@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+{% block title %}Matériels — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Matériels</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Matériels</div>
+        <div class="page-sub">Gestion du parc matériel</div>
+    </div>
+    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouveau matériel</a>
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Rechercher un matériel...">
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+            <button class="btn btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nom</th>
+                <th>N° Série</th>
+                <th>Catégorie</th>
+                <th>État</th>
+                <th>Localisation</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="td-muted">001</td>
+                <td class="td-bold">MacBook Pro 14"</td>
+                <td class="td-muted">MBP-2024-001</td>
+                <td>Informatique</td>
+                <td><span class="sbadge sb-success">Bon</span></td>
+                <td>Salle A12</td>
+                <td><div class="action-btns">
+                    <button class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                    <button class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">002</td>
+                <td class="td-bold">Vidéoprojecteur BenQ</td>
+                <td class="td-muted">VPJ-2023-014</td>
+                <td>Audiovisuel</td>
+                <td><span class="sbadge sb-warning">Usé</span></td>
+                <td>Salle B03</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">003</td>
+                <td class="td-bold">iPad Pro 12.9"</td>
+                <td class="td-muted">IPD-2024-007</td>
+                <td>Tablette</td>
+                <td><span class="sbadge sb-success">Neuf</span></td>
+                <td>Réserve</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">004</td>
+                <td class="td-bold">Imprimante HP LaserJet</td>
+                <td class="td-muted">IMP-2022-003</td>
+                <td>Bureautique</td>
+                <td><span class="sbadge sb-danger">HS</span></td>
+                <td>Atelier</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="table-footer">
+        <span>1 à 4 sur 124 résultats</span>
+        <div class="pagination">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}

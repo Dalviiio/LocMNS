@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+{% block title %}Documents — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Documents</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Documents</div>
+        <div class="page-sub">Notices et documentations techniques</div>
+    </div>
+    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ajouter un document</a>
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Rechercher un document...">
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Titre</th>
+                <th>Matériel associé</th>
+                <th>Type</th>
+                <th>URL</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="td-muted">001</td>
+                <td class="td-bold">Notice d'utilisation MacBook Pro</td>
+                <td>MacBook Pro 14"</td>
+                <td><span class="sbadge sb-info">Notice</span></td>
+                <td class="td-muted">docs/mbp-notice.pdf</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-download"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">002</td>
+                <td class="td-bold">Fiche technique BenQ W1110</td>
+                <td>Vidéoprojecteur BenQ</td>
+                <td><span class="sbadge sb-gray">Doc technique</span></td>
+                <td class="td-muted">docs/benq-fiche.pdf</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-download"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">003</td>
+                <td class="td-bold">Tutoriel vidéo iPad Pro</td>
+                <td>iPad Pro 12.9"</td>
+                <td><span class="sbadge sb-warning">Vidéo</span></td>
+                <td class="td-muted">videos/ipad-tuto.mp4</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-download"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="table-footer">
+        <span>1 à 3 sur 9 résultats</span>
+        <div class="pagination">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}

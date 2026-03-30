@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+{% block title %}Réservations — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Réservations</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Réservations</div>
+        <div class="page-sub">Gestion des réservations de matériel</div>
+    </div>
+    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvelle réservation</a>
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Rechercher une réservation...">
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Utilisateur</th>
+                <th>Matériel</th>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="td-muted">021</td>
+                <td class="td-bold">Marie Martin</td>
+                <td>Vidéoprojecteur BenQ</td>
+                <td>05/04/2026</td>
+                <td>05/04/2026</td>
+                <td><span class="sbadge sb-warning">En attente</span></td>
+                <td><div class="action-btns">
+                    <button class="action-btn" title="Confirmer"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn" title="Annuler"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">020</td>
+                <td class="td-bold">Lucas Petit</td>
+                <td>MacBook Pro 14"</td>
+                <td>02/04/2026</td>
+                <td>06/04/2026</td>
+                <td><span class="sbadge sb-success">Confirmée</span></td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">019</td>
+                <td class="td-bold">Sophie Leroy</td>
+                <td>iPad Pro 12.9"</td>
+                <td>28/03/2026</td>
+                <td>30/03/2026</td>
+                <td><span class="sbadge sb-gray">Annulée</span></td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                </div></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="table-footer">
+        <span>1 à 3 sur 17 résultats</span>
+        <div class="pagination">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}

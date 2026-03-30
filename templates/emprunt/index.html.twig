@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+{% block title %}Emprunts — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Emprunts</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Emprunts</div>
+        <div class="page-sub">Suivi des emprunts de matériel</div>
+    </div>
+    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel emprunt</a>
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Rechercher un emprunt...">
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+            <button class="btn btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Utilisateur</th>
+                <th>Matériel</th>
+                <th>Date début</th>
+                <th>Date fin prévue</th>
+                <th>Date retour</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="td-muted">014</td>
+                <td class="td-bold">Jean Dupont</td>
+                <td>MacBook Pro 14"</td>
+                <td>28/03/2026</td>
+                <td>04/04/2026</td>
+                <td class="td-muted">—</td>
+                <td><span class="sbadge sb-info">En cours</span></td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">013</td>
+                <td class="td-bold">Marie Martin</td>
+                <td>iPad Pro 12.9"</td>
+                <td>20/03/2026</td>
+                <td>27/03/2026</td>
+                <td class="td-muted">—</td>
+                <td><span class="sbadge sb-danger">Retard</span></td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td class="td-muted">012</td>
+                <td class="td-bold">Paul Bernard</td>
+                <td>Tablette iPad</td>
+                <td>15/03/2026</td>
+                <td>22/03/2026</td>
+                <td>22/03/2026</td>
+                <td><span class="sbadge sb-success">Rendu</span></td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                </div></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="table-footer">
+        <span>1 à 3 sur 38 résultats</span>
+        <div class="pagination">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}

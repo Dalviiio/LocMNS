@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+{% block title %}Dashboard — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Dashboard</div>
+
+<!-- KPI -->
+<div class="kpi-strip">
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fa-solid fa-box-open"></i> Matériels indisponibles</div>
+        <div class="kpi-value">{{ kpi.materiels_indisponibles ?? '—' }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fa-solid fa-clock"></i> Retards de retour</div>
+        <div class="kpi-value">{{ kpi.retards ?? '—' }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fa-solid fa-triangle-exclamation"></i> Incidents ouverts</div>
+        <div class="kpi-value">{{ kpi.incidents ?? '—' }}</div>
+    </div>
+    <div class="kpi-card" style="border-right:none">
+        <div class="kpi-label"><i class="fa-solid fa-inbox"></i> Demandes en attente</div>
+        <div class="kpi-value">{{ kpi.demandes ?? '—' }}</div>
+    </div>
+</div>
+
+<!-- ÉTAT DU STOCK -->
+<div class="stock-grid">
+    <div class="stock-card">
+        <div class="stock-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+        <div class="stock-info">
+            <div class="stock-label">Total matériels</div>
+            <div class="stock-value">{{ stock.total ?? '—' }}</div>
+            <div class="stock-sub">dans le parc</div>
+        </div>
+    </div>
+    <div class="stock-card">
+        <div class="stock-icon" style="color:#22c55e"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stock-info">
+            <div class="stock-label">Disponibles</div>
+            <div class="stock-value" style="color:#22c55e">{{ stock.disponibles ?? '—' }}</div>
+            <div class="stock-sub">prêts à l'emprunt</div>
+        </div>
+    </div>
+    <div class="stock-card">
+        <div class="stock-icon" style="color:#f59e0b"><i class="fa-solid fa-right-left"></i></div>
+        <div class="stock-info">
+            <div class="stock-label">En cours d'emprunt</div>
+            <div class="stock-value" style="color:#f59e0b">{{ stock.empruntes ?? '—' }}</div>
+            <div class="stock-sub">actuellement sortis</div>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICATIONS + CALENDRIER -->
+<div class="bottom-grid">
+
+    <!-- NOTIFICATIONS -->
+    <div class="panel">
+        <div class="panel-title">Notifications</div>
+        <div class="notif-list">
+
+            <div class="notif-item">
+                <div class="notif-check"></div>
+                <div class="notif-body">
+                    <div class="notif-meta">
+                        <span class="notif-badge badge-green">Lorem</span>
+                        <span class="notif-time">il y a quelques secondes</span>
+                    </div>
+                    <div class="notif-title">Lorem Ipsum</div>
+                    <div class="notif-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam felis libero, porttitor malesuada rhoncus nec, euismod a enim. Fusce sit amet convallis est, a pulvinar massa. Maecenas ut sem ac risus venenatis sodales vel eu felis.</div>
+                    <div class="notif-author">Jhon Doe</div>
+                </div>
+            </div>
+
+            <div class="notif-item">
+                <div class="notif-check"></div>
+                <div class="notif-body">
+                    <div class="notif-meta">
+                        <span class="notif-badge badge-purple">Lorem</span>
+                        <span class="notif-time">il y a quelques secondes</span>
+                    </div>
+                    <div class="notif-title">Lorem Ipsum</div>
+                    <div class="notif-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam felis libero, porttitor malesuada rhoncus nec, euismod a enim. Fusce sit amet convallis est, a pulvinar massa. Maecenas ut sem ac risus venenatis sodales vel eu felis.</div>
+                    <div class="notif-author">Jhon Doe</div>
+                </div>
+            </div>
+
+            <div class="notif-item">
+                <div class="notif-check"></div>
+                <div class="notif-body">
+                    <div class="notif-meta">
+                        <span class="notif-badge badge-blend">Lorem</span>
+                        <span class="notif-time">il y a quelques secondes</span>
+                    </div>
+                    <div class="notif-title">Lorem Ipsum</div>
+                    <div class="notif-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam felis libero, porttitor malesuada rhoncus nec, euismod a enim. Fusce sit amet convallis est, a pulvinar massa. Maecenas ut sem ac risus venenatis sodales vel eu felis.</div>
+                    <div class="notif-author">Jhon Doe</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CALENDRIER -->
+    <div class="panel">
+        <div class="panel-title">Calendrier</div>
+        <div class="cal-wrap">
+
+            <div class="cal-days-row">
+                <div class="cal-day-lbl">D</div>
+                <div class="cal-day-lbl">L</div>
+                <div class="cal-day-lbl">M</div>
+                <div class="cal-day-lbl">ME</div>
+                <div class="cal-day-lbl">J</div>
+                <div class="cal-day-lbl">V</div>
+                <div class="cal-day-lbl">S</div>
+            </div>
+
+            <div class="cal-dates-row">
+                <div class="cal-d other">28</div>
+                <div class="cal-d other">29</div>
+                <div class="cal-d other">30</div>
+                <div class="cal-d other">31</div>
+                <div class="cal-d">1</div>
+                <div class="cal-d has-evt">2</div>
+                <div class="cal-d">3</div>
+                <div class="cal-d">4</div>
+                <div class="cal-d today">5</div>
+                <div class="cal-d">6</div>
+                <div class="cal-d">7</div>
+            </div>
+
+            <div class="cal-events">
+                <div class="cal-evt-bar"></div>
+                <div class="cal-evt-bar"></div>
+                <div class="cal-evt-bar"></div>
+                <div class="cal-evt-bar"></div>
+                <div class="cal-evt-bar"></div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

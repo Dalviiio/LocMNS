@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+{% block title %}Alertes — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Alertes</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Alertes</div>
+        <div class="page-sub">Centre de notifications et alertes</div>
+    </div>
+    <button class="btn btn-outline"><i class="fa-solid fa-check-double"></i> Tout marquer comme lu</button>
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Rechercher une alerte...">
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Lu</th>
+                <th>Type</th>
+                <th>Message</th>
+                <th>Utilisateur</th>
+                <th>Emprunt</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><i class="fa-solid fa-circle" style="color:var(--primary);font-size:9px"></i></td>
+                <td><span class="sbadge sb-danger">Retard</span></td>
+                <td>Emprunt #13 non retourné — retard de 3 jours</td>
+                <td class="td-bold">Marie Martin</td>
+                <td class="td-muted">#013</td>
+                <td class="td-muted">30/03/2026</td>
+                <td><div class="action-btns">
+                    <button class="action-btn" title="Marquer lu"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td><i class="fa-solid fa-circle" style="color:var(--primary);font-size:9px"></i></td>
+                <td><span class="sbadge sb-warning">Panne</span></td>
+                <td>Panne signalée sur le Vidéoprojecteur BenQ</td>
+                <td class="td-bold">Jean Dupont</td>
+                <td class="td-muted">#014</td>
+                <td class="td-muted">29/03/2026</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+            <tr>
+                <td><i class="fa-regular fa-circle" style="color:#CCCCCC;font-size:9px"></i></td>
+                <td><span class="sbadge sb-info">Nouvelle demande</span></td>
+                <td>Nouvelle réservation en attente de confirmation</td>
+                <td class="td-bold">Lucas Petit</td>
+                <td class="td-muted">—</td>
+                <td class="td-muted">28/03/2026</td>
+                <td><div class="action-btns">
+                    <button class="action-btn"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                </div></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="table-footer">
+        <span>5 alertes non lues sur 12 au total</span>
+        <div class="pagination">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
