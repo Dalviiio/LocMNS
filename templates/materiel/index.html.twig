@@ -9,96 +9,67 @@
         <div class="page-title">Matériels</div>
         <div class="page-sub">Gestion du parc matériel</div>
     </div>
-    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouveau matériel</a>
+    <div style="display:flex;gap:8px">
+        <a href="{{ path('export_materiels_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
+        <a href="{{ path('export_materiels_xml') }}" class="btn btn-outline"><i class="fa-solid fa-code"></i> XML</a>
+        <a href="{{ path('materiel_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouveau matériel</a>
+    </div>
 </div>
 
-<div class="table-wrap">
+<form method="GET" class="table-wrap" style="overflow:visible">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Rechercher un matériel...">
+            <input type="text" name="search" placeholder="Rechercher..." value="{{ search ?? '' }}">
         </div>
         <div style="display:flex;gap:8px">
-            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
-            <button class="btn btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
+            <select name="etat" class="form-select-sm" onchange="this.form.submit()">
+                <option value="">Tous les états</option>
+                {% for etat in etats %}
+                <option value="{{ etat.value }}" {{ etat_filtre == etat.value ? 'selected' : '' }}>{{ etat.label() }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
     <table>
         <thead>
             <tr>
-                <th>#</th>
-                <th>Nom</th>
-                <th>N° Série</th>
-                <th>Catégorie</th>
-                <th>État</th>
-                <th>Localisation</th>
-                <th>Actions</th>
+                <th>#</th><th>Nom</th><th>N° Série</th><th>Catégorie</th><th>État</th><th>Localisation</th><th>Dispo</th><th>Actions</th>
             </tr>
         </thead>
         <tbody>
+            {% for m in materiels %}
             <tr>
-                <td class="td-muted">001</td>
-                <td class="td-bold">MacBook Pro 14"</td>
-                <td class="td-muted">MBP-2024-001</td>
-                <td>Informatique</td>
-                <td><span class="sbadge sb-success">Bon</span></td>
-                <td>Salle A12</td>
+                <td class="td-muted">{{ m.id }}</td>
+                <td class="td-bold">{{ m.nom }}</td>
+                <td class="td-muted">{{ m.numeroSerie ?? '—' }}</td>
+                <td>{{ m.categorie.nom }}</td>
+                <td><span class="sbadge {{ m.etat.badgeClass() }}">{{ m.etat.label() }}</span></td>
+                <td>{{ m.localisation ?? '—' }}</td>
+                <td>
+                    {% if m.disponible %}
+                        <i class="fa-solid fa-circle-check" style="color:#22c55e"></i>
+                    {% else %}
+                        <i class="fa-solid fa-circle-xmark" style="color:#ef4444"></i>
+                    {% endif %}
+                </td>
                 <td><div class="action-btns">
-                    <button class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    <a href="{{ path('materiel_show', {id: m.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
+                    <a href="{{ path('materiel_edit', {id: m.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
+                    <form method="POST" action="{{ path('materiel_delete', {id: m.id}) }}" style="display:inline" onsubmit="return confirm('Supprimer ce matériel ?')">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ m.id) }}">
+                        <button type="submit" class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    </form>
                 </div></td>
             </tr>
-            <tr>
-                <td class="td-muted">002</td>
-                <td class="td-bold">Vidéoprojecteur BenQ</td>
-                <td class="td-muted">VPJ-2023-014</td>
-                <td>Audiovisuel</td>
-                <td><span class="sbadge sb-warning">Usé</span></td>
-                <td>Salle B03</td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
-                </div></td>
-            </tr>
-            <tr>
-                <td class="td-muted">003</td>
-                <td class="td-bold">iPad Pro 12.9"</td>
-                <td class="td-muted">IPD-2024-007</td>
-                <td>Tablette</td>
-                <td><span class="sbadge sb-success">Neuf</span></td>
-                <td>Réserve</td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
-                </div></td>
-            </tr>
-            <tr>
-                <td class="td-muted">004</td>
-                <td class="td-bold">Imprimante HP LaserJet</td>
-                <td class="td-muted">IMP-2022-003</td>
-                <td>Bureautique</td>
-                <td><span class="sbadge sb-danger">HS</span></td>
-                <td>Atelier</td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
-                </div></td>
-            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Aucun matériel trouvé</td></tr>
+            {% endfor %}
         </tbody>
     </table>
     <div class="table-footer">
-        <span>1 à 4 sur 124 résultats</span>
-        <div class="pagination">
-            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">3</button>
-            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
+        <span>{{ materiels|length }} résultat(s)</span>
     </div>
-</div>
+</form>
 {% endblock %}

@@ -9,83 +9,61 @@
         <div class="page-title">Emprunts</div>
         <div class="page-sub">Suivi des emprunts de matériel</div>
     </div>
-    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel emprunt</a>
+    <div style="display:flex;gap:8px">
+        <a href="{{ path('export_emprunts_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
+        <a href="{{ path('emprunt_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel emprunt</a>
+    </div>
 </div>
 
-<div class="table-wrap">
+<form method="GET" class="table-wrap" style="overflow:visible">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Rechercher un emprunt...">
+            <input type="text" name="search" placeholder="Rechercher..." value="{{ app.request.query.get('search') ?? '' }}">
         </div>
         <div style="display:flex;gap:8px">
-            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
-            <button class="btn btn-outline"><i class="fa-solid fa-download"></i> Exporter</button>
+            <select name="statut" class="form-select-sm" onchange="this.form.submit()">
+                <option value="">Tous les statuts</option>
+                {% for s in statuts %}
+                <option value="{{ s.value }}" {{ app.request.query.get('statut') == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
     <table>
         <thead>
             <tr>
-                <th>#</th>
-                <th>Utilisateur</th>
-                <th>Matériel</th>
-                <th>Date début</th>
-                <th>Date fin prévue</th>
-                <th>Date retour</th>
-                <th>Statut</th>
-                <th>Actions</th>
+                <th>#</th><th>Utilisateur</th><th>Matériel</th><th>Date début</th><th>Date fin prévue</th><th>Date retour</th><th>Statut</th><th>Actions</th>
             </tr>
         </thead>
         <tbody>
+            {% for e in emprunts %}
             <tr>
-                <td class="td-muted">014</td>
-                <td class="td-bold">Jean Dupont</td>
-                <td>MacBook Pro 14"</td>
-                <td>28/03/2026</td>
-                <td>04/04/2026</td>
-                <td class="td-muted">—</td>
-                <td><span class="sbadge sb-info">En cours</span></td>
+                <td class="td-muted">{{ e.id }}</td>
+                <td class="td-bold">{{ e.utilisateur.nomComplet }}</td>
+                <td>{{ e.materiel.nom }}</td>
+                <td>{{ e.dateDebut|date('d/m/Y') }}</td>
+                <td>{{ e.dateFinPrevue|date('d/m/Y') }}</td>
+                <td>{{ e.dateRetour ? e.dateRetour|date('d/m/Y') : '—' }}</td>
+                <td><span class="sbadge {{ e.statut.badgeClass() }}">{{ e.statut.label() }}</span></td>
                 <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                    <a href="{{ path('emprunt_show', {id: e.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
+                    {% if e.statut.value == 'en_cours' or e.statut.value == 'retard' %}
+                    <form method="POST" action="{{ path('emprunt_retour', {id: e.id}) }}" style="display:inline">
+                        <button type="submit" class="action-btn" title="Enregistrer le retour"><i class="fa-solid fa-rotate-left"></i></button>
+                    </form>
+                    {% endif %}
+                    <a href="{{ path('emprunt_edit', {id: e.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
                 </div></td>
             </tr>
-            <tr>
-                <td class="td-muted">013</td>
-                <td class="td-bold">Marie Martin</td>
-                <td>iPad Pro 12.9"</td>
-                <td>20/03/2026</td>
-                <td>27/03/2026</td>
-                <td class="td-muted">—</td>
-                <td><span class="sbadge sb-danger">Retard</span></td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                </div></td>
-            </tr>
-            <tr>
-                <td class="td-muted">012</td>
-                <td class="td-bold">Paul Bernard</td>
-                <td>Tablette iPad</td>
-                <td>15/03/2026</td>
-                <td>22/03/2026</td>
-                <td>22/03/2026</td>
-                <td><span class="sbadge sb-success">Rendu</span></td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                </div></td>
-            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Aucun emprunt trouvé</td></tr>
+            {% endfor %}
         </tbody>
     </table>
     <div class="table-footer">
-        <span>1 à 3 sur 38 résultats</span>
-        <div class="pagination">
-            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
+        <span>{{ emprunts|length }} résultat(s)</span>
     </div>
-</div>
+</form>
 {% endblock %}

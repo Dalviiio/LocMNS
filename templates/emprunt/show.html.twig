@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+{% block title %}Emprunt #{{ emprunt.id }} — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Emprunts › Détail</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Emprunt #{{ emprunt.id }}</div>
+        <div class="page-sub">{{ emprunt.materiel.nom }} — {{ emprunt.utilisateur.nomComplet }}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+        {% if emprunt.statut.value == 'en_cours' or emprunt.statut.value == 'retard' %}
+        <form method="POST" action="{{ path('emprunt_retour', {id: emprunt.id}) }}">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate-left"></i> Enregistrer le retour</button>
+        </form>
+        {% endif %}
+        <a href="{{ path('emprunt_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <div class="table-wrap" style="padding:20px">
+        <div class="panel-title" style="margin-bottom:14px">Informations</div>
+        <table><tbody>
+            <tr><td style="color:#999;font-size:12px;padding:8px 0;width:140px">Utilisateur</td><td class="td-bold">{{ emprunt.utilisateur.nomComplet }}</td></tr>
+            <tr><td style="color:#999;font-size:12px;padding:8px 0">Matériel</td><td>{{ emprunt.materiel.nom }}</td></tr>
+            <tr><td style="color:#999;font-size:12px;padding:8px 0">Date début</td><td>{{ emprunt.dateDebut|date('d/m/Y H:i') }}</td></tr>
+            <tr><td style="color:#999;font-size:12px;padding:8px 0">Date fin prévue</td><td>{{ emprunt.dateFinPrevue|date('d/m/Y H:i') }}</td></tr>
+            <tr><td style="color:#999;font-size:12px;padding:8px 0">Date retour</td><td>{{ emprunt.dateRetour ? emprunt.dateRetour|date('d/m/Y H:i') : '—' }}</td></tr>
+            <tr><td style="color:#999;font-size:12px;padding:8px 0">Statut</td><td><span class="sbadge {{ emprunt.statut.badgeClass() }}">{{ emprunt.statut.label() }}</span></td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="table-wrap" style="padding:20px">
+        <div class="panel-title" style="margin-bottom:14px">Signaler un événement</div>
+        <form method="POST" action="{{ path('emprunt_evenement_add', {id: emprunt.id}) }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <select name="type" class="form-control">
+                    {% for t in types_evenement %}
+                    <option value="{{ t.value }}">{{ t.label() }}</option>
+                    {% endfor %}
+                </select>
+                <textarea name="description" class="form-control" rows="3" placeholder="Description (optionnel)"></textarea>
+                <input type="datetime-local" name="nouvelle_date_fin" class="form-control" placeholder="Nouvelle date de fin (prolongation)">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-flag"></i> Signaler</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <span class="panel-title">Événements ({{ emprunt.evenements|length }})</span>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Type</th><th>Description</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for ev in emprunt.evenements %}
+            <tr>
+                <td><span class="sbadge {{ ev.type.badgeClass() }}">{{ ev.type.label() }}</span></td>
+                <td>{{ ev.description ?? '—' }}</td>
+                <td class="td-muted">{{ ev.createdAt|date('d/m/Y H:i') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" style="text-align:center;padding:16px;color:#999">Aucun événement</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

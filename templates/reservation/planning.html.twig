@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+{% block title %}Planning des réservations — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Réservations › Planning</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Planning — {{ debut|date('F Y')|capitalize }}</div>
+        <div class="page-sub">{{ reservations|length }} réservation(s) ce mois</div>
+    </div>
+    <a href="{{ path('reservation_index') }}" class="btn btn-outline"><i class="fa-solid fa-list"></i> Vue liste</a>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Matériel</th>
+                <th>Utilisateur</th>
+                <th>Du</th>
+                <th>Au</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservations %}
+            <tr>
+                <td class="td-bold">{{ r.materiel.nom }}</td>
+                <td>{{ r.utilisateur.nomComplet }}</td>
+                <td>{{ r.dateDebut|date('d/m/Y H:i') }}</td>
+                <td>{{ r.dateFin|date('d/m/Y H:i') }}</td>
+                <td><span class="sbadge {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span></td>
+                <td><div class="action-btns">
+                    {% if r.statut.value == 'en_attente' %}
+                    <form method="POST" action="{{ path('reservation_confirmer', {id: r.id}) }}" style="display:inline">
+                        <button type="submit" class="action-btn" title="Confirmer"><i class="fa-solid fa-check"></i></button>
+                    </form>
+                    <form method="POST" action="{{ path('reservation_annuler', {id: r.id}) }}" style="display:inline">
+                        <button type="submit" class="action-btn" title="Annuler"><i class="fa-solid fa-xmark"></i></button>
+                    </form>
+                    {% endif %}
+                </div></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center;padding:20px;color:#999">Aucune réservation ce mois-ci</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

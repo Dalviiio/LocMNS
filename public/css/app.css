@@ -576,3 +576,53 @@ tbody tr:hover { background: #FAFAFA; }
     .h-btn { width: 60px; }
     .h-btn.profile { width: 70px; }
 }
+
+/* ═══════════════════════════
+   FORMULAIRES
+   ═══════════════════════════ */
+.form-control {
+    padding: 9px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--white);
+    outline: none;
+    width: 100%;
+    transition: border-color .2s;
+    font-family: inherit;
+}
+.form-control:focus { border-color: var(--primary); }
+
+.form-select-sm {
+    padding: 7px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--white);
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+.form-select-sm:focus { border-color: var(--primary); }
+
+/* Flash messages */
+.flash-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.flash-error {
+    background: #ffebee;
+    color: #b71c1c;
+    border: 1px solid #ef9a9a;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+}

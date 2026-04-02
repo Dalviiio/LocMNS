@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ materiel ? 'Modifier' : 'Nouveau' }} matériel — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Matériels › {{ materiel ? 'Modifier' : 'Nouveau' }}</div>
+
+<div class="page-header">
+    <div class="page-title">{{ materiel ? 'Modifier : ' ~ materiel.nom : 'Nouveau matériel' }}</div>
+    <a href="{{ path('materiel_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
+</div>
+
+<div class="table-wrap" style="padding:28px;max-width:700px">
+    <form method="POST" action="{{ materiel ? path('materiel_edit', {id: materiel.id}) : path('materiel_new') }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Nom *</label>
+                <input type="text" name="nom" value="{{ materiel ? materiel.nom : '' }}" class="form-control" required>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">N° de série</label>
+                <input type="text" name="numero_serie" value="{{ materiel ? materiel.numeroSerie : '' }}" class="form-control">
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Catégorie *</label>
+                <select name="categorie_id" class="form-control" required>
+                    <option value="">-- Choisir --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {{ materiel and materiel.categorie.id == cat.id ? 'selected' : '' }}>{{ cat.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">État *</label>
+                <select name="etat" class="form-control" required>
+                    {% for etat in etats %}
+                    <option value="{{ etat.value }}" {{ materiel and materiel.etat.value == etat.value ? 'selected' : '' }}>{{ etat.label() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Localisation</label>
+                <input type="text" name="localisation" value="{{ materiel ? materiel.localisation : '' }}" class="form-control">
+            </div>
+
+        </div>
+
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e5e5e5;display:flex;gap:10px">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+            <a href="{{ path('materiel_index') }}" class="btn btn-outline">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

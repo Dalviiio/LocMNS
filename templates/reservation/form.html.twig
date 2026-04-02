@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ reservation ? 'Modifier' : 'Nouvelle' }} réservation — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Réservations › {{ reservation ? 'Modifier' : 'Nouvelle' }}</div>
+
+<div class="page-header">
+    <div class="page-title">{{ reservation ? 'Modifier la réservation #' ~ reservation.id : 'Nouvelle réservation' }}</div>
+    <a href="{{ path('reservation_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
+</div>
+
+<div class="table-wrap" style="padding:28px;max-width:700px">
+    <form method="POST" action="{{ reservation ? path('reservation_edit', {id: reservation.id}) : path('reservation_new') }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Utilisateur *</label>
+                <select name="utilisateur_id" class="form-control" required>
+                    <option value="">-- Choisir --</option>
+                    {% for u in utilisateurs %}
+                    <option value="{{ u.id }}" {{ reservation and reservation.utilisateur.id == u.id ? 'selected' : '' }}>{{ u.nomComplet }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Matériel *</label>
+                <select name="materiel_id" class="form-control" required>
+                    <option value="">-- Choisir --</option>
+                    {% for m in materiels %}
+                    <option value="{{ m.id }}" {{ reservation and reservation.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de début *</label>
+                <input type="datetime-local" name="date_debut" class="form-control" required
+                       value="{{ reservation ? reservation.dateDebut|date('Y-m-d\\TH:i') : '' }}">
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de fin *</label>
+                <input type="datetime-local" name="date_fin" class="form-control" required
+                       value="{{ reservation ? reservation.dateFin|date('Y-m-d\\TH:i') : '' }}">
+            </div>
+
+        </div>
+
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e5e5e5;display:flex;gap:10px">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+            <a href="{{ path('reservation_index') }}" class="btn btn-outline">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

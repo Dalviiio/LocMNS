@@ -9,81 +9,62 @@
         <div class="page-title">Réservations</div>
         <div class="page-sub">Gestion des réservations de matériel</div>
     </div>
-    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvelle réservation</a>
+    <div style="display:flex;gap:8px">
+        <a href="{{ path('reservation_planning') }}" class="btn btn-outline"><i class="fa-solid fa-calendar-days"></i> Planning</a>
+        <a href="{{ path('reservation_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvelle réservation</a>
+    </div>
 </div>
 
-<div class="table-wrap">
+<form method="GET" class="table-wrap" style="overflow:visible">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Rechercher une réservation...">
+            <input type="text" name="search" placeholder="Rechercher..." value="{{ app.request.query.get('search') ?? '' }}">
         </div>
         <div style="display:flex;gap:8px">
-            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+            <select name="statut" class="form-select-sm" onchange="this.form.submit()">
+                <option value="">Tous les statuts</option>
+                {% for s in statuts %}
+                <option value="{{ s.value }}" {{ app.request.query.get('statut') == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
     <table>
         <thead>
             <tr>
-                <th>#</th>
-                <th>Utilisateur</th>
-                <th>Matériel</th>
-                <th>Date début</th>
-                <th>Date fin</th>
-                <th>Statut</th>
-                <th>Actions</th>
+                <th>#</th><th>Utilisateur</th><th>Matériel</th><th>Date début</th><th>Date fin</th><th>Statut</th><th>Actions</th>
             </tr>
         </thead>
         <tbody>
+            {% for r in reservations %}
             <tr>
-                <td class="td-muted">021</td>
-                <td class="td-bold">Marie Martin</td>
-                <td>Vidéoprojecteur BenQ</td>
-                <td>05/04/2026</td>
-                <td>05/04/2026</td>
-                <td><span class="sbadge sb-warning">En attente</span></td>
+                <td class="td-muted">{{ r.id }}</td>
+                <td class="td-bold">{{ r.utilisateur.nomComplet }}</td>
+                <td>{{ r.materiel.nom }}</td>
+                <td>{{ r.dateDebut|date('d/m/Y') }}</td>
+                <td>{{ r.dateFin|date('d/m/Y') }}</td>
+                <td><span class="sbadge {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span></td>
                 <td><div class="action-btns">
-                    <button class="action-btn" title="Confirmer"><i class="fa-solid fa-check"></i></button>
-                    <button class="action-btn" title="Annuler"><i class="fa-solid fa-xmark"></i></button>
-                    <button class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></button>
+                    {% if r.statut.value == 'en_attente' %}
+                    <form method="POST" action="{{ path('reservation_confirmer', {id: r.id}) }}" style="display:inline">
+                        <button type="submit" class="action-btn" title="Confirmer"><i class="fa-solid fa-check"></i></button>
+                    </form>
+                    <form method="POST" action="{{ path('reservation_annuler', {id: r.id}) }}" style="display:inline">
+                        <button type="submit" class="action-btn" title="Annuler"><i class="fa-solid fa-xmark"></i></button>
+                    </form>
+                    {% endif %}
+                    <a href="{{ path('reservation_edit', {id: r.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
                 </div></td>
             </tr>
-            <tr>
-                <td class="td-muted">020</td>
-                <td class="td-bold">Lucas Petit</td>
-                <td>MacBook Pro 14"</td>
-                <td>02/04/2026</td>
-                <td>06/04/2026</td>
-                <td><span class="sbadge sb-success">Confirmée</span></td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-check"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-xmark"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                </div></td>
-            </tr>
-            <tr>
-                <td class="td-muted">019</td>
-                <td class="td-bold">Sophie Leroy</td>
-                <td>iPad Pro 12.9"</td>
-                <td>28/03/2026</td>
-                <td>30/03/2026</td>
-                <td><span class="sbadge sb-gray">Annulée</span></td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-check"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-xmark"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                </div></td>
-            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;padding:20px;color:#999">Aucune réservation trouvée</td></tr>
+            {% endfor %}
         </tbody>
     </table>
     <div class="table-footer">
-        <span>1 à 3 sur 17 résultats</span>
-        <div class="pagination">
-            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
+        <span>{{ reservations|length }} résultat(s)</span>
     </div>
-</div>
+</form>
 {% endblock %}

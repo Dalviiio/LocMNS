@@ -71,6 +71,12 @@
 
     <!-- ══ MAIN ══ -->
     <main class="main">
+        {% for msg in app.flashes('success') %}
+            <div class="flash-success"><i class="fa-solid fa-circle-check"></i> {{ msg }}</div>
+        {% endfor %}
+        {% for msg in app.flashes('error') %}
+            <div class="flash-error"><i class="fa-solid fa-circle-xmark"></i> {{ msg }}</div>
+        {% endfor %}
         {% block content %}{% endblock %}
     </main>
 

@@ -2,7 +2,16 @@
 
 namespace App\Controller;
 
+use App\Entity\Alerte;
+use App\Entity\Reservation;
+use App\Entity\StatutReservation;
+use App\Entity\TypeAlerte;
+use App\Repository\MaterielRepository;
+use App\Repository\ReservationRepository;
+use App\Repository\UtilisateurRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -10,8 +19,114 @@ use Symfony\Component\Routing\Attribute\Route;
 class ReservationController extends AbstractController
 {
     #[Route('', name: 'index')]
-    public function index(): Response
+    public function index(Request $request, ReservationRepository $repo): Response
     {
-        return $this->render('reservation/index.html.twig');
+        return $this->render('reservation/index.html.twig', [
+            'reservations' => $repo->findWithFilters(
+                $request->query->get('search'),
+                $request->query->get('statut'),
+            ),
+            'statuts' => StatutReservation::cases(),
+        ]);
+    }
+
+    #[Route('/planning', name: 'planning')]
+    public function planning(ReservationRepository $repo): Response
+    {
+        $debut = new \DateTime('first day of this month');
+        $fin   = new \DateTime('last day of this month');
+
+        return $this->render('reservation/planning.html.twig', [
+            'reservations' => $repo->findPlanning($debut, $fin),
+            'debut'        => $debut,
+            'fin'          => $fin,
+        ]);
+    }
+
+    #[Route('/nouvelle', name: 'new', methods: ['GET', 'POST'])]
+    public function new(
+        Request $request,
+        EntityManagerInterface $em,
+        MaterielRepository $materielRepo,
+        UtilisateurRepository $utilisateurRepo,
+    ): Response {
+        if ($request->isMethod('POST')) {
+            $reservation = new Reservation();
+            $this->hydrateFromRequest($reservation, $request, $materielRepo, $utilisateurRepo);
+            $em->persist($reservation);
+
+            // Alerte nouvelle demande
+            $alerte = new Alerte();
+            $alerte->setUtilisateur($reservation->getUtilisateur());
+            $alerte->setType(TypeAlerte::NouvelleDemande);
+            $alerte->setMessage('Nouvelle réservation de ' . $reservation->getUtilisateur()->getNomComplet() . ' pour ' . $reservation->getMateriel()->getNom());
+            $em->persist($alerte);
+
+            $em->flush();
+            $this->addFlash('success', 'Réservation créée.');
+            return $this->redirectToRoute('reservation_index');
+        }
+
+        return $this->render('reservation/form.html.twig', [
+            'reservation'  => null,
+            'materiels'    => $materielRepo->findAll(),
+            'utilisateurs' => $utilisateurRepo->findAll(),
+        ]);
+    }
+
+    #[Route('/{id}/confirmer', name: 'confirmer', methods: ['POST'])]
+    public function confirmer(Reservation $reservation, EntityManagerInterface $em): Response
+    {
+        $reservation->setStatut(StatutReservation::Confirmee);
+        $em->flush();
+        $this->addFlash('success', 'Réservation confirmée.');
+        return $this->redirectToRoute('reservation_index');
+    }
+
+    #[Route('/{id}/annuler', name: 'annuler', methods: ['POST'])]
+    public function annuler(Reservation $reservation, EntityManagerInterface $em): Response
+    {
+        $reservation->setStatut(StatutReservation::Annulee);
+        $em->flush();
+        $this->addFlash('success', 'Réservation annulée.');
+        return $this->redirectToRoute('reservation_index');
+    }
+
+    #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(
+        Request $request,
+        Reservation $reservation,
+        EntityManagerInterface $em,
+        MaterielRepository $materielRepo,
+        UtilisateurRepository $utilisateurRepo,
+    ): Response {
+        if ($request->isMethod('POST')) {
+            $this->hydrateFromRequest($reservation, $request, $materielRepo, $utilisateurRepo);
+            $em->flush();
+            $this->addFlash('success', 'Réservation modifiée.');
+            return $this->redirectToRoute('reservation_index');
+        }
+
+        return $this->render('reservation/form.html.twig', [
+            'reservation'  => $reservation,
+            'materiels'    => $materielRepo->findAll(),
+            'utilisateurs' => $utilisateurRepo->findAll(),
+        ]);
+    }
+
+    private function hydrateFromRequest(
+        Reservation $reservation,
+        Request $request,
+        MaterielRepository $materielRepo,
+        UtilisateurRepository $utilisateurRepo,
+    ): void {
+        $reservation->setDateDebut(new \DateTime($request->request->get('date_debut')));
+        $reservation->setDateFin(new \DateTime($request->request->get('date_fin')));
+
+        $materiel = $materielRepo->find($request->request->getInt('materiel_id'));
+        if ($materiel) $reservation->setMateriel($materiel);
+
+        $utilisateur = $utilisateurRepo->find($request->request->getInt('utilisateur_id'));
+        if ($utilisateur) $reservation->setUtilisateur($utilisateur);
     }
 }

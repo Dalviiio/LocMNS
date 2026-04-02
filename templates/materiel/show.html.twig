@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ materiel.nom }} — LOCMNS{% endblock %}
+{% block content %}
+
+<div class="page-label">Matériels › Détail</div>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">{{ materiel.nom }}</div>
+        <div class="page-sub">{{ materiel.categorie.nom }} — {{ materiel.localisation ?? 'Localisation inconnue' }}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+        <a href="{{ path('materiel_edit', {id: materiel.id}) }}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Modifier</a>
+        <a href="{{ path('materiel_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <div class="table-wrap" style="padding:20px">
+        <div class="panel-title" style="margin-bottom:16px">Informations</div>
+        <table>
+            <tbody>
+                <tr><td style="color:#999;font-size:12px;padding:8px 0;width:140px">N° Série</td><td>{{ materiel.numeroSerie ?? '—' }}</td></tr>
+                <tr><td style="color:#999;font-size:12px;padding:8px 0">État</td><td><span class="sbadge {{ materiel.etat.badgeClass() }}">{{ materiel.etat.label() }}</span></td></tr>
+                <tr><td style="color:#999;font-size:12px;padding:8px 0">Disponibilité</td>
+                    <td>
+                        {% if materiel.disponible %}
+                            <span class="sbadge sb-success">Disponible</span>
+                        {% else %}
+                            <span class="sbadge sb-danger">Indisponible</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr><td style="color:#999;font-size:12px;padding:8px 0">Localisation</td><td>{{ materiel.localisation ?? '—' }}</td></tr>
+                <tr><td style="color:#999;font-size:12px;padding:8px 0">Ajouté le</td><td>{{ materiel.createdAt|date('d/m/Y') }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-wrap" style="padding:20px">
+        <div class="panel-title" style="margin-bottom:16px">Ajouter un document</div>
+        <form method="POST" action="{{ path('materiel_document_add', {id: materiel.id}) }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <input type="text" name="titre" placeholder="Titre du document" class="form-control" required>
+                <input type="text" name="url" placeholder="URL ou chemin du fichier" class="form-control" required>
+                <select name="type" class="form-control">
+                    <option value="notice">Notice</option>
+                    <option value="doc_technique">Doc technique</option>
+                    <option value="video">Vidéo</option>
+                </select>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ajouter</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <span class="panel-title">Documents ({{ materiel.documents|length }})</span>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Titre</th><th>Type</th><th>URL</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for doc in materiel.documents %}
+            <tr>
+                <td class="td-bold">{{ doc.titre }}</td>
+                <td><span class="sbadge {{ doc.type.badgeClass() }}">{{ doc.type.label() }}</span></td>
+                <td class="td-muted">{{ doc.url }}</td>
+                <td>
+                    <form method="POST" action="{{ path('materiel_document_delete', {id: doc.id}) }}" style="display:inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('del_doc' ~ doc.id) }}">
+                        <button type="submit" class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" style="text-align:center;padding:16px;color:#999">Aucun document</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <span class="panel-title">Historique des emprunts</span>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Utilisateur</th><th>Date début</th><th>Date fin prévue</th><th>Date retour</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+            {% for e in materiel.emprunts %}
+            <tr>
+                <td class="td-bold">{{ e.utilisateur.nomComplet }}</td>
+                <td>{{ e.dateDebut|date('d/m/Y') }}</td>
+                <td>{{ e.dateFinPrevue|date('d/m/Y') }}</td>
+                <td>{{ e.dateRetour ? e.dateRetour|date('d/m/Y') : '—' }}</td>
+                <td><span class="sbadge {{ e.statut.badgeClass() }}">{{ e.statut.label() }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align:center;padding:16px;color:#999">Aucun emprunt</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
