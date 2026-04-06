@@ -33,8 +33,14 @@ class DashboardController extends AbstractController
                 'disponibles' => $materielRepo->countDisponibles(),
                 'empruntes'  => $materielRepo->countEmpruntes(),
             ],
-            'alertes_recentes' => $alerteRepo->findNonLues(),
+            'alertes_recentes'  => $alerteRepo->findNonLues(),
             'emprunts_en_cours' => $empruntRepo->findEnCours(),
+            'reservations_mois' => $reservationRepo->findPlanning(
+                new \DateTime('first day of this month 00:00:00'),
+                new \DateTime('last day of this month 23:59:59'),
+            ),
+            'cal_annee'  => (int) (new \DateTime())->format('Y'),
+            'cal_mois'   => (int) (new \DateTime())->format('n'),
         ]);
     }
 }

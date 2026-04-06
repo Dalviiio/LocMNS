@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — LOCMNS</title>
+    <link rel="stylesheet" href="{{ asset('fonts/fa/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20260406b">
+    <style>
+        body { background: #F2F2F2; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .login-wrap {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #E5E5E5;
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,.08);
+        }
+        .login-top {
+            background: #1A1A1A;
+            padding: 40px 40px 32px;
+            text-align: center;
+        }
+        .login-logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        .login-logo .loc { color: #fff; }
+        .login-logo .mns { color: #FF5C2C; }
+        .login-sub { color: rgba(255,255,255,.4); font-size: 12px; margin-top: 6px; letter-spacing: .5px; text-transform: uppercase; }
+        .login-body { padding: 32px 40px 40px; }
+        .login-title { font-size: 18px; font-weight: 700; color: #1A1A1A; margin-bottom: 24px; }
+        .login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .login-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #666; }
+        .login-input {
+            padding: 11px 14px;
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1A1A1A;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .login-input:focus { border-color: #FF5C2C; }
+        .login-btn {
+            width: 100%;
+            padding: 13px;
+            background: #FF5C2C;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background .15s;
+        }
+        .login-btn:hover { background: #e04a1a; }
+        .login-error {
+            background: #FFF0EB;
+            border: 1px solid #FF5C2C;
+            color: #FF5C2C;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="login-wrap">
+    <div class="login-top">
+        <div class="login-logo"><span class="loc">LOC</span><span class="mns">MNS</span></div>
+        <div class="login-sub">Gestion de matériel</div>
+    </div>
+    <div class="login-body">
+        <div class="login-title">Connexion</div>
+        {% if error %}
+        <div class="login-error"><i class="fa-solid fa-circle-xmark"></i> {{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            <div class="login-field">
+                <label class="login-label">Adresse email</label>
+                <input type="email" name="email" class="login-input" required autofocus placeholder="admin@locmns.fr">
+            </div>
+            <div class="login-field">
+                <label class="login-label">Mot de passe</label>
+                <input type="password" name="mot_de_passe" class="login-input" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="login-btn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Se connecter</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

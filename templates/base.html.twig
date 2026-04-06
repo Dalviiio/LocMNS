@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LOCMNS{% endblock %}</title>
     <link rel="stylesheet" href="{{ asset('fonts/fa/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20260406b">
 </head>
 <body>
 
@@ -20,10 +20,32 @@
         </div>
     </div>
     <div class="header-actions">
-        <div class="h-btn"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div class="h-btn"><i class="fa-solid fa-envelope"></i></div>
-        <div class="h-btn"><i class="fa-solid fa-bell"></i></div>
-        <div class="h-btn profile"><i class="fa-solid fa-circle-user"></i></div>
+        <a href="{{ path('alerte_index') }}" class="h-btn" title="Alertes" style="position:relative;text-decoration:none">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </a>
+        <div class="h-btn h-dropdown-trigger" title="Notifications" style="position:relative">
+            <i class="fa-solid fa-bell"></i>
+            <div class="h-dropdown h-notif-dropdown">
+                <div class="h-dropdown-title">Dernières alertes</div>
+                <div id="notif-list" style="max-height:280px;overflow-y:auto">
+                    <div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Chargement…</div>
+                </div>
+                <a href="{{ path('alerte_index') }}" class="h-dropdown-footer">Voir toutes les alertes →</a>
+            </div>
+        </div>
+        <div class="h-btn h-dropdown-trigger" title="Mon compte" style="position:relative">
+            <i class="fa-solid fa-circle-user"></i>
+            <span style="font-size:12px;font-weight:600;margin-left:6px;display:none" id="h-username"></span>
+            <div class="h-dropdown">
+                <div class="h-dropdown-title">{{ app.session.get('user_nom') ?? 'Compte' }}</div>
+                <div style="padding:4px 0">
+                    <a href="{{ path('compte_index') }}" class="h-dropdown-item"><i class="fa-solid fa-user" style="width:16px"></i> Mon compte</a>
+                    <a href="{{ path('utilisateur_index') }}" class="h-dropdown-item"><i class="fa-solid fa-users" style="width:16px"></i> Utilisateurs</a>
+                    <div style="margin:6px 0;border-top:1px solid #F0F0F0"></div>
+                    <a href="{{ path('logout') }}" class="h-dropdown-item" style="color:#FF5C2C"><i class="fa-solid fa-arrow-right-from-bracket" style="width:16px"></i> Déconnexion</a>
+                </div>
+            </div>
+        </div>
     </div>
 </header>
 

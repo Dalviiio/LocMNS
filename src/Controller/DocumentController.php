@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Document;
+use App\Entity\TypeDocument;
 use App\Repository\DocumentRepository;
 use App\Repository\MaterielRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +24,29 @@ class DocumentController extends AbstractController
                 $request->query->get('type'),
             ),
             'materiels' => $materielRepo->findAll(),
+            'types'     => TypeDocument::cases(),
         ]);
+    }
+
+    #[Route('/nouveau', name: 'new', methods: ['POST'])]
+    public function new(Request $request, EntityManagerInterface $em, MaterielRepository $materielRepo): Response
+    {
+        if (!$this->isCsrfTokenValid('new_document', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $materiel = $materielRepo->find($request->request->getInt('materiel_id'));
+        if ($materiel) {
+            $doc = new Document();
+            $doc->setMateriel($materiel);
+            $doc->setTitre($request->request->get('titre'));
+            $doc->setUrl($request->request->get('url'));
+            $doc->setType(TypeDocument::from($request->request->get('type')));
+            $em->persist($doc);
+            $em->flush();
+            $this->addFlash('success', 'Document ajouté.');
+        }
+
+        return $this->redirectToRoute('document_index');
     }
 }

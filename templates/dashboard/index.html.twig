@@ -52,6 +52,84 @@
     </div>
 </div>
 
+<!-- CALENDRIER -->
+{% set jours_semaine = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'] %}
+{% set mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'] %}
+
+{# Jours avec réservation ce mois #}
+{% set jours_resa = [] %}
+{% for r in reservations_mois %}
+    {% set d = r.dateDebut|date('j')|number_format %}
+    {% if d not in jours_resa %}{% set jours_resa = jours_resa|merge([d]) %}{% endif %}
+{% endfor %}
+
+{# Semaine courante : lundi au dimanche #}
+{% set today_num   = 'now'|date('j')|number_format %}
+{% set today_dow   = 'now'|date('N')|number_format %}{# 1=lun … 7=dim #}
+{% set week_days   = [] %}
+{% for i in 0..6 %}
+    {% set offset = i - (today_dow - 1) %}
+    {% set day_num = today_num + offset %}
+    {% set week_days = week_days|merge([day_num]) %}
+{% endfor %}
+
+<div class="cal-panel">
+    <div class="cal-header">
+        <div class="cal-header-left">
+            <span class="cal-header-month">{{ mois_noms[cal_mois] }}</span>
+            <span class="cal-header-year">{{ cal_annee }}</span>
+        </div>
+        <a href="{{ path('reservation_planning') }}" class="cal-header-link">Planning →</a>
+    </div>
+
+    <div class="cal-week">
+        {% for i in 0..6 %}
+        {% set d = week_days[i] %}
+        {% set is_today = (d == today_num) %}
+        {% set has_evt  = (d in jours_resa and d >= 1 and d <= 31) %}
+        <div class="cal-week-day {{ has_evt ? 'has-evt' : '' }}">
+            <span class="cal-week-lbl">{{ jours_semaine[i] }}</span>
+            <span class="cal-week-num {{ is_today ? 'today' : '' }} {{ has_evt ? 'has-evt' : '' }}">
+                {{ d > 0 ? d : '' }}
+            </span>
+            <span class="cal-week-dot"></span>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% set prochaines = [] %}
+    {% for r in reservations_mois %}
+        {% if r.dateDebut|date('j')|number_format >= today_num and prochaines|length < 3 %}
+            {% set prochaines = prochaines|merge([r]) %}
+        {% endif %}
+    {% endfor %}
+
+    {% if prochaines is not empty %}
+    <div class="cal-upcoming">
+        {% for r in prochaines %}
+        <div class="cal-upcoming-item">
+            <span class="cal-upcoming-date">{{ r.dateDebut|date('d/M') }}</span>
+            <div class="cal-upcoming-info">
+                <div class="cal-upcoming-mat">{{ r.materiel.nom }}</div>
+                <div class="cal-upcoming-user">{{ r.utilisateur.nomComplet }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="cal-legend">
+        <div class="cal-legend-item">
+            <div class="cal-legend-dot" style="background:var(--dark)"></div>
+            Aujourd'hui
+        </div>
+        <div class="cal-legend-item">
+            <div class="cal-legend-dot" style="background:var(--primary)"></div>
+            Réservation
+        </div>
+    </div>
+</div>
+
 <!-- NOTIFICATIONS + ACTIVITÉ -->
 <div class="bottom-grid">
 
