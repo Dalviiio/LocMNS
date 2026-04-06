@@ -9,17 +9,17 @@
         <div class="page-title">Utilisateurs</div>
         <div class="page-sub">Gestion des comptes utilisateurs</div>
     </div>
-    <a href="#" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel utilisateur</a>
+    <a href="{{ path('utilisateur_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel utilisateur</a>
 </div>
 
-<div class="table-wrap">
+<form method="GET" class="table-wrap" style="overflow:visible">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Rechercher un utilisateur...">
+            <input type="text" name="search" placeholder="Rechercher un utilisateur..." value="{{ app.request.query.get('search') ?? '' }}">
         </div>
         <div style="display:flex;gap:8px">
-            <button class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
     <table>
@@ -35,56 +35,29 @@
             </tr>
         </thead>
         <tbody>
+            {% for u in utilisateurs %}
             <tr>
-                <td class="td-muted">001</td>
-                <td class="td-bold">Jean Dupont</td>
-                <td class="td-muted">j.dupont@mns.fr</td>
-                <td><span class="sbadge sb-info">Étudiant</span></td>
-                <td>1</td>
-                <td class="td-muted">01/09/2025</td>
+                <td class="td-muted">{{ u.id }}</td>
+                <td class="td-bold">{{ u.nomComplet }}</td>
+                <td class="td-muted">{{ u.email }}</td>
+                <td><span class="sbadge sb-info">{{ u.profil.nom }}</span></td>
+                <td>{{ u.empruntsActifs|length }}</td>
+                <td class="td-muted">{{ u.createdAt|date('d/m/Y') }}</td>
                 <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
+                    <a href="{{ path('utilisateur_edit', {id: u.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
+                    <form method="POST" action="{{ path('utilisateur_delete', {id: u.id}) }}" style="display:inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_user' ~ u.id) }}">
+                        <button type="submit" class="action-btn" title="Supprimer" onclick="return confirm('Supprimer cet utilisateur ?')"><i class="fa-solid fa-trash"></i></button>
+                    </form>
                 </div></td>
             </tr>
-            <tr>
-                <td class="td-muted">002</td>
-                <td class="td-bold">Marie Martin</td>
-                <td class="td-muted">m.martin@mns.fr</td>
-                <td><span class="sbadge sb-info">Étudiant</span></td>
-                <td>1</td>
-                <td class="td-muted">01/09/2025</td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
-                </div></td>
-            </tr>
-            <tr>
-                <td class="td-muted">003</td>
-                <td class="td-bold">Admin System</td>
-                <td class="td-muted">admin@mns.fr</td>
-                <td><span class="sbadge sb-warning">Administrateur</span></td>
-                <td>0</td>
-                <td class="td-muted">01/01/2025</td>
-                <td><div class="action-btns">
-                    <button class="action-btn"><i class="fa-solid fa-eye"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn"><i class="fa-solid fa-trash"></i></button>
-                </div></td>
-            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;padding:20px;color:#999">Aucun utilisateur trouvé</td></tr>
+            {% endfor %}
         </tbody>
     </table>
     <div class="table-footer">
-        <span>1 à 3 sur 52 résultats</span>
-        <div class="pagination">
-            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">3</button>
-            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
+        <span>{{ utilisateurs|length }} utilisateur(s)</span>
     </div>
-</div>
+</form>
 {% endblock %}

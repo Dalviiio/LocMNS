@@ -22,4 +22,21 @@ class DocumentRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findWithFilters(?string $search, ?string $type): array
+    {
+        $qb = $this->createQueryBuilder('d')
+            ->join('d.materiel', 'm')
+            ->orderBy('d.titre', 'ASC');
+
+        if ($search) {
+            $qb->andWhere('d.titre LIKE :s OR m.nom LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+        if ($type) {
+            $qb->andWhere('d.type = :type')->setParameter('type', $type);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

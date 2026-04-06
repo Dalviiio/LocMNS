@@ -22,4 +22,18 @@ class UtilisateurRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findWithFilters(?string $search): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->join('u.profil', 'p')
+            ->orderBy('u.nom', 'ASC');
+
+        if ($search) {
+            $qb->andWhere('u.nom LIKE :s OR u.prenom LIKE :s OR u.email LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }
