@@ -86,11 +86,11 @@ class ExportController extends AbstractController
         foreach ($materiels as $m) {
             $node = $xml->addChild('materiel');
             $node->addChild('id', $m->getId());
-            $node->addChild('nom', htmlspecialchars($m->getNom()));
+            $node->addChild('nom', $m->getNom());
             $node->addChild('numero_serie', $m->getNumeroSerie() ?? '');
-            $node->addChild('categorie', htmlspecialchars($m->getCategorie()->getNom()));
+            $node->addChild('categorie', $m->getCategorie()->getNom());
             $node->addChild('etat', $m->getEtat()->label());
-            $node->addChild('localisation', htmlspecialchars($m->getLocalisation() ?? ''));
+            $node->addChild('localisation', $m->getLocalisation() ?? '');
             $node->addChild('date_ajout', $m->getCreatedAt()->format('Y-m-d'));
         }
 

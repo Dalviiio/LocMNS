@@ -51,6 +51,7 @@
                     <a href="{{ path('emprunt_show', {id: e.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
                     {% if e.statut.value == 'en_cours' or e.statut.value == 'retard' %}
                     <form method="POST" action="{{ path('emprunt_retour', {id: e.id}) }}" style="display:inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('retour_emprunt' ~ e.id) }}">
                         <button type="submit" class="action-btn" title="Enregistrer le retour"><i class="fa-solid fa-rotate-left"></i></button>
                     </form>
                     {% endif %}

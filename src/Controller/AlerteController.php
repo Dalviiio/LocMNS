@@ -28,21 +28,25 @@ class AlerteController extends AbstractController
     }
 
     #[Route('/{id}/lire', name: 'lire', methods: ['POST'])]
-    public function marquerLu(Alerte $alerte, EntityManagerInterface $em): Response
+    public function marquerLu(Request $request, Alerte $alerte, EntityManagerInterface $em): Response
     {
-        $alerte->setLu(true);
-        $em->flush();
+        if ($this->isCsrfTokenValid('lire_alerte' . $alerte->getId(), $request->request->get('_token'))) {
+            $alerte->setLu(true);
+            $em->flush();
+        }
         return $this->redirectToRoute('alerte_index');
     }
 
     #[Route('/tout-lire', name: 'tout_lire', methods: ['POST'])]
-    public function marquerToutLu(AlerteRepository $repo, EntityManagerInterface $em): Response
+    public function marquerToutLu(Request $request, AlerteRepository $repo, EntityManagerInterface $em): Response
     {
-        foreach ($repo->findNonLues() as $alerte) {
-            $alerte->setLu(true);
+        if ($this->isCsrfTokenValid('tout_lire', $request->request->get('_token'))) {
+            foreach ($repo->findNonLues() as $alerte) {
+                $alerte->setLu(true);
+            }
+            $em->flush();
+            $this->addFlash('success', 'Toutes les alertes ont été marquées comme lues.');
         }
-        $em->flush();
-        $this->addFlash('success', 'Toutes les alertes ont été marquées comme lues.');
         return $this->redirectToRoute('alerte_index');
     }
 

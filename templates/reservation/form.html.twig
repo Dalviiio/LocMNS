@@ -11,6 +11,7 @@
 
 <div class="table-wrap" style="padding:28px;max-width:700px">
     <form method="POST" action="{{ reservation ? path('reservation_edit', {id: reservation.id}) : path('reservation_new') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token(reservation ? 'edit_resa' ~ reservation.id : 'new_resa') }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
 
             <div style="display:flex;flex-direction:column;gap:6px">

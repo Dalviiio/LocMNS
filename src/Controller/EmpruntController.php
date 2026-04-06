@@ -40,6 +40,9 @@ class EmpruntController extends AbstractController
         UtilisateurRepository $utilisateurRepo,
     ): Response {
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('new_emprunt', $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF invalide.');
+            }
             $emprunt = new Emprunt();
             $this->hydrateFromRequest($emprunt, $request, $materielRepo, $utilisateurRepo);
             $em->persist($emprunt);
@@ -74,18 +77,23 @@ class EmpruntController extends AbstractController
     }
 
     #[Route('/{id}/retour', name: 'retour', methods: ['POST'])]
-    public function retour(Emprunt $emprunt, EntityManagerInterface $em): Response
+    public function retour(Request $request, Emprunt $emprunt, EntityManagerInterface $em): Response
     {
-        $emprunt->setStatut(StatutEmprunt::Rendu);
-        $emprunt->setDateRetour(new \DateTime());
-        $em->flush();
-        $this->addFlash('success', 'Retour enregistré.');
+        if ($this->isCsrfTokenValid('retour_emprunt' . $emprunt->getId(), $request->request->get('_token'))) {
+            $emprunt->setStatut(StatutEmprunt::Rendu);
+            $emprunt->setDateRetour(new \DateTime());
+            $em->flush();
+            $this->addFlash('success', 'Retour enregistré.');
+        }
         return $this->redirectToRoute('emprunt_show', ['id' => $emprunt->getId()]);
     }
 
     #[Route('/{id}/evenement', name: 'evenement_add', methods: ['POST'])]
     public function addEvenement(Request $request, Emprunt $emprunt, EntityManagerInterface $em): Response
     {
+        if (!$this->isCsrfTokenValid('evenement_emprunt' . $emprunt->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
         $evenement = new Evenement();
         $evenement->setEmprunt($emprunt);
         $evenement->setType(TypeEvenement::from($request->request->get('type')));
@@ -124,6 +132,9 @@ class EmpruntController extends AbstractController
         UtilisateurRepository $utilisateurRepo,
     ): Response {
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('edit_emprunt' . $emprunt->getId(), $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF invalide.');
+            }
             $this->hydrateFromRequest($emprunt, $request, $materielRepo, $utilisateurRepo);
             $em->flush();
             $this->addFlash('success', 'Emprunt modifié.');

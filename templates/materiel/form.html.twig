@@ -11,6 +11,7 @@
 
 <div class="table-wrap" style="padding:28px;max-width:700px">
     <form method="POST" action="{{ materiel ? path('materiel_edit', {id: materiel.id}) : path('materiel_new') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token(materiel ? 'edit_materiel' ~ materiel.id : 'new_materiel') }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
 
             <div style="display:flex;flex-direction:column;gap:6px">

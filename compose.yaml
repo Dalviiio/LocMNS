@@ -3,13 +3,13 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
-    volumes:
-      - .:/var/www/html
+      - "8000:80"
     depends_on:
       database:
         condition: service_healthy
     environment:
+      APP_ENV: prod
+      APP_SECRET: locmns_secret_key_change_in_prod
       DATABASE_URL: "mysql://locmns:locmns@database:3306/locmns?serverVersion=8.0&charset=utf8mb4"
 
   database:
@@ -19,15 +19,24 @@ services:
       MYSQL_USER: locmns
       MYSQL_PASSWORD: locmns
       MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3307:3306"
     volumes:
       - database_data:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - database
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
 
 volumes:
   database_data:

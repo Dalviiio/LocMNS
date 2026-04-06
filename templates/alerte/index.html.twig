@@ -10,6 +10,7 @@
         <div class="page-sub">Centre de notifications et alertes</div>
     </div>
     <form method="POST" action="{{ path('alerte_tout_lire') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('tout_lire') }}">
         <button type="submit" class="btn btn-outline"><i class="fa-solid fa-check-double"></i> Tout marquer comme lu</button>
     </form>
 </div>
@@ -54,6 +55,7 @@
                 <td><div class="action-btns">
                     {% if not a.lu %}
                     <form method="POST" action="{{ path('alerte_lire', {id: a.id}) }}" style="display:inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('lire_alerte' ~ a.id) }}">
                         <button type="submit" class="action-btn" title="Marquer comme lu"><i class="fa-solid fa-check"></i></button>
                     </form>
                     {% endif %}

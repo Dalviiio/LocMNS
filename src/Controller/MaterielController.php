@@ -37,6 +37,9 @@ class MaterielController extends AbstractController
     public function new(Request $request, EntityManagerInterface $em, CategorieRepository $catRepo): Response
     {
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('new_materiel', $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF invalide.');
+            }
             $materiel = new Materiel();
             $this->hydrateFromRequest($materiel, $request, $catRepo);
             $em->persist($materiel);
@@ -64,6 +67,9 @@ class MaterielController extends AbstractController
     public function edit(Request $request, Materiel $materiel, EntityManagerInterface $em, CategorieRepository $catRepo): Response
     {
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('edit_materiel' . $materiel->getId(), $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF invalide.');
+            }
             $this->hydrateFromRequest($materiel, $request, $catRepo);
             $em->flush();
             $this->addFlash('success', 'Matériel modifié avec succès.');
@@ -91,6 +97,9 @@ class MaterielController extends AbstractController
     #[Route('/{id}/document/ajouter', name: 'document_add', methods: ['POST'])]
     public function addDocument(Request $request, Materiel $materiel, EntityManagerInterface $em): Response
     {
+        if (!$this->isCsrfTokenValid('add_doc' . $materiel->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
         $doc = new Document();
         $doc->setMateriel($materiel);
         $doc->setTitre($request->request->get('titre'));

@@ -41,6 +41,7 @@
     <div class="table-wrap" style="padding:20px">
         <div class="panel-title" style="margin-bottom:16px">Ajouter un document</div>
         <form method="POST" action="{{ path('materiel_document_add', {id: materiel.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('add_doc' ~ materiel.id) }}">
             <div style="display:flex;flex-direction:column;gap:10px">
                 <input type="text" name="titre" placeholder="Titre du document" class="form-control" required>
                 <input type="text" name="url" placeholder="URL ou chemin du fichier" class="form-control" required>

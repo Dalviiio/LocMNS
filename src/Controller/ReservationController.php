@@ -51,6 +51,9 @@ class ReservationController extends AbstractController
         UtilisateurRepository $utilisateurRepo,
     ): Response {
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('new_resa', $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF invalide.');
+            }
             $reservation = new Reservation();
             $this->hydrateFromRequest($reservation, $request, $materielRepo, $utilisateurRepo);
             $em->persist($reservation);
@@ -75,20 +78,24 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/{id}/confirmer', name: 'confirmer', methods: ['POST'])]
-    public function confirmer(Reservation $reservation, EntityManagerInterface $em): Response
+    public function confirmer(Request $request, Reservation $reservation, EntityManagerInterface $em): Response
     {
-        $reservation->setStatut(StatutReservation::Confirmee);
-        $em->flush();
-        $this->addFlash('success', 'Réservation confirmée.');
+        if ($this->isCsrfTokenValid('confirmer_resa' . $reservation->getId(), $request->request->get('_token'))) {
+            $reservation->setStatut(StatutReservation::Confirmee);
+            $em->flush();
+            $this->addFlash('success', 'Réservation confirmée.');
+        }
         return $this->redirectToRoute('reservation_index');
     }
 
     #[Route('/{id}/annuler', name: 'annuler', methods: ['POST'])]
-    public function annuler(Reservation $reservation, EntityManagerInterface $em): Response
+    public function annuler(Request $request, Reservation $reservation, EntityManagerInterface $em): Response
     {
-        $reservation->setStatut(StatutReservation::Annulee);
-        $em->flush();
-        $this->addFlash('success', 'Réservation annulée.');
+        if ($this->isCsrfTokenValid('annuler_resa' . $reservation->getId(), $request->request->get('_token'))) {
+            $reservation->setStatut(StatutReservation::Annulee);
+            $em->flush();
+            $this->addFlash('success', 'Réservation annulée.');
+        }
         return $this->redirectToRoute('reservation_index');
     }
 
@@ -101,6 +108,9 @@ class ReservationController extends AbstractController
         UtilisateurRepository $utilisateurRepo,
     ): Response {
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('edit_resa' . $reservation->getId(), $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Token CSRF invalide.');
+            }
             $this->hydrateFromRequest($reservation, $request, $materielRepo, $utilisateurRepo);
             $em->flush();
             $this->addFlash('success', 'Réservation modifiée.');

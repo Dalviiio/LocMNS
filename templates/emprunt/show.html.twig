@@ -12,6 +12,7 @@
     <div style="display:flex;gap:8px">
         {% if emprunt.statut.value == 'en_cours' or emprunt.statut.value == 'retard' %}
         <form method="POST" action="{{ path('emprunt_retour', {id: emprunt.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('retour_emprunt' ~ emprunt.id) }}">
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate-left"></i> Enregistrer le retour</button>
         </form>
         {% endif %}
@@ -36,6 +37,7 @@
     <div class="table-wrap" style="padding:20px">
         <div class="panel-title" style="margin-bottom:14px">Signaler un événement</div>
         <form method="POST" action="{{ path('emprunt_evenement_add', {id: emprunt.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('evenement_emprunt' ~ emprunt.id) }}">
             <div style="display:flex;flex-direction:column;gap:10px">
                 <select name="type" class="form-control">
                     {% for t in types_evenement %}
