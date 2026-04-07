@@ -51,6 +51,19 @@ class MaterielRepository extends ServiceEntityRepository
         return $empruntes + $hs;
     }
 
+    public function findByCategories(array $categorieIds): array
+    {
+        if (empty($categorieIds)) return $this->findAll();
+
+        return $this->createQueryBuilder('m')
+            ->join('m.categorie', 'c')
+            ->where('c.id IN (:cats)')
+            ->setParameter('cats', $categorieIds)
+            ->orderBy('m.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findWithFilters(?string $search, ?string $etat, ?int $categorieId): array
     {
         $qb = $this->createQueryBuilder('m')

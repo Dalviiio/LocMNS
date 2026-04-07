@@ -9,7 +9,10 @@
         <div class="page-title">Utilisateurs</div>
         <div class="page-sub">Gestion des comptes utilisateurs</div>
     </div>
-    <a href="{{ path('utilisateur_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel utilisateur</a>
+    <div style="display:flex;gap:8px">
+        <a href="{{ path('profil_index') }}" class="btn btn-outline"><i class="fa-solid fa-shield-halved"></i> Profils & Autorisations</a>
+        <a href="{{ path('utilisateur_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel utilisateur</a>
+    </div>
 </div>
 
 <form method="GET" class="table-wrap" style="overflow:visible">
@@ -40,7 +43,10 @@
                 <td class="td-muted">{{ u.id }}</td>
                 <td class="td-bold">{{ u.nomComplet }}</td>
                 <td class="td-muted">{{ u.email }}</td>
-                <td><span class="sbadge sb-info">{{ u.profil.nom }}</span></td>
+                <td>
+                    <span class="sbadge sb-info">{{ u.profil.nom }}</span>
+                    <span style="font-size:10px;color:#aaa;margin-left:4px">{{ u.profil.categories|length }} cat.</span>
+                </td>
                 <td>{{ u.empruntsActifs|length }}</td>
                 <td class="td-muted">{{ u.createdAt|date('d/m/Y') }}</td>
                 <td><div class="action-btns">

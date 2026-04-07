@@ -9,6 +9,7 @@ use App\Entity\TypeAlerte;
 use App\Repository\MaterielRepository;
 use App\Repository\ReservationRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -49,6 +50,7 @@ class ReservationController extends AbstractController
         EntityManagerInterface $em,
         MaterielRepository $materielRepo,
         UtilisateurRepository $utilisateurRepo,
+        AutorisationService $auth,
     ): Response {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_resa', $request->request->get('_token'))) {
@@ -56,9 +58,13 @@ class ReservationController extends AbstractController
             }
             $reservation = new Reservation();
             $this->hydrateFromRequest($reservation, $request, $materielRepo, $utilisateurRepo);
+
+            if ($reservation->getMateriel()) {
+                $auth->verifierAccesMateriel($reservation->getMateriel());
+            }
+
             $em->persist($reservation);
 
-            // Alerte nouvelle demande
             $alerte = new Alerte();
             $alerte->setUtilisateur($reservation->getUtilisateur());
             $alerte->setType(TypeAlerte::NouvelleDemande);
@@ -70,10 +76,16 @@ class ReservationController extends AbstractController
             return $this->redirectToRoute('reservation_index');
         }
 
+        $categoriesAutorisees = $auth->getCategoriesAutorisees();
+        $materiels = $categoriesAutorisees
+            ? $materielRepo->findByCategories($categoriesAutorisees)
+            : $materielRepo->findAll();
+
         return $this->render('reservation/form.html.twig', [
             'reservation'  => null,
-            'materiels'    => $materielRepo->findAll(),
+            'materiels'    => $materiels,
             'utilisateurs' => $utilisateurRepo->findAll(),
+            'acces_limite' => !empty($categoriesAutorisees) && count($materiels) === 0,
         ]);
     }
 
@@ -106,6 +118,7 @@ class ReservationController extends AbstractController
         EntityManagerInterface $em,
         MaterielRepository $materielRepo,
         UtilisateurRepository $utilisateurRepo,
+        AutorisationService $auth,
     ): Response {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('edit_resa' . $reservation->getId(), $request->request->get('_token'))) {
@@ -117,10 +130,16 @@ class ReservationController extends AbstractController
             return $this->redirectToRoute('reservation_index');
         }
 
+        $categoriesAutorisees = $auth->getCategoriesAutorisees();
+        $materiels = $categoriesAutorisees
+            ? $materielRepo->findByCategories($categoriesAutorisees)
+            : $materielRepo->findAll();
+
         return $this->render('reservation/form.html.twig', [
             'reservation'  => $reservation,
-            'materiels'    => $materielRepo->findAll(),
+            'materiels'    => $materiels,
             'utilisateurs' => $utilisateurRepo->findAll(),
+            'acces_limite' => false,
         ]);
     }
 

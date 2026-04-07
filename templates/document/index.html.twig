@@ -9,6 +9,9 @@
         <div class="page-title">Documents</div>
         <div class="page-sub">Notices et documentations techniques</div>
     </div>
+    <button class="btn btn-primary" onclick="document.getElementById('modal-doc').style.display='flex'">
+        <i class="fa-solid fa-plus"></i> Ajouter un document
+    </button>
 </div>
 
 <form method="GET" class="table-wrap" style="overflow:visible">
@@ -20,9 +23,9 @@
         <div style="display:flex;gap:8px">
             <select name="type" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Tous les types</option>
-                <option value="notice" {{ app.request.query.get('type') == 'notice' ? 'selected' : '' }}>Notice</option>
-                <option value="doc_technique" {{ app.request.query.get('type') == 'doc_technique' ? 'selected' : '' }}>Doc technique</option>
-                <option value="video" {{ app.request.query.get('type') == 'video' ? 'selected' : '' }}>Vidéo</option>
+                {% for t in types %}
+                <option value="{{ t.value }}" {{ app.request.query.get('type') == t.value ? 'selected' : '' }}>{{ t.label() }}</option>
+                {% endfor %}
             </select>
             <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
@@ -30,12 +33,7 @@
     <table>
         <thead>
             <tr>
-                <th>#</th>
-                <th>Titre</th>
-                <th>Matériel associé</th>
-                <th>Type</th>
-                <th>URL</th>
-                <th>Actions</th>
+                <th>#</th><th>Titre</th><th>Matériel associé</th><th>Type</th><th>URL</th><th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -45,14 +43,14 @@
                 <td class="td-bold">{{ doc.titre }}</td>
                 <td><a href="{{ path('materiel_show', {id: doc.materiel.id}) }}" style="color:inherit">{{ doc.materiel.nom }}</a></td>
                 <td><span class="sbadge {{ doc.type.badgeClass() }}">{{ doc.type.label() }}</span></td>
-                <td class="td-muted">{{ doc.url }}</td>
+                <td class="td-muted" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ doc.url }}</td>
                 <td><div class="action-btns">
                     <a href="{{ doc.url }}" target="_blank" class="action-btn" title="Ouvrir"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                     <a href="{{ path('materiel_show', {id: doc.materiel.id}) }}" class="action-btn" title="Voir le matériel"><i class="fa-solid fa-box"></i></a>
                 </div></td>
             </tr>
             {% else %}
-            <tr><td colspan="6" style="text-align:center;padding:20px;color:#999">Aucun document — ajoutez-en depuis la fiche d'un matériel</td></tr>
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:#999">Aucun document pour le moment</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -60,4 +58,48 @@
         <span>{{ documents|length }} document(s)</span>
     </div>
 </form>
+
+<!-- MODAL ajout document -->
+<div id="modal-doc" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.2)">
+        <div style="background:#1A1A1A;padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
+            <span style="color:#fff;font-weight:700;font-size:15px"><i class="fa-solid fa-file-plus" style="color:#FF5C2C;margin-right:8px"></i>Ajouter un document</span>
+            <button onclick="document.getElementById('modal-doc').style.display='none'" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;line-height:1">×</button>
+        </div>
+        <form method="POST" action="{{ path('document_new') }}" style="padding:24px;display:flex;flex-direction:column;gap:14px">
+            <input type="hidden" name="_token" value="{{ csrf_token('new_document') }}">
+            <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Titre *</label>
+                <input type="text" name="titre" class="form-control" required placeholder="Notice d'utilisation…">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Matériel associé *</label>
+                <select name="materiel_id" class="form-control" required>
+                    <option value="">-- Choisir --</option>
+                    {% for m in materiels %}
+                    <option value="{{ m.id }}">{{ m.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div style="display:flex;flex-direction:column;gap:5px">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Type *</label>
+                    <select name="type" class="form-control" required>
+                        {% for t in types %}
+                        <option value="{{ t.value }}">{{ t.label() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">URL / Chemin *</label>
+                    <input type="text" name="url" class="form-control" required placeholder="docs/notice.pdf">
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-doc').style.display='none'">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

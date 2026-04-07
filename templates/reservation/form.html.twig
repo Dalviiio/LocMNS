@@ -26,12 +26,18 @@
 
             <div style="display:flex;flex-direction:column;gap:6px">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Matériel *</label>
+                {% if acces_limite is defined and acces_limite %}
+                <div style="padding:10px 14px;background:#FFF0EB;border:1px solid #FF5C2C;border-radius:8px;font-size:12px;color:#FF5C2C">
+                    <i class="fa-solid fa-lock"></i> Aucun matériel accessible avec votre profil.
+                </div>
+                {% else %}
                 <select name="materiel_id" class="form-control" required>
                     <option value="">-- Choisir --</option>
                     {% for m in materiels %}
-                    <option value="{{ m.id }}" {{ reservation and reservation.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }}</option>
+                    <option value="{{ m.id }}" {{ reservation and reservation.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }} — {{ m.categorie.nom }}</option>
                     {% endfor %}
                 </select>
+                {% endif %}
             </div>
 
             <div style="display:flex;flex-direction:column;gap:6px">

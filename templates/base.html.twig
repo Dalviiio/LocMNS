@@ -108,6 +108,26 @@
     document.getElementById('hamburger').addEventListener('click', function () {
         document.getElementById('sidebar').classList.toggle('open');
     });
+
+    // Fermer les modals en cliquant l'arrière-plan
+    document.querySelectorAll('[id^="modal-"]').forEach(function(modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    });
+
+    // Dropdown notifications — chargement alertes
+    document.querySelectorAll('.h-dropdown-trigger').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            btn.classList.toggle('open');
+        });
+    });
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.h-dropdown-trigger.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+    });
 </script>
 </body>
 </html>

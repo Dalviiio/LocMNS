@@ -11,6 +11,7 @@ use App\Entity\TypeEvenement;
 use App\Repository\EmpruntRepository;
 use App\Repository\MaterielRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,6 +39,7 @@ class EmpruntController extends AbstractController
         EntityManagerInterface $em,
         MaterielRepository $materielRepo,
         UtilisateurRepository $utilisateurRepo,
+        AutorisationService $auth,
     ): Response {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_emprunt', $request->request->get('_token'))) {
@@ -45,9 +47,14 @@ class EmpruntController extends AbstractController
             }
             $emprunt = new Emprunt();
             $this->hydrateFromRequest($emprunt, $request, $materielRepo, $utilisateurRepo);
+
+            // Vérification accès matériel
+            if ($emprunt->getMateriel()) {
+                $auth->verifierAccesMateriel($emprunt->getMateriel());
+            }
+
             $em->persist($emprunt);
 
-            // Alerte nouvelle demande
             $alerte = new Alerte();
             $alerte->setUtilisateur($emprunt->getUtilisateur());
             $alerte->setEmprunt($emprunt);
@@ -60,10 +67,16 @@ class EmpruntController extends AbstractController
             return $this->redirectToRoute('emprunt_index');
         }
 
+        $categoriesAutorisees = $auth->getCategoriesAutorisees();
+        $materiels = $categoriesAutorisees
+            ? $materielRepo->findByCategories($categoriesAutorisees)
+            : $materielRepo->findAll();
+
         return $this->render('emprunt/form.html.twig', [
             'emprunt'      => null,
-            'materiels'    => $materielRepo->findAll(),
+            'materiels'    => $materiels,
             'utilisateurs' => $utilisateurRepo->findAll(),
+            'acces_limite' => !empty($categoriesAutorisees) && count($materiels) === 0,
         ]);
     }
 
@@ -71,8 +84,8 @@ class EmpruntController extends AbstractController
     public function show(Emprunt $emprunt): Response
     {
         return $this->render('emprunt/show.html.twig', [
-            'emprunt'          => $emprunt,
-            'types_evenement'  => TypeEvenement::cases(),
+            'emprunt'         => $emprunt,
+            'types_evenement' => TypeEvenement::cases(),
         ]);
     }
 
@@ -100,8 +113,7 @@ class EmpruntController extends AbstractController
         $evenement->setDescription($request->request->get('description'));
         $em->persist($evenement);
 
-        // Si panne → alerte
-        if ($evenement->getType() === TypeEvenement::Panne || $evenement->getType() === TypeEvenement::Dysfonctionnement) {
+        if (in_array($evenement->getType(), [TypeEvenement::Panne, TypeEvenement::Dysfonctionnement])) {
             $alerte = new Alerte();
             $alerte->setUtilisateur($emprunt->getUtilisateur());
             $alerte->setEmprunt($emprunt);
@@ -110,7 +122,6 @@ class EmpruntController extends AbstractController
             $em->persist($alerte);
         }
 
-        // Si prolongation → mise à jour date fin
         if ($evenement->getType() === TypeEvenement::Prolongation) {
             $nouvelleFin = $request->request->get('nouvelle_date_fin');
             if ($nouvelleFin) {
@@ -130,6 +141,7 @@ class EmpruntController extends AbstractController
         EntityManagerInterface $em,
         MaterielRepository $materielRepo,
         UtilisateurRepository $utilisateurRepo,
+        AutorisationService $auth,
     ): Response {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('edit_emprunt' . $emprunt->getId(), $request->request->get('_token'))) {
@@ -141,10 +153,16 @@ class EmpruntController extends AbstractController
             return $this->redirectToRoute('emprunt_show', ['id' => $emprunt->getId()]);
         }
 
+        $categoriesAutorisees = $auth->getCategoriesAutorisees();
+        $materiels = $categoriesAutorisees
+            ? $materielRepo->findByCategories($categoriesAutorisees)
+            : $materielRepo->findAll();
+
         return $this->render('emprunt/form.html.twig', [
             'emprunt'      => $emprunt,
-            'materiels'    => $materielRepo->findAll(),
+            'materiels'    => $materiels,
             'utilisateurs' => $utilisateurRepo->findAll(),
+            'acces_limite' => false,
         ]);
     }
 
