@@ -19,7 +19,8 @@
     </div>
 </div>
 
-<form method="GET" class="table-wrap" style="overflow:visible">
+<div class="table-wrap">
+<form method="GET">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
@@ -35,12 +36,13 @@
             <select name="categorie" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Toutes les catégories</option>
                 {% for cat in categories %}
-                <option value="{{ cat.id }}" {{ app.request.query.get('categorie') == cat.id ? 'selected' : '' }}>{{ cat.nom }}</option>
+                <option value="{{ cat.id }}" {{ categorie_filtre == cat.id ? 'selected' : '' }}>{{ cat.nom }}</option>
                 {% endfor %}
             </select>
             <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
+</form>
     <table>
         <thead>
             <tr>
@@ -92,7 +94,7 @@
         </div>
         {% endif %}
     </div>
-</form>
+</div>
 
 <!-- MODAL nouvelle catégorie -->
 <div id="modal-cat" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center">

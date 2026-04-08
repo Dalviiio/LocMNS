@@ -15,22 +15,24 @@
     </div>
 </div>
 
-<form method="GET" class="table-wrap" style="overflow:visible">
+<div class="table-wrap">
+<form method="GET">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher..." value="{{ app.request.query.get('search') ?? '' }}">
+            <input type="text" name="search" placeholder="Rechercher..." value="{{ filtre_search }}">
         </div>
         <div style="display:flex;gap:8px">
             <select name="statut" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Tous les statuts</option>
                 {% for s in statuts %}
-                <option value="{{ s.value }}" {{ app.request.query.get('statut') == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
+                <option value="{{ s.value }}" {{ filtre_statut == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
                 {% endfor %}
             </select>
             <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
+</form>
     <table>
         <thead>
             <tr>
@@ -68,5 +70,5 @@
     <div class="table-footer">
         <span>{{ reservations|length }} résultat(s)</span>
     </div>
-</form>
+</div>
 {% endblock %}

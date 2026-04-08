@@ -22,12 +22,15 @@ class ReservationController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, ReservationRepository $repo): Response
     {
+        $raw    = $request->query->all();
+        $search = isset($raw['search']) ? (string) $raw['search'] : '';
+        $statut = isset($raw['statut']) ? (string) $raw['statut'] : '';
+
         return $this->render('reservation/index.html.twig', [
-            'reservations' => $repo->findWithFilters(
-                $request->query->get('search'),
-                $request->query->get('statut'),
-            ),
-            'statuts' => StatutReservation::cases(),
+            'reservations'  => $repo->findWithFilters($search ?: null, $statut ?: null),
+            'statuts'       => StatutReservation::cases(),
+            'filtre_search' => $search,
+            'filtre_statut' => $statut,
         ]);
     }
 

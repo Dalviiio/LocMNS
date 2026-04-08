@@ -22,15 +22,16 @@ class MaterielController extends AbstractController
     {
         $search      = $request->query->get('search');
         $etat        = $request->query->get('etat');
-        $raw = $request->query->all();
+        $raw         = $request->query->all();
         $categorieId = isset($raw['categorie']) && $raw['categorie'] !== '' ? (int) $raw['categorie'] : null;
 
         return $this->render('materiel/index.html.twig', [
-            'materiels'  => $repo->findWithFilters($search, $etat, $categorieId),
-            'categories' => $catRepo->findAll(),
-            'etats'      => EtatMateriel::cases(),
-            'search'     => $search,
-            'etat_filtre' => $etat,
+            'materiels'       => $repo->findWithFilters($search, $etat, $categorieId),
+            'categories'      => $catRepo->findAll(),
+            'etats'           => EtatMateriel::cases(),
+            'search'          => $search,
+            'etat_filtre'     => $etat,
+            'categorie_filtre' => $categorieId,
         ]);
     }
 

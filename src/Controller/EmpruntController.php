@@ -24,12 +24,15 @@ class EmpruntController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, EmpruntRepository $repo): Response
     {
+        $raw    = $request->query->all();
+        $search = isset($raw['search']) ? (string) $raw['search'] : '';
+        $statut = isset($raw['statut']) ? (string) $raw['statut'] : '';
+
         return $this->render('emprunt/index.html.twig', [
-            'emprunts' => $repo->findWithFilters(
-                $request->query->get('search'),
-                $request->query->get('statut'),
-            ),
-            'statuts' => StatutEmprunt::cases(),
+            'emprunts'      => $repo->findWithFilters($search ?: null, $statut ?: null),
+            'statuts'       => StatutEmprunt::cases(),
+            'filtre_search' => $search,
+            'filtre_statut' => $statut,
         ]);
     }
 
