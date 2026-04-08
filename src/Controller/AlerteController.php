@@ -7,6 +7,7 @@ use App\Entity\TypeAlerte;
 use App\Repository\AlerteRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -28,6 +29,22 @@ class AlerteController extends AbstractController
             'filtre_search' => $search,
             'filtre_type'   => $type,
         ]);
+    }
+
+    #[Route('/api/dernieres', name: 'api_dernieres', methods: ['GET'])]
+    public function apiDernieres(AlerteRepository $repo): JsonResponse
+    {
+        $alertes = array_slice($repo->findNonLues(), 0, 5);
+        $data = array_map(fn(Alerte $a) => [
+            'id'      => $a->getId(),
+            'type'    => $a->getType()->label(),
+            'badge'   => $a->getType()->badgeClass(),
+            'message' => $a->getMessage(),
+            'user'    => $a->getUtilisateur()->getNomComplet(),
+            'date'    => $a->getCreatedAt()->format('d/m/Y H:i'),
+        ], $alertes);
+
+        return new JsonResponse(['alertes' => $data, 'total' => $repo->countNonLues()]);
     }
 
     #[Route('/{id}/lire', name: 'lire', methods: ['POST'])]

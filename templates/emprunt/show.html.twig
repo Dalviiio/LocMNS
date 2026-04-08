@@ -30,7 +30,7 @@
             <tr><td style="color:#999;font-size:12px;padding:8px 0">Date début</td><td>{{ emprunt.dateDebut|date('d/m/Y H:i') }}</td></tr>
             <tr><td style="color:#999;font-size:12px;padding:8px 0">Date fin prévue</td><td>{{ emprunt.dateFinPrevue|date('d/m/Y H:i') }}</td></tr>
             <tr><td style="color:#999;font-size:12px;padding:8px 0">Date retour</td><td>{{ emprunt.dateRetour ? emprunt.dateRetour|date('d/m/Y H:i') : '—' }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:8px 0">Statut</td><td><span class="sbadge {{ emprunt.statut.badgeClass() }}">{{ emprunt.statut.label() }}</span></td></tr>
+            <tr><td style="color:#999;font-size:12px;padding:8px 0">Statut</td><td><span class="sbadge {{ emprunt.enRetard ? 'sb-danger' : emprunt.statut.badgeClass() }}">{{ emprunt.enRetard ? 'Retard' : emprunt.statut.label() }}</span></td></tr>
         </tbody></table>
     </div>
 

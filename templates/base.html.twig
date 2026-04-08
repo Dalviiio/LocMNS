@@ -23,8 +23,9 @@
         <a href="{{ path('alerte_index') }}" class="h-btn" title="Alertes" style="position:relative;text-decoration:none">
             <i class="fa-solid fa-triangle-exclamation"></i>
         </a>
-        <div class="h-btn h-dropdown-trigger" title="Notifications" style="position:relative">
+        <div class="h-btn h-dropdown-trigger" title="Notifications" id="notif-trigger" style="position:relative">
             <i class="fa-solid fa-bell"></i>
+            <span id="notif-badge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--primary)"></span>
             <div class="h-dropdown h-notif-dropdown">
                 <div class="h-dropdown-title">Dernières alertes</div>
                 <div id="notif-list" style="max-height:280px;overflow-y:auto">
@@ -117,10 +118,39 @@
     });
 
     // Dropdown notifications — chargement alertes
+    var notifLoaded = false;
     document.querySelectorAll('.h-dropdown-trigger').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             btn.classList.toggle('open');
+            if (btn.id === 'notif-trigger' && !notifLoaded) {
+                notifLoaded = true;
+                fetch('{{ path('alerte_api_dernieres') }}')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var list = document.getElementById('notif-list');
+                        if (data.total > 0) {
+                            document.getElementById('notif-badge').style.display = 'block';
+                        }
+                        if (data.alertes.length === 0) {
+                            list.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Aucune alerte non lue</div>';
+                            return;
+                        }
+                        list.innerHTML = data.alertes.map(function(a) {
+                            return '<div style="padding:12px 16px;border-bottom:1px solid #F5F5F5">' +
+                                '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+                                '<span class="sbadge ' + a.badge + '" style="font-size:9px">' + a.type + '</span>' +
+                                '<span style="font-size:10px;color:#aaa">' + a.date + '</span>' +
+                                '</div>' +
+                                '<div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:2px">' + a.message + '</div>' +
+                                '<div style="font-size:11px;color:#999">' + a.user + '</div>' +
+                                '</div>';
+                        }).join('');
+                    })
+                    .catch(function() {
+                        document.getElementById('notif-list').innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Erreur de chargement</div>';
+                    });
+            }
         });
     });
     document.addEventListener('click', function() {

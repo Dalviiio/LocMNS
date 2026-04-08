@@ -35,15 +35,30 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/planning', name: 'planning')]
-    public function planning(ReservationRepository $repo): Response
+    public function planning(Request $request, ReservationRepository $repo): Response
     {
-        $debut = new \DateTime('first day of this month');
-        $fin   = new \DateTime('last day of this month');
+        $raw   = $request->query->all();
+        $annee = isset($raw['annee']) && ctype_digit($raw['annee']) ? (int) $raw['annee'] : (int) date('Y');
+        $mois  = isset($raw['mois'])  && ctype_digit($raw['mois'])  ? (int) $raw['mois']  : (int) date('n');
+        $mois  = max(1, min(12, $mois));
+
+        $debut = new \DateTime(sprintf('%04d-%02d-01', $annee, $mois));
+        $fin   = (clone $debut)->modify('last day of this month')->setTime(23, 59, 59);
+
+        $prevDate = (clone $debut)->modify('-1 month');
+        $nextDate = (clone $debut)->modify('+1 month');
+
+        // Indexer les réservations par jour
+        $reservations = $repo->findPlanning($debut, $fin);
 
         return $this->render('reservation/planning.html.twig', [
-            'reservations' => $repo->findPlanning($debut, $fin),
+            'reservations' => $reservations,
             'debut'        => $debut,
             'fin'          => $fin,
+            'prev'         => $prevDate,
+            'next'         => $nextDate,
+            'nb_jours'     => (int) $fin->format('d'),
+            'premier_jour' => (int) $debut->format('N'),
         ]);
     }
 

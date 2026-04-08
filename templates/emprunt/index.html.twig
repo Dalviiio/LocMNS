@@ -48,7 +48,7 @@
                 <td>{{ e.dateDebut|date('d/m/Y') }}</td>
                 <td>{{ e.dateFinPrevue|date('d/m/Y') }}</td>
                 <td>{{ e.dateRetour ? e.dateRetour|date('d/m/Y') : '—' }}</td>
-                <td><span class="sbadge {{ e.statut.badgeClass() }}">{{ e.statut.label() }}</span></td>
+                <td><span class="sbadge {{ e.enRetard ? 'sb-danger' : e.statut.badgeClass() }}">{{ e.enRetard ? 'Retard' : e.statut.label() }}</span></td>
                 <td><div class="action-btns">
                     <a href="{{ path('emprunt_show', {id: e.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
                     {% if e.statut.value == 'en_cours' or e.statut.value == 'retard' %}
