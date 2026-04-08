@@ -17,8 +17,12 @@ class UtilisateurController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, UtilisateurRepository $repo): Response
     {
+        $raw    = $request->query->all();
+        $search = isset($raw['search']) ? (string) $raw['search'] : '';
+
         return $this->render('utilisateur/index.html.twig', [
-            'utilisateurs' => $repo->findWithFilters($request->query->get('search')),
+            'utilisateurs'  => $repo->findWithFilters($search ?: null),
+            'filtre_search' => $search,
         ]);
     }
 

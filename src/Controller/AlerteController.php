@@ -17,13 +17,16 @@ class AlerteController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, AlerteRepository $repo): Response
     {
+        $raw    = $request->query->all();
+        $search = isset($raw['search']) ? (string) $raw['search'] : '';
+        $type   = isset($raw['type'])   ? (string) $raw['type']   : '';
+
         return $this->render('alerte/index.html.twig', [
-            'alertes'      => $repo->findWithFilters(
-                $request->query->get('search'),
-                $request->query->get('type'),
-            ),
-            'types'        => TypeAlerte::cases(),
+            'alertes'       => $repo->findWithFilters($search ?: null, $type ?: null),
+            'types'         => TypeAlerte::cases(),
             'count_nonlues' => $repo->countNonLues(),
+            'filtre_search' => $search,
+            'filtre_type'   => $type,
         ]);
     }
 

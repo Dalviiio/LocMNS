@@ -11,6 +11,12 @@ services:
       APP_ENV: prod
       APP_SECRET: locmns_secret_key_change_in_prod
       DATABASE_URL: "mysql://locmns:locmns@database:3306/locmns?serverVersion=8.0&charset=utf8mb4"
+      PHP_OPCACHE_VALIDATE_TIMESTAMPS: "1"
+    volumes:
+      - ./src:/var/www/html/src
+      - ./templates:/var/www/html/templates
+      - ./config:/var/www/html/config
+      - ./public:/var/www/html/public
 
   database:
     image: mysql:8.0

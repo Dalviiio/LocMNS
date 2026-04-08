@@ -15,16 +15,18 @@
     </div>
 </div>
 
-<form method="GET" class="table-wrap" style="overflow:visible">
+<div class="table-wrap">
+<form method="GET" id="filter-utilisateurs">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher un utilisateur..." value="{{ app.request.query.get('search') ?? '' }}">
+            <input type="text" name="search" placeholder="Rechercher un utilisateur..." value="{{ filtre_search }}">
         </div>
         <div style="display:flex;gap:8px">
             <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
+</form>
     <table>
         <thead>
             <tr>
@@ -65,5 +67,5 @@
     <div class="table-footer">
         <span>{{ utilisateurs|length }} utilisateur(s)</span>
     </div>
-</form>
+</div>
 {% endblock %}

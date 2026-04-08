@@ -15,22 +15,24 @@
     </form>
 </div>
 
-<form method="GET" class="table-wrap" style="overflow:visible">
+<div class="table-wrap">
+<form method="GET" id="filter-alertes">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher..." value="{{ app.request.query.get('search') ?? '' }}">
+            <input type="text" name="search" placeholder="Rechercher..." value="{{ filtre_search }}">
         </div>
         <div style="display:flex;gap:8px">
             <select name="type" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Tous les types</option>
                 {% for t in types %}
-                <option value="{{ t.value }}" {{ app.request.query.get('type') == t.value ? 'selected' : '' }}>{{ t.label() }}</option>
+                <option value="{{ t.value }}" {{ filtre_type == t.value ? 'selected' : '' }}>{{ t.label() }}</option>
                 {% endfor %}
             </select>
             <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
         </div>
     </div>
+</form>
     <table>
         <thead>
             <tr>
@@ -73,5 +75,5 @@
     <div class="table-footer">
         <span>{{ alertes|length }} alerte(s)</span>
     </div>
-</form>
+</div>
 {% endblock %}

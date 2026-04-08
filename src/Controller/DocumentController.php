@@ -18,13 +18,16 @@ class DocumentController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, DocumentRepository $repo, MaterielRepository $materielRepo): Response
     {
+        $raw    = $request->query->all();
+        $search = isset($raw['search']) ? (string) $raw['search'] : '';
+        $type   = isset($raw['type'])   ? (string) $raw['type']   : '';
+
         return $this->render('document/index.html.twig', [
-            'documents' => $repo->findWithFilters(
-                $request->query->get('search'),
-                $request->query->get('type'),
-            ),
-            'materiels' => $materielRepo->findAll(),
-            'types'     => TypeDocument::cases(),
+            'documents'     => $repo->findWithFilters($search ?: null, $type ?: null),
+            'materiels'     => $materielRepo->findAll(),
+            'types'         => TypeDocument::cases(),
+            'filtre_search' => $search,
+            'filtre_type'   => $type,
         ]);
     }
 

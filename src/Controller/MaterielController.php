@@ -22,7 +22,8 @@ class MaterielController extends AbstractController
     {
         $search      = $request->query->get('search');
         $etat        = $request->query->get('etat');
-        $categorieId = $request->query->getInt('categorie') ?: null;
+        $raw = $request->query->all();
+        $categorieId = isset($raw['categorie']) && $raw['categorie'] !== '' ? (int) $raw['categorie'] : null;
 
         return $this->render('materiel/index.html.twig', [
             'materiels'  => $repo->findWithFilters($search, $etat, $categorieId),

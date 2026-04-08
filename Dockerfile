@@ -6,14 +6,14 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql opcache \
     && rm -rf /var/lib/apt/lists/*
 
-# OPcache optimisé
+# OPcache — validate_timestamps=1 pour détecter les changements de fichiers (volumes)
 RUN { \
     echo 'opcache.enable=1'; \
     echo 'opcache.memory_consumption=128'; \
     echo 'opcache.interned_strings_buffer=8'; \
     echo 'opcache.max_accelerated_files=10000'; \
     echo 'opcache.revalidate_freq=0'; \
-    echo 'opcache.validate_timestamps=0'; \
+    echo 'opcache.validate_timestamps=1'; \
     echo 'opcache.fast_shutdown=1'; \
 } > /usr/local/etc/php/conf.d/opcache.ini
 

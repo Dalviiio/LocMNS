@@ -7,6 +7,17 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- Créer la table si elle n'existe pas encore (avant le nettoyage)
+CREATE TABLE IF NOT EXISTS materiel_accessoire (
+    materiel_id   INT NOT NULL,
+    accessoire_id INT NOT NULL,
+    PRIMARY KEY (materiel_id, accessoire_id),
+    INDEX IDX_MA_MAT (materiel_id),
+    INDEX IDX_MA_ACC (accessoire_id),
+    CONSTRAINT FK_MA_MAT FOREIGN KEY (materiel_id)   REFERENCES materiel (id) ON DELETE CASCADE,
+    CONSTRAINT FK_MA_ACC FOREIGN KEY (accessoire_id) REFERENCES materiel (id) ON DELETE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB;
+
 START TRANSACTION;
 
 -- ───────────────────────────────────────────────────────────────
@@ -225,9 +236,10 @@ CREATE TABLE IF NOT EXISTS materiel_accessoire (
 INSERT INTO materiel_accessoire (materiel_id, accessoire_id)
     SELECT m.id, a.id
     FROM materiel m
-    JOIN categorie cm ON m.categorie_id = cm.id AND cm.nom = 'Ordinateurs portables'
     CROSS JOIN materiel a
-    WHERE a.nom IN (
+    JOIN categorie cm ON m.categorie_id = cm.id
+    WHERE cm.nom = 'Ordinateurs portables'
+    AND a.nom IN (
         'Souris Logitech MX Anywhere',
         'Clavier Logitech K380',
         'Câble RJ45 5m',
@@ -239,9 +251,10 @@ INSERT INTO materiel_accessoire (materiel_id, accessoire_id)
 INSERT INTO materiel_accessoire (materiel_id, accessoire_id)
     SELECT m.id, a.id
     FROM materiel m
-    JOIN categorie cm ON m.categorie_id = cm.id AND cm.nom = 'Postes fixes'
     CROSS JOIN materiel a
-    WHERE a.nom IN (
+    JOIN categorie cm ON m.categorie_id = cm.id
+    WHERE cm.nom = 'Postes fixes'
+    AND a.nom IN (
         'Souris Logitech MX Anywhere',
         'Clavier Logitech K380',
         'Câble RJ45 5m'
@@ -251,9 +264,9 @@ INSERT INTO materiel_accessoire (materiel_id, accessoire_id)
 INSERT INTO materiel_accessoire (materiel_id, accessoire_id)
     SELECT m.id, a.id
     FROM materiel m
-    WHERE m.nom = 'Vidéoprojecteur Epson EB-W51'
     CROSS JOIN materiel a
-    WHERE a.nom IN (
+    WHERE m.nom = 'Vidéoprojecteur Epson EB-W51'
+    AND a.nom IN (
         'Adaptateur USB-C HDMI',
         'Pointeur Logitech R500'
     );
@@ -262,9 +275,9 @@ INSERT INTO materiel_accessoire (materiel_id, accessoire_id)
 INSERT INTO materiel_accessoire (materiel_id, accessoire_id)
     SELECT m.id, a.id
     FROM materiel m
-    WHERE m.nom = 'Raspberry Pi 4 4Go'
     CROSS JOIN materiel a
-    WHERE a.nom IN (
+    WHERE m.nom = 'Raspberry Pi 4 4Go'
+    AND a.nom IN (
         'Câble RJ45 5m',
         'Adaptateur USB-C HDMI'
     );
