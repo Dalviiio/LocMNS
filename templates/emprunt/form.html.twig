@@ -9,14 +9,22 @@
     <a href="{{ path('emprunt_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
 </div>
 
-<div class="table-wrap" style="padding:28px;max-width:{{ is_manager ? '700px' : '860px' }}">
+{% if acces_limite is defined and acces_limite %}
+<div class="table-wrap" style="padding:28px;max-width:600px">
+    <div style="padding:16px;background:#FFF0EB;border:1px solid #FF5C2C;border-radius:8px;font-size:13px;color:#FF5C2C">
+        <i class="fa-solid fa-lock"></i> Aucun matériel accessible avec votre profil.
+    </div>
+</div>
+
+{% elseif is_manager %}
+{# ══════════════════════════════════════════
+   VUE GESTIONNAIRE — formulaire classique
+══════════════════════════════════════════ #}
+<div class="table-wrap" style="padding:28px;max-width:700px">
     <form method="POST" action="{{ emprunt ? path('emprunt_edit', {id: emprunt.id}) : path('emprunt_new') }}">
         <input type="hidden" name="_token" value="{{ csrf_token(emprunt ? 'edit_emprunt' ~ emprunt.id : 'new_emprunt') }}">
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
 
-            {# ── UTILISATEUR ── #}
-            {% if is_manager %}
             <div style="display:flex;flex-direction:column;gap:6px">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Utilisateur *</label>
                 <select name="utilisateur_id" class="form-control" required>
@@ -26,22 +34,24 @@
                     {% endfor %}
                 </select>
             </div>
-            {% else %}
-            <input type="hidden" name="utilisateur_id" value="{{ user_id_connecte }}">
-            {% endif %}
 
-            {# ── DATES ── #}
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Matériel *</label>
+                <select name="materiel_id" id="materiel_select" class="form-control" required>
+                    <option value="">-- Choisir --</option>
+                    {% for m in materiels %}
+                    <option value="{{ m.id }}" {{ emprunt and emprunt.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }} — {{ m.categorie.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <div style="display:flex;flex-direction:column;gap:6px">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de début *</label>
                 <input type="datetime-local" name="date_debut" class="form-control" required
                        value="{{ emprunt ? emprunt.dateDebut|date('Y-m-d\\TH:i') : '' }}">
             </div>
 
-            {% if is_manager %}
             <div style="display:flex;flex-direction:column;gap:6px">
-            {% else %}
-            <div style="display:flex;flex-direction:column;gap:6px;grid-column:2">
-            {% endif %}
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de fin prévue *</label>
                 <input type="datetime-local" name="date_fin_prevue" class="form-control" required
                        value="{{ emprunt ? emprunt.dateFinPrevue|date('Y-m-d\\TH:i') : '' }}">
@@ -49,60 +59,7 @@
 
         </div>
 
-        {# ── MATÉRIEL : dropdown pour gestionnaires, catalogue pour clients ── #}
-        <div style="margin-top:18px">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:10px">Matériel *</label>
-
-            {% if acces_limite is defined and acces_limite %}
-            <div style="padding:10px 14px;background:#FFF0EB;border:1px solid #FF5C2C;border-radius:8px;font-size:12px;color:#FF5C2C">
-                <i class="fa-solid fa-lock"></i> Aucun matériel accessible avec votre profil.
-            </div>
-
-            {% elseif is_manager %}
-            <select name="materiel_id" id="materiel_select" class="form-control" required>
-                <option value="">-- Choisir --</option>
-                {% for m in materiels %}
-                <option value="{{ m.id }}" {{ emprunt and emprunt.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }} — {{ m.categorie.nom }}</option>
-                {% endfor %}
-            </select>
-
-            {% else %}
-            {# Vue catalogue pour les clients #}
-            <input type="hidden" name="materiel_id" id="materiel_id_hidden" value="{{ emprunt ? emprunt.materiel.id : '' }}" required>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px" id="catalogue-materiels">
-                {% for m in materiels %}
-                {% set selected = emprunt and emprunt.materiel.id == m.id %}
-                <label class="catalogue-card {{ m.disponible ? '' : 'catalogue-card--indispo' }} {{ selected ? 'catalogue-card--selected' : '' }}"
-                       for="mat_{{ m.id }}"
-                       style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:2px solid {{ selected ? '#FF5C2C' : (m.disponible ? '#E5E5E5' : '#F0F0F0') }};border-radius:10px;cursor:{{ m.disponible ? 'pointer' : 'default' }};background:{{ m.disponible ? '#fff' : '#FAFAFA' }};position:relative;transition:border-color .15s">
-                    <input type="radio" name="materiel_radio" id="mat_{{ m.id }}" value="{{ m.id }}"
-                           {{ selected ? 'checked' : '' }} {{ m.disponible ? '' : 'disabled' }}
-                           style="position:absolute;opacity:0;width:0;height:0">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                        <span style="font-size:13px;font-weight:700;color:{{ m.disponible ? '#1A1A1A' : '#aaa' }}">{{ m.nom }}</span>
-                        {% if m.disponible %}
-                        <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;margin-top:4px"></span>
-                        {% else %}
-                        <span style="width:8px;height:8px;border-radius:50%;background:#e5e5e5;flex-shrink:0;margin-top:4px"></span>
-                        {% endif %}
-                    </div>
-                    <span style="font-size:11px;color:#999">{{ m.categorie.nom }}</span>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
-                        <span class="sbadge {{ m.etat.badgeClass() }}" style="font-size:10px">{{ m.etat.label() }}</span>
-                        <span style="font-size:11px;font-weight:600;color:{{ m.disponible ? '#22c55e' : '#ef4444' }}">
-                            {{ m.disponible ? 'Disponible' : 'Indisponible' }}
-                        </span>
-                    </div>
-                </label>
-                {% endfor %}
-            </div>
-            {% if materiels|length == 0 %}
-            <div style="padding:16px;color:#999;font-size:13px;text-align:center">Aucun matériel accessible.</div>
-            {% endif %}
-            {% endif %}
-        </div>
-
-        {% if not emprunt and is_manager %}
+        {% if not emprunt %}
         <div id="accessoires-wrap" style="display:none;margin-top:16px">
             <div style="background:#F8F8F8;border:1px solid #E5E5E5;border-radius:10px;padding:16px">
                 <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;color:#666">
@@ -122,7 +79,93 @@
     </form>
 </div>
 
-{% if not emprunt and is_manager %}
+{% else %}
+{# ══════════════════════════════════════════
+   VUE CLIENT — catalogue groupé
+══════════════════════════════════════════ #}
+<form method="POST" action="{{ path('emprunt_new') }}" id="form-client">
+    <input type="hidden" name="_token" value="{{ csrf_token('new_emprunt') }}">
+    <input type="hidden" name="utilisateur_id" value="{{ user_id_connecte }}">
+    <input type="hidden" name="materiel_nom" id="materiel_nom_hidden" value="">
+
+    {# Dates #}
+    <div class="table-wrap" style="padding:24px;max-width:600px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#1A1A1A;margin-bottom:16px">Période d'emprunt</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de début *</label>
+                <input type="datetime-local" name="date_debut" class="form-control" required>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de fin prévue *</label>
+                <input type="datetime-local" name="date_fin_prevue" class="form-control" required>
+            </div>
+        </div>
+    </div>
+
+    {# Catalogue matériels #}
+    <div class="table-wrap" style="padding:24px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="font-size:13px;font-weight:700;color:#1A1A1A">Choisir un matériel</div>
+            <div id="selection-info" style="font-size:12px;color:#999;display:none">
+                <span id="selection-nom" style="font-weight:700;color:#FF5C2C"></span>
+                <span id="selection-qty-label"></span>
+            </div>
+        </div>
+
+        {% if catalogue_client is empty %}
+        <div style="padding:20px;text-align:center;color:#999;font-size:13px">Aucun matériel disponible.</div>
+        {% else %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+            {% for item in catalogue_client %}
+            <div class="cat-card {% if item.dispo == 0 %}cat-card--off{% endif %}"
+                 data-nom="{{ item.nom }}"
+                 data-dispo="{{ item.dispo }}"
+                 onclick="selectCard(this)"
+                 style="padding:16px;border:2px solid {{ item.dispo > 0 ? '#E5E5E5' : '#F0F0F0' }};border-radius:12px;cursor:{{ item.dispo > 0 ? 'pointer' : 'default' }};background:{{ item.dispo > 0 ? '#fff' : '#FAFAFA' }};transition:border-color .15s,background .15s;position:relative">
+
+                {# Dot disponibilité #}
+                <span style="position:absolute;top:14px;right:14px;width:9px;height:9px;border-radius:50%;background:{{ item.dispo > 0 ? '#22c55e' : '#e5e5e5' }}"></span>
+
+                <div style="font-size:13px;font-weight:700;color:{{ item.dispo > 0 ? '#1A1A1A' : '#bbb' }};margin-bottom:4px;padding-right:18px;line-height:1.3">
+                    {{ item.nom }}
+                </div>
+                <div style="font-size:11px;color:#999;margin-bottom:10px">{{ item.categorie }}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:12px;font-weight:700;color:{{ item.dispo > 0 ? '#22c55e' : '#ef4444' }}">
+                        {% if item.dispo > 0 %}{{ item.dispo }} dispo{% else %}Indisponible{% endif %}
+                    </span>
+                    <span style="font-size:10px;color:#ccc">{{ item.total }} unité{{ item.total > 1 ? 's' : '' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# Quantité + bouton submit #}
+    <div class="table-wrap" style="padding:24px;max-width:600px" id="qty-panel" style="display:none">
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Quantité</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <button type="button" onclick="changeQty(-1)" class="btn btn-outline" style="padding:8px 14px;font-size:16px;font-weight:700">−</button>
+                    <input type="number" name="quantite" id="quantite" value="1" min="1" max="1"
+                           style="width:60px;text-align:center;font-size:18px;font-weight:700;border:2px solid #E5E5E5;border-radius:8px;padding:8px;background:#fff">
+                    <button type="button" onclick="changeQty(1)" class="btn btn-outline" style="padding:8px 14px;font-size:16px;font-weight:700">+</button>
+                </div>
+            </div>
+            <div style="flex:1"></div>
+            <button type="submit" class="btn btn-primary" style="padding:12px 28px;font-size:15px" id="btn-submit" disabled>
+                <i class="fa-solid fa-circle-check"></i> Créer l'emprunt
+            </button>
+        </div>
+    </div>
+
+</form>
+{% endif %}
+
+{% if is_manager and not emprunt %}
 <script>
 document.getElementById('materiel_select').addEventListener('change', function() {
     var id = this.value;
@@ -137,12 +180,11 @@ document.getElementById('materiel_select').addEventListener('change', function()
             list.innerHTML = data.map(function(a) {
                 var dispo = a.disponible;
                 var color = dispo ? '#22c55e' : '#ef4444';
-                var label = dispo ? 'Disponible' : 'Indisponible';
                 return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border:1px solid #e5e5e5;border-radius:8px;cursor:' + (dispo ? 'pointer' : 'default') + '">' +
                     '<input type="checkbox" name="accessoire_ids[]" value="' + a.id + '" ' + (dispo ? '' : 'disabled') + ' style="accent-color:#FF5C2C;width:16px;height:16px">' +
                     '<span style="flex:1;font-size:13px;font-weight:600">' + a.nom + '</span>' +
                     '<span style="font-size:11px;color:#999">' + a.etat + '</span>' +
-                    '<span style="font-size:11px;font-weight:600;color:' + color + '">' + label + '</span>' +
+                    '<span style="font-size:11px;font-weight:600;color:' + color + '">' + (dispo ? 'Disponible' : 'Indisponible') + '</span>' +
                     '</label>';
             }).join('');
         });
@@ -152,42 +194,57 @@ document.getElementById('materiel_select').addEventListener('change', function()
 
 {% if not is_manager %}
 <script>
-(function() {
-    var hidden = document.getElementById('materiel_id_hidden');
-    var cards = document.querySelectorAll('#catalogue-materiels .catalogue-card');
-    var radios = document.querySelectorAll('#catalogue-materiels input[type=radio]');
+var selectedDispo = 0;
 
-    function selectCard(id, label) {
-        hidden.value = id;
-        cards.forEach(function(c) {
-            var isSelected = c.htmlFor === label.htmlFor;
-            c.style.borderColor = isSelected ? '#FF5C2C' : '#E5E5E5';
-            c.style.background = isSelected ? '#FFF9F7' : '#fff';
-        });
+function selectCard(el) {
+    if (el.classList.contains('cat-card--off')) return;
+
+    document.querySelectorAll('.cat-card').forEach(function(c) {
+        c.style.borderColor = c.dataset.dispo > 0 ? '#E5E5E5' : '#F0F0F0';
+        c.style.background  = c.dataset.dispo > 0 ? '#fff' : '#FAFAFA';
+    });
+
+    el.style.borderColor = '#FF5C2C';
+    el.style.background  = '#FFF9F7';
+
+    var nom   = el.dataset.nom;
+    var dispo = parseInt(el.dataset.dispo);
+    selectedDispo = dispo;
+
+    document.getElementById('materiel_nom_hidden').value = nom;
+
+    var qtyInput = document.getElementById('quantite');
+    qtyInput.max   = dispo;
+    qtyInput.value = 1;
+
+    document.getElementById('selection-nom').textContent = nom;
+    document.getElementById('selection-info').style.display = 'block';
+    document.getElementById('qty-panel').style.display = 'block';
+    document.getElementById('btn-submit').disabled = false;
+    updateQtyLabel();
+}
+
+function changeQty(delta) {
+    var input = document.getElementById('quantite');
+    var val   = parseInt(input.value) + delta;
+    val = Math.max(1, Math.min(selectedDispo, val));
+    input.value = val;
+    updateQtyLabel();
+}
+
+function updateQtyLabel() {
+    var val = document.getElementById('quantite').value;
+    document.getElementById('selection-qty-label').textContent = ' — ' + val + ' unité' + (val > 1 ? 's' : '');
+}
+
+document.getElementById('quantite').addEventListener('input', updateQtyLabel);
+
+document.getElementById('form-client').addEventListener('submit', function(e) {
+    if (!document.getElementById('materiel_nom_hidden').value) {
+        e.preventDefault();
+        alert('Veuillez sélectionner un matériel.');
     }
-
-    radios.forEach(function(radio) {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                selectCard(this.value, document.querySelector('label[for="' + this.id + '"]'));
-            }
-        });
-        // Init si pré-sélectionné
-        if (radio.checked) {
-            selectCard(radio.value, document.querySelector('label[for="' + radio.id + '"]'));
-        }
-    });
-
-    cards.forEach(function(card) {
-        card.addEventListener('click', function() {
-            var radio = document.getElementById(this.htmlFor);
-            if (radio && !radio.disabled) {
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change'));
-            }
-        });
-    });
-})();
+});
 </script>
 {% endif %}
 

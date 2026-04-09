@@ -49,41 +49,80 @@ class EmpruntController extends AbstractController
         AutorisationService $auth,
         AlerteService $alerteService,
     ): Response {
+        $isManager = $auth->isAdminOrGestionnaire();
+        $categoriesAutorisees = $auth->getCategoriesAutorisees();
+
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_emprunt', $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
             }
-            $emprunt = new Emprunt();
-            $this->hydrateFromRequest($emprunt, $request, $materielRepo, $utilisateurRepo, $auth->isAdminOrGestionnaire() ? null : $auth->getUserId());
 
-            if ($emprunt->getMateriel()) {
-                $auth->verifierAccesMateriel($emprunt->getMateriel());
-            }
-
-            $em->persist($emprunt);
-
-            // Emprunts accessoires cochés
-            $raw = $request->request->all();
-            $accessoireIds = isset($raw['accessoire_ids']) && is_array($raw['accessoire_ids']) ? $raw['accessoire_ids'] : [];
-            foreach ($accessoireIds as $accId) {
-                $accMateriel = $materielRepo->find((int) $accId);
-                if ($accMateriel && $accMateriel->isDisponible()) {
-                    $empAcc = new Emprunt();
-                    $empAcc->setUtilisateur($emprunt->getUtilisateur());
-                    $empAcc->setMateriel($accMateriel);
-                    $empAcc->setDateDebut($emprunt->getDateDebut());
-                    $empAcc->setDateFinPrevue($emprunt->getDateFinPrevue());
-                    $empAcc->setParentEmprunt($emprunt);
-                    $em->persist($empAcc);
+            if ($isManager) {
+                // Gestionnaire : flux classique 1 emprunt
+                $emprunt = new Emprunt();
+                $this->hydrateFromRequest($emprunt, $request, $materielRepo, $utilisateurRepo);
+                if ($emprunt->getMateriel()) {
+                    $auth->verifierAccesMateriel($emprunt->getMateriel());
                 }
-            }
+                $em->persist($emprunt);
 
-            $alerteService->creer(
-                $emprunt->getUtilisateur(),
-                'Nouvel emprunt créé pour ' . $emprunt->getUtilisateur()->getNomComplet(),
-                TypeAlerte::NouvelleDemande,
-                $emprunt,
-            );
+                $raw = $request->request->all();
+                $accessoireIds = isset($raw['accessoire_ids']) && is_array($raw['accessoire_ids']) ? $raw['accessoire_ids'] : [];
+                foreach ($accessoireIds as $accId) {
+                    $accMateriel = $materielRepo->find((int) $accId);
+                    if ($accMateriel && $accMateriel->isDisponible()) {
+                        $empAcc = new Emprunt();
+                        $empAcc->setUtilisateur($emprunt->getUtilisateur());
+                        $empAcc->setMateriel($accMateriel);
+                        $empAcc->setDateDebut($emprunt->getDateDebut());
+                        $empAcc->setDateFinPrevue($emprunt->getDateFinPrevue());
+                        $empAcc->setParentEmprunt($emprunt);
+                        $em->persist($empAcc);
+                    }
+                }
+
+                $alerteService->creer(
+                    $emprunt->getUtilisateur(),
+                    'Nouvel emprunt créé pour ' . $emprunt->getUtilisateur()->getNomComplet(),
+                    TypeAlerte::NouvelleDemande,
+                    $emprunt,
+                );
+            } else {
+                // Client : par nom de matériel + quantité
+                $materielNom = trim($request->request->get('materiel_nom', ''));
+                $quantite    = max(1, min(10, $request->request->getInt('quantite', 1)));
+                $dateDebut   = new \DateTime($request->request->get('date_debut'));
+                $dateFin     = new \DateTime($request->request->get('date_fin_prevue'));
+                $utilisateur = $utilisateurRepo->find($auth->getUserId());
+
+                $unites = $materielRepo->findDisponiblesParNom($materielNom, $categoriesAutorisees, $quantite);
+                if (empty($unites)) {
+                    $this->addFlash('error', 'Aucune unité disponible pour "' . $materielNom . '".');
+                    return $this->redirectToRoute('emprunt_new');
+                }
+
+                $emprunt = null;
+                foreach ($unites as $unite) {
+                    $emp = new Emprunt();
+                    $emp->setUtilisateur($utilisateur);
+                    $emp->setMateriel($unite);
+                    $emp->setDateDebut($dateDebut);
+                    $emp->setDateFinPrevue($dateFin);
+                    if ($emprunt === null) {
+                        $emprunt = $emp;
+                    } else {
+                        $emp->setParentEmprunt($emprunt);
+                    }
+                    $em->persist($emp);
+                }
+
+                $alerteService->creer(
+                    $utilisateur,
+                    'Nouvel emprunt créé pour ' . $utilisateur->getNomComplet(),
+                    TypeAlerte::NouvelleDemande,
+                    $emprunt,
+                );
+            }
 
             try {
                 $em->flush();
@@ -100,17 +139,22 @@ class EmpruntController extends AbstractController
             return $this->redirectToRoute('emprunt_index');
         }
 
-        $isManager = $auth->isAdminOrGestionnaire();
-        $categoriesAutorisees = $auth->getCategoriesAutorisees();
-        $materiels = $categoriesAutorisees
-            ? $materielRepo->findByCategories($categoriesAutorisees)
-            : $materielRepo->findAll();
+        if ($isManager) {
+            $materiels = $categoriesAutorisees
+                ? $materielRepo->findByCategories($categoriesAutorisees)
+                : $materielRepo->findAll();
+            $catalogueClient = null;
+        } else {
+            $materiels       = null;
+            $catalogueClient = $materielRepo->findGroupedPourClient($categoriesAutorisees);
+        }
 
         return $this->render('emprunt/form.html.twig', [
-            'emprunt'         => null,
-            'materiels'       => $materiels,
-            'utilisateurs'    => $isManager ? $utilisateurRepo->findAll() : [],
-            'acces_limite'    => !empty($categoriesAutorisees) && count($materiels) === 0,
+            'emprunt'          => null,
+            'materiels'        => $materiels,
+            'catalogue_client' => $catalogueClient,
+            'utilisateurs'     => $isManager ? $utilisateurRepo->findAll() : [],
+            'acces_limite'     => !$isManager && empty($catalogueClient),
             'is_manager'      => $isManager,
             'user_id_connecte' => $auth->getUserId(),
         ]);
