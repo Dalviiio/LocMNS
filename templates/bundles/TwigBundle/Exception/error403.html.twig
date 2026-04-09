@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+{% block title %}Accès refusé — LOCMNS{% endblock %}
+{% block content %}
+
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px">
+
+    <div style="width:72px;height:72px;background:#FFF0EC;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px">
+        <i class="fa-solid fa-lock" style="font-size:28px;color:#FF5C2C"></i>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#FF5C2C;margin-bottom:10px">
+        Erreur 403
+    </div>
+
+    <div style="font-size:26px;font-weight:800;color:#1A1A1A;margin-bottom:12px;letter-spacing:-.5px">
+        Accès non autorisé
+    </div>
+
+    <div style="font-size:14px;color:#888;max-width:400px;line-height:1.6;margin-bottom:32px">
+        {{ exception is defined and exception.message ? exception.message : 'Vous n\'avez pas les droits nécessaires pour accéder à cette page.' }}
+    </div>
+
+    <a href="{{ path('dashboard') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px">
+        <i class="fa-solid fa-table-columns"></i>
+        Retour au dashboard
+    </a>
+
+</div>
+
+{% endblock %}

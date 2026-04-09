@@ -10,11 +10,13 @@
         <div class="page-sub">{{ emprunt.materiel.nom }} — {{ emprunt.utilisateur.nomComplet }}</div>
     </div>
     <div style="display:flex;gap:8px">
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         {% if emprunt.statut.value == 'en_cours' or emprunt.statut.value == 'retard' %}
         <form method="POST" action="{{ path('emprunt_retour', {id: emprunt.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('retour_emprunt' ~ emprunt.id) }}">
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate-left"></i> Enregistrer le retour</button>
         </form>
+        {% endif %}
         {% endif %}
         <a href="{{ path('emprunt_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
     </div>
@@ -52,6 +54,29 @@
     </div>
 
 </div>
+
+{% if emprunts_accessoires is not empty %}
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <span class="panel-title">Accessoires partis avec ce matériel ({{ emprunts_accessoires|length }})</span>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Accessoire</th><th>Statut</th><th>Date retour</th><th>Voir</th></tr>
+        </thead>
+        <tbody>
+            {% for ea in emprunts_accessoires %}
+            <tr>
+                <td class="td-bold">{{ ea.materiel.nom }}</td>
+                <td><span class="sbadge {{ ea.enRetard ? 'sb-danger' : ea.statut.badgeClass() }}">{{ ea.enRetard ? 'Retard' : ea.statut.label() }}</span></td>
+                <td class="td-muted">{{ ea.dateRetour ? ea.dateRetour|date('d/m/Y') : '—' }}</td>
+                <td><a href="{{ path('emprunt_show', {id: ea.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 
 <div class="table-wrap">
     <div class="table-toolbar">

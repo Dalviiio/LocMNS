@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Categorie;
 use App\Repository\CategorieRepository;
+use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,8 +15,11 @@ use Symfony\Component\Routing\Attribute\Route;
 class CategorieController extends AbstractController
 {
     #[Route('/nouvelle', name: 'new', methods: ['POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         if (!$this->isCsrfTokenValid('new_categorie', $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF invalide.');
         }
@@ -34,8 +38,11 @@ class CategorieController extends AbstractController
     }
 
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Categorie $categorie, EntityManagerInterface $em): Response
+    public function delete(Request $request, Categorie $categorie, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         if ($this->isCsrfTokenValid('del_cat' . $categorie->getId(), $request->request->get('_token'))) {
             $em->remove($categorie);
             $em->flush();

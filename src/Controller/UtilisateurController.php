@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Utilisateur;
 use App\Repository\ProfilRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,8 +16,11 @@ use Symfony\Component\Routing\Attribute\Route;
 class UtilisateurController extends AbstractController
 {
     #[Route('', name: 'index')]
-    public function index(Request $request, UtilisateurRepository $repo): Response
+    public function index(Request $request, UtilisateurRepository $repo, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         $raw    = $request->query->all();
         $search = isset($raw['search']) ? (string) $raw['search'] : '';
 
@@ -27,8 +31,11 @@ class UtilisateurController extends AbstractController
     }
 
     #[Route('/nouveau', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, ProfilRepository $profilRepo): Response
+    public function new(Request $request, EntityManagerInterface $em, ProfilRepository $profilRepo, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_user', $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
@@ -48,8 +55,11 @@ class UtilisateurController extends AbstractController
     }
 
     #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em, ProfilRepository $profilRepo): Response
+    public function edit(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em, ProfilRepository $profilRepo, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('edit_user' . $utilisateur->getId(), $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
@@ -67,8 +77,11 @@ class UtilisateurController extends AbstractController
     }
 
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em): Response
+    public function delete(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         if ($this->isCsrfTokenValid('delete_user' . $utilisateur->getId(), $request->request->get('_token'))) {
             $em->remove($utilisateur);
             $em->flush();

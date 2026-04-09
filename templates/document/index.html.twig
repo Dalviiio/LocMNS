@@ -9,9 +9,11 @@
         <div class="page-title">Documents</div>
         <div class="page-sub">Notices et documentations techniques</div>
     </div>
+    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
     <button class="btn btn-primary" onclick="document.getElementById('modal-doc').style.display='flex'">
         <i class="fa-solid fa-plus"></i> Ajouter un document
     </button>
+    {% endif %}
 </div>
 
 <div class="table-wrap">

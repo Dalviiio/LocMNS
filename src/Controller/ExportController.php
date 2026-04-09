@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\EmpruntRepository;
 use App\Repository\MaterielRepository;
+use App\Service\AutorisationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -13,8 +14,11 @@ use Symfony\Component\Routing\Attribute\Route;
 class ExportController extends AbstractController
 {
     #[Route('/materiels/csv', name: 'materiels_csv')]
-    public function materielsCsv(MaterielRepository $repo): StreamedResponse
+    public function materielsCsv(MaterielRepository $repo, AutorisationService $auth): StreamedResponse
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         $materiels = $repo->findAll();
 
         $response = new StreamedResponse(function () use ($materiels) {
@@ -45,8 +49,11 @@ class ExportController extends AbstractController
     }
 
     #[Route('/emprunts/csv', name: 'emprunts_csv')]
-    public function empruntsCsv(EmpruntRepository $repo): StreamedResponse
+    public function empruntsCsv(EmpruntRepository $repo, AutorisationService $auth): StreamedResponse
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         $emprunts = $repo->findAll();
 
         $response = new StreamedResponse(function () use ($emprunts) {
@@ -77,8 +84,11 @@ class ExportController extends AbstractController
     }
 
     #[Route('/materiels/xml', name: 'materiels_xml')]
-    public function materielsXml(MaterielRepository $repo): Response
+    public function materielsXml(MaterielRepository $repo, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            throw $this->createAccessDeniedException();
+        }
         $materiels = $repo->findAll();
 
         $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><materiels/>');

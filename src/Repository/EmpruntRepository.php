@@ -14,39 +14,59 @@ class EmpruntRepository extends ServiceEntityRepository
         parent::__construct($registry, Emprunt::class);
     }
 
-    public function countEnCours(): int
+    public function countEnCours(?int $utilisateurId = null): int
     {
-        return $this->count(['statut' => StatutEmprunt::EnCours]);
+        if (!$utilisateurId) {
+            return $this->count(['statut' => StatutEmprunt::EnCours]);
+        }
+        return (int) $this->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->where('e.statut = :statut')
+            ->andWhere('e.utilisateur = :uid')
+            ->setParameter('statut', StatutEmprunt::EnCours->value)
+            ->setParameter('uid', $utilisateurId)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
-    public function countRetards(): int
+    public function countRetards(?int $utilisateurId = null): int
     {
-        return (int) $this->createQueryBuilder('e')
+        $qb = $this->createQueryBuilder('e')
             ->select('COUNT(e.id)')
             ->where('e.statut = :en_cours OR e.statut = :retard')
             ->andWhere('e.dateFinPrevue < :now')
             ->setParameter('en_cours', StatutEmprunt::EnCours->value)
             ->setParameter('retard', StatutEmprunt::Retard->value)
-            ->setParameter('now', new \DateTime())
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->setParameter('now', new \DateTime());
+
+        if ($utilisateurId) {
+            $qb->andWhere('e.utilisateur = :uid')->setParameter('uid', $utilisateurId);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
-    public function findEnCours(): array
+    public function findEnCours(?int $utilisateurId = null): array
     {
-        return $this->createQueryBuilder('e')
+        $qb = $this->createQueryBuilder('e')
+            ->addSelect('u', 'm')
             ->join('e.utilisateur', 'u')
             ->join('e.materiel', 'm')
             ->where('e.statut = :statut')
             ->setParameter('statut', StatutEmprunt::EnCours->value)
-            ->orderBy('e.dateFinPrevue', 'ASC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('e.dateFinPrevue', 'ASC');
+
+        if ($utilisateurId) {
+            $qb->andWhere('e.utilisateur = :uid')->setParameter('uid', $utilisateurId);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     public function findRetards(): array
     {
         return $this->createQueryBuilder('e')
+            ->addSelect('u', 'm')
             ->join('e.utilisateur', 'u')
             ->join('e.materiel', 'm')
             ->where('e.statut = :retard')
@@ -56,13 +76,17 @@ class EmpruntRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findWithFilters(?string $search, ?string $statut): array
+    public function findWithFilters(?string $search, ?string $statut, ?int $utilisateurId = null): array
     {
         $qb = $this->createQueryBuilder('e')
+            ->addSelect('u', 'm')
             ->join('e.utilisateur', 'u')
             ->join('e.materiel', 'm')
             ->orderBy('e.dateDebut', 'DESC');
 
+        if ($utilisateurId) {
+            $qb->andWhere('e.utilisateur = :uid')->setParameter('uid', $utilisateurId);
+        }
         if ($search) {
             $qb->andWhere('u.nom LIKE :s OR u.prenom LIKE :s OR m.nom LIKE :s')
                ->setParameter('s', '%' . $search . '%');

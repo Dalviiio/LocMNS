@@ -6,6 +6,7 @@ use App\Entity\Document;
 use App\Entity\TypeDocument;
 use App\Repository\DocumentRepository;
 use App\Repository\MaterielRepository;
+use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,8 +17,9 @@ use Symfony\Component\Routing\Attribute\Route;
 class DocumentController extends AbstractController
 {
     #[Route('', name: 'index')]
-    public function index(Request $request, DocumentRepository $repo, MaterielRepository $materielRepo): Response
+    public function index(Request $request, DocumentRepository $repo, MaterielRepository $materielRepo, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         $raw    = $request->query->all();
         $search = isset($raw['search']) ? (string) $raw['search'] : '';
         $type   = isset($raw['type'])   ? (string) $raw['type']   : '';
@@ -32,8 +34,9 @@ class DocumentController extends AbstractController
     }
 
     #[Route('/nouveau', name: 'new', methods: ['POST'])]
-    public function new(Request $request, EntityManagerInterface $em, MaterielRepository $materielRepo): Response
+    public function new(Request $request, EntityManagerInterface $em, MaterielRepository $materielRepo, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if (!$this->isCsrfTokenValid('new_document', $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF invalide.');
         }

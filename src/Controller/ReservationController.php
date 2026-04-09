@@ -2,13 +2,13 @@
 
 namespace App\Controller;
 
-use App\Entity\Alerte;
 use App\Entity\Reservation;
 use App\Entity\StatutReservation;
 use App\Entity\TypeAlerte;
 use App\Repository\MaterielRepository;
 use App\Repository\ReservationRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\AlerteService;
 use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,14 +20,18 @@ use Symfony\Component\Routing\Attribute\Route;
 class ReservationController extends AbstractController
 {
     #[Route('', name: 'index')]
-    public function index(Request $request, ReservationRepository $repo): Response
+    public function index(Request $request, ReservationRepository $repo, AutorisationService $auth): Response
     {
         $raw    = $request->query->all();
         $search = isset($raw['search']) ? (string) $raw['search'] : '';
         $statut = isset($raw['statut']) ? (string) $raw['statut'] : '';
 
+        $utilisateurId = $auth->isAdminOrGestionnaire()
+            ? null
+            : $request->getSession()->get('user_id');
+
         return $this->render('reservation/index.html.twig', [
-            'reservations'  => $repo->findWithFilters($search ?: null, $statut ?: null),
+            'reservations'  => $repo->findWithFilters($search ?: null, $statut ?: null, $utilisateurId),
             'statuts'       => StatutReservation::cases(),
             'filtre_search' => $search,
             'filtre_statut' => $statut,
@@ -48,7 +52,6 @@ class ReservationController extends AbstractController
         $prevDate = (clone $debut)->modify('-1 month');
         $nextDate = (clone $debut)->modify('+1 month');
 
-        // Indexer les réservations par jour
         $reservations = $repo->findPlanning($debut, $fin);
 
         return $this->render('reservation/planning.html.twig', [
@@ -69,6 +72,7 @@ class ReservationController extends AbstractController
         MaterielRepository $materielRepo,
         UtilisateurRepository $utilisateurRepo,
         AutorisationService $auth,
+        AlerteService $alerteService,
     ): Response {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_resa', $request->request->get('_token'))) {
@@ -83,11 +87,11 @@ class ReservationController extends AbstractController
 
             $em->persist($reservation);
 
-            $alerte = new Alerte();
-            $alerte->setUtilisateur($reservation->getUtilisateur());
-            $alerte->setType(TypeAlerte::NouvelleDemande);
-            $alerte->setMessage('Nouvelle réservation de ' . $reservation->getUtilisateur()->getNomComplet() . ' pour ' . $reservation->getMateriel()->getNom());
-            $em->persist($alerte);
+            $alerteService->creer(
+                $reservation->getUtilisateur(),
+                'Nouvelle réservation de ' . $reservation->getUtilisateur()->getNomComplet() . ' pour ' . $reservation->getMateriel()->getNom(),
+                TypeAlerte::NouvelleDemande,
+            );
 
             $em->flush();
             $this->addFlash('success', 'Réservation créée.');
@@ -108,8 +112,9 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/{id}/confirmer', name: 'confirmer', methods: ['POST'])]
-    public function confirmer(Request $request, Reservation $reservation, EntityManagerInterface $em): Response
+    public function confirmer(Request $request, Reservation $reservation, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($this->isCsrfTokenValid('confirmer_resa' . $reservation->getId(), $request->request->get('_token'))) {
             $reservation->setStatut(StatutReservation::Confirmee);
             $em->flush();
@@ -119,8 +124,9 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/{id}/annuler', name: 'annuler', methods: ['POST'])]
-    public function annuler(Request $request, Reservation $reservation, EntityManagerInterface $em): Response
+    public function annuler(Request $request, Reservation $reservation, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($this->isCsrfTokenValid('annuler_resa' . $reservation->getId(), $request->request->get('_token'))) {
             $reservation->setStatut(StatutReservation::Annulee);
             $em->flush();
@@ -138,6 +144,7 @@ class ReservationController extends AbstractController
         UtilisateurRepository $utilisateurRepo,
         AutorisationService $auth,
     ): Response {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('edit_resa' . $reservation->getId(), $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Alerte;
 use App\Entity\TypeAlerte;
 use App\Repository\AlerteRepository;
+use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,8 +17,10 @@ use Symfony\Component\Routing\Attribute\Route;
 class AlerteController extends AbstractController
 {
     #[Route('', name: 'index')]
-    public function index(Request $request, AlerteRepository $repo): Response
+    public function index(Request $request, AlerteRepository $repo, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
+
         $raw    = $request->query->all();
         $search = isset($raw['search']) ? (string) $raw['search'] : '';
         $type   = isset($raw['type'])   ? (string) $raw['type']   : '';
@@ -32,8 +35,12 @@ class AlerteController extends AbstractController
     }
 
     #[Route('/api/dernieres', name: 'api_dernieres', methods: ['GET'])]
-    public function apiDernieres(AlerteRepository $repo): JsonResponse
+    public function apiDernieres(AlerteRepository $repo, AutorisationService $auth): JsonResponse
     {
+        if (!$auth->isAdminOrGestionnaire()) {
+            return new JsonResponse(['alertes' => [], 'total' => 0]);
+        }
+
         $alertes = array_slice($repo->findNonLues(), 0, 5);
         $data = array_map(fn(Alerte $a) => [
             'id'      => $a->getId(),
@@ -48,8 +55,11 @@ class AlerteController extends AbstractController
     }
 
     #[Route('/{id}/lire', name: 'lire', methods: ['POST'])]
-    public function marquerLu(Request $request, Alerte $alerte, EntityManagerInterface $em): Response
+    public function marquerLu(Request $request, Alerte $alerte, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        if (!$auth->isAdminOrGestionnaire() && $alerte->getUtilisateur()->getId() !== $auth->getUserId()) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cette alerte.');
+        }
         if ($this->isCsrfTokenValid('lire_alerte' . $alerte->getId(), $request->request->get('_token'))) {
             $alerte->setLu(true);
             $em->flush();
@@ -58,8 +68,9 @@ class AlerteController extends AbstractController
     }
 
     #[Route('/tout-lire', name: 'tout_lire', methods: ['POST'])]
-    public function marquerToutLu(Request $request, AlerteRepository $repo, EntityManagerInterface $em): Response
+    public function marquerToutLu(Request $request, AlerteRepository $repo, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($this->isCsrfTokenValid('tout_lire', $request->request->get('_token'))) {
             foreach ($repo->findNonLues() as $alerte) {
                 $alerte->setLu(true);
@@ -71,8 +82,9 @@ class AlerteController extends AbstractController
     }
 
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Alerte $alerte, EntityManagerInterface $em): Response
+    public function delete(Request $request, Alerte $alerte, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($this->isCsrfTokenValid('del_alerte' . $alerte->getId(), $request->request->get('_token'))) {
             $em->remove($alerte);
             $em->flush();

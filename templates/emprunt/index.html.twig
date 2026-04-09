@@ -10,7 +10,9 @@
         <div class="page-sub">Suivi des emprunts de matériel</div>
     </div>
     <div style="display:flex;gap:8px">
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('export_emprunts_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
+        {% endif %}
         <a href="{{ path('emprunt_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel emprunt</a>
     </div>
 </div>
@@ -51,6 +53,7 @@
                 <td><span class="sbadge {{ e.enRetard ? 'sb-danger' : e.statut.badgeClass() }}">{{ e.enRetard ? 'Retard' : e.statut.label() }}</span></td>
                 <td><div class="action-btns">
                     <a href="{{ path('emprunt_show', {id: e.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
+                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
                     {% if e.statut.value == 'en_cours' or e.statut.value == 'retard' %}
                     <form method="POST" action="{{ path('emprunt_retour', {id: e.id}) }}" style="display:inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('retour_emprunt' ~ e.id) }}">
@@ -58,6 +61,7 @@
                     </form>
                     {% endif %}
                     <a href="{{ path('emprunt_edit', {id: e.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
+                    {% endif %}
                 </div></td>
             </tr>
             {% else %}

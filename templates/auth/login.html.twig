@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — LOCMNS</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/loc.png') }}">
     <link rel="stylesheet" href="{{ asset('fonts/fa/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20260406b">
     <style>
@@ -19,17 +20,12 @@
         }
         .login-top {
             background: #1A1A1A;
-            padding: 40px 40px 32px;
+            padding: 32px 40px;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .login-logo {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-        .login-logo .loc { color: #fff; }
-        .login-logo .mns { color: #FF5C2C; }
-        .login-sub { color: rgba(255,255,255,.4); font-size: 12px; margin-top: 6px; letter-spacing: .5px; text-transform: uppercase; }
         .login-body { padding: 32px 40px 40px; }
         .login-title { font-size: 18px; font-weight: 700; color: #1A1A1A; margin-bottom: 24px; }
         .login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
@@ -75,18 +71,17 @@
 <body>
 <div class="login-wrap">
     <div class="login-top">
-        <div class="login-logo"><span class="loc">LOC</span><span class="mns">MNS</span></div>
-        <div class="login-sub">Gestion de matériel</div>
+        <img src="{{ asset('images/loc.png') }}" alt="LOCMNS" style="height:80px;width:auto;mix-blend-mode:multiply">
     </div>
     <div class="login-body">
         <div class="login-title">Connexion</div>
         {% if error %}
         <div class="login-error"><i class="fa-solid fa-circle-xmark"></i> {{ error }}</div>
         {% endif %}
-        <form method="POST">
+        <form method="POST" autocomplete="off">
             <div class="login-field">
                 <label class="login-label">Adresse email</label>
-                <input type="email" name="email" class="login-input" required autofocus>
+                <input type="email" name="email" class="login-input" required autofocus autocomplete="new-password">
             </div>
             <div class="login-field">
                 <label class="login-label">Mot de passe</label>

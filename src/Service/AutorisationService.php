@@ -55,4 +55,38 @@ class AutorisationService
         $profil = $this->getProfilConnecte();
         return $profil?->getNom() === 'Administrateur';
     }
+
+    public function isAdminOrGestionnaire(): bool
+    {
+        $profil = $this->getProfilConnecte();
+        return in_array($profil?->getNom(), ['Administrateur', 'Gestionnaire']);
+    }
+
+    public function getNomProfil(): string
+    {
+        return $this->getProfilConnecte()?->getNom() ?? '';
+    }
+
+    public function getUtilisateurConnecte(): ?object
+    {
+        $userId = $this->requestStack->getSession()->get('user_id');
+        if (!$userId) return null;
+        return $this->utilisateurRepo->find($userId);
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->requestStack->getSession()->get('user_id');
+    }
+
+    /**
+     * Lève AccessDeniedHttpException si le profil connecté n'est pas dans la liste autorisée.
+     * @param string[] $profilsAutorises
+     */
+    public function verifier(array $profilsAutorises, string $message = 'Accès non autorisé.'): void
+    {
+        if (!in_array($this->getNomProfil(), $profilsAutorises)) {
+            throw new AccessDeniedHttpException($message);
+        }
+    }
 }

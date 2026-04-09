@@ -10,12 +10,14 @@
         <div class="page-sub">Gestion du parc matériel</div>
     </div>
     <div style="display:flex;gap:8px">
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('export_materiels_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
         <a href="{{ path('export_materiels_xml') }}" class="btn btn-outline"><i class="fa-solid fa-code"></i> XML</a>
         <button class="btn btn-outline" onclick="document.getElementById('modal-cat').style.display='flex'">
             <i class="fa-solid fa-tag"></i> Catégorie
         </button>
         <a href="{{ path('materiel_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouveau matériel</a>
+        {% endif %}
     </div>
 </div>
 
@@ -67,11 +69,13 @@
                 </td>
                 <td><div class="action-btns">
                     <a href="{{ path('materiel_show', {id: m.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
+                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
                     <a href="{{ path('materiel_edit', {id: m.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
                     <form method="POST" action="{{ path('materiel_delete', {id: m.id}) }}" style="display:inline" onsubmit="return confirm('Supprimer ce matériel ?')">
                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ m.id) }}">
                         <button type="submit" class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
                     </form>
+                    {% endif %}
                 </div></td>
             </tr>
             {% else %}

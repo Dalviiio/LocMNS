@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LOCMNS{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/loc.png') }}">
     <link rel="stylesheet" href="{{ asset('fonts/fa/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20260406b">
 </head>
@@ -15,11 +16,12 @@
         <i class="fa-solid fa-bars"></i>
     </div>
     <div class="header-logo">
-        <div class="logo-box">
-            <span class="loc">LOC</span><span class="mns">MNS</span>
-        </div>
+        <a href="{{ path('dashboard') }}" style="text-decoration:none;display:flex;align-items:center">
+            <img src="{{ asset('images/loc.png') }}" alt="LOCMNS" style="height:93px;width:auto;display:block">
+        </a>
     </div>
     <div class="header-actions">
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('alerte_index') }}" class="h-btn" title="Alertes" style="position:relative;text-decoration:none">
             <i class="fa-solid fa-triangle-exclamation"></i>
         </a>
@@ -34,6 +36,7 @@
                 <a href="{{ path('alerte_index') }}" class="h-dropdown-footer">Voir toutes les alertes →</a>
             </div>
         </div>
+        {% endif %}
         <div class="h-btn h-dropdown-trigger" title="Mon compte" style="position:relative">
             <i class="fa-solid fa-circle-user"></i>
             <span style="font-size:12px;font-weight:600;margin-left:6px;display:none" id="h-username"></span>
@@ -41,7 +44,9 @@
                 <div class="h-dropdown-title">{{ app.session.get('user_nom') ?? 'Compte' }}</div>
                 <div style="padding:4px 0">
                     <a href="{{ path('compte_index') }}" class="h-dropdown-item"><i class="fa-solid fa-user" style="width:16px"></i> Mon compte</a>
+                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
                     <a href="{{ path('utilisateur_index') }}" class="h-dropdown-item"><i class="fa-solid fa-users" style="width:16px"></i> Utilisateurs</a>
+                    {% endif %}
                     <div style="margin:6px 0;border-top:1px solid #F0F0F0"></div>
                     <a href="{{ path('logout') }}" class="h-dropdown-item" style="color:#FF5C2C"><i class="fa-solid fa-arrow-right-from-bracket" style="width:16px"></i> Déconnexion</a>
                 </div>
@@ -70,26 +75,34 @@
            title="Emprunts">
             <i class="fa-solid fa-right-left"></i>
         </a>
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('reservation_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'reservation' %}active{% endif %}"
            title="Réservations">
             <i class="fa-solid fa-calendar-days"></i>
         </a>
+        {% endif %}
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('alerte_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'alerte' %}active{% endif %}"
            title="Alertes">
             <i class="fa-solid fa-bell"></i>
         </a>
+        {% endif %}
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('document_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'document' %}active{% endif %}"
            title="Documents">
             <i class="fa-solid fa-file-lines"></i>
         </a>
+        {% endif %}
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('utilisateur_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'utilisateur' %}active{% endif %}"
            title="Utilisateurs">
             <i class="fa-solid fa-users"></i>
         </a>
+        {% endif %}
     </aside>
 
     <!-- ══ MAIN ══ -->

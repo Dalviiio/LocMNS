@@ -6,6 +6,8 @@ use App\Repository\MaterielRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\JoinColumn;
+use Doctrine\ORM\Mapping\JoinTable;
 
 #[ORM\Entity(repositoryClass: MaterielRepository::class)]
 class Materiel
@@ -43,12 +45,21 @@ class Materiel
     #[ORM\OneToMany(targetEntity: Document::class, mappedBy: 'materiel', cascade: ['remove'])]
     private Collection $documents;
 
+    #[ORM\ManyToMany(targetEntity: self::class)]
+    #[JoinTable(
+        name: 'materiel_accessoire',
+        joinColumns: [new JoinColumn(name: 'materiel_id', referencedColumnName: 'id', onDelete: 'CASCADE')],
+        inverseJoinColumns: [new JoinColumn(name: 'accessoire_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    )]
+    private Collection $accessoires;
+
     public function __construct()
     {
         $this->createdAt    = new \DateTime();
         $this->emprunts     = new ArrayCollection();
         $this->reservations = new ArrayCollection();
         $this->documents    = new ArrayCollection();
+        $this->accessoires  = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -74,6 +85,7 @@ class Materiel
     public function getEmprunts(): Collection { return $this->emprunts; }
     public function getReservations(): Collection { return $this->reservations; }
     public function getDocuments(): Collection { return $this->documents; }
+    public function getAccessoires(): Collection { return $this->accessoires; }
 
     public function isDisponible(): bool
     {

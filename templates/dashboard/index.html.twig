@@ -6,25 +6,30 @@
 
 <!-- KPI -->
 <div class="kpi-strip">
+    {% if is_manager %}
     <div class="kpi-card">
         <div class="kpi-label"><i class="fa-solid fa-box-open"></i> Matériels indisponibles</div>
         <div class="kpi-value">{{ kpi.materiels_indisponibles }}</div>
     </div>
+    {% endif %}
     <div class="kpi-card">
-        <div class="kpi-label"><i class="fa-solid fa-clock"></i> Retards de retour</div>
+        <div class="kpi-label"><i class="fa-solid fa-clock"></i> {{ is_manager ? 'Retards de retour' : 'Mes retards' }}</div>
         <div class="kpi-value">{{ kpi.retards }}</div>
     </div>
+    {% if is_manager %}
     <div class="kpi-card">
         <div class="kpi-label"><i class="fa-solid fa-triangle-exclamation"></i> Incidents ouverts</div>
         <div class="kpi-value">{{ kpi.incidents }}</div>
     </div>
+    {% endif %}
     <div class="kpi-card" style="border-right:none">
-        <div class="kpi-label"><i class="fa-solid fa-inbox"></i> Demandes en attente</div>
+        <div class="kpi-label"><i class="fa-solid fa-inbox"></i> {{ is_manager ? 'Demandes en attente' : 'Mes demandes' }}</div>
         <div class="kpi-value">{{ kpi.demandes }}</div>
     </div>
 </div>
 
-<!-- ÉTAT DU STOCK -->
+<!-- ÉTAT DU STOCK (gestionnaires uniquement) -->
+{% if is_manager and stock %}
 <div class="stock-grid">
     <div class="stock-card">
         <div class="stock-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
@@ -51,6 +56,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- CALENDRIER -->
 {% set jours_semaine = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'] %}
@@ -133,6 +139,7 @@
 <!-- NOTIFICATIONS + ACTIVITÉ -->
 <div class="bottom-grid">
 
+    {% if is_manager %}
     <div class="panel">
         <div class="panel-title">Alertes récentes</div>
         <div class="notif-list">
@@ -158,9 +165,10 @@
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 
     <div class="panel">
-        <div class="panel-title">Emprunts en cours</div>
+        <div class="panel-title">{{ is_manager ? 'Emprunts en cours' : 'Mes emprunts en cours' }}</div>
         <div class="notif-list">
             {% for emprunt in emprunts_en_cours %}
             <div class="notif-item">

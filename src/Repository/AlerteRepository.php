@@ -21,18 +21,28 @@ class AlerteRepository extends ServiceEntityRepository
     public function findNonLues(): array
     {
         return $this->createQueryBuilder('a')
+            ->addSelect('u', 'e', 'm')
+            ->leftJoin('a.utilisateur', 'u')
+            ->leftJoin('a.emprunt', 'e')
+            ->leftJoin('e.materiel', 'm')
             ->where('a.lu = false')
             ->orderBy('a.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    public function findWithFilters(?string $search, ?string $type): array
+    public function findWithFilters(?string $search, ?string $type, ?int $utilisateurId = null): array
     {
         $qb = $this->createQueryBuilder('a')
-            ->join('a.utilisateur', 'u')
+            ->addSelect('u', 'e', 'm')
+            ->leftJoin('a.utilisateur', 'u')
+            ->leftJoin('a.emprunt', 'e')
+            ->leftJoin('e.materiel', 'm')
             ->orderBy('a.createdAt', 'DESC');
 
+        if ($utilisateurId) {
+            $qb->andWhere('a.utilisateur = :uid')->setParameter('uid', $utilisateurId);
+        }
         if ($search) {
             $qb->andWhere('a.message LIKE :s OR u.nom LIKE :s OR u.prenom LIKE :s')
                ->setParameter('s', '%' . $search . '%');

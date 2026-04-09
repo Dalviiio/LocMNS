@@ -9,11 +9,14 @@
     <a href="{{ path('emprunt_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
 </div>
 
-<div class="table-wrap" style="padding:28px;max-width:700px">
+<div class="table-wrap" style="padding:28px;max-width:{{ is_manager ? '700px' : '860px' }}">
     <form method="POST" action="{{ emprunt ? path('emprunt_edit', {id: emprunt.id}) : path('emprunt_new') }}">
         <input type="hidden" name="_token" value="{{ csrf_token(emprunt ? 'edit_emprunt' ~ emprunt.id : 'new_emprunt') }}">
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
 
+            {# ── UTILISATEUR ── #}
+            {% if is_manager %}
             <div style="display:flex;flex-direction:column;gap:6px">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Utilisateur *</label>
                 <select name="utilisateur_id" class="form-control" required>
@@ -23,30 +26,22 @@
                     {% endfor %}
                 </select>
             </div>
+            {% else %}
+            <input type="hidden" name="utilisateur_id" value="{{ user_id_connecte }}">
+            {% endif %}
 
-            <div style="display:flex;flex-direction:column;gap:6px">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Matériel *</label>
-                {% if acces_limite is defined and acces_limite %}
-                <div style="padding:10px 14px;background:#FFF0EB;border:1px solid #FF5C2C;border-radius:8px;font-size:12px;color:#FF5C2C">
-                    <i class="fa-solid fa-lock"></i> Aucun matériel accessible avec votre profil.
-                </div>
-                {% else %}
-                <select name="materiel_id" class="form-control" required>
-                    <option value="">-- Choisir --</option>
-                    {% for m in materiels %}
-                    <option value="{{ m.id }}" {{ emprunt and emprunt.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }} — {{ m.categorie.nom }}</option>
-                    {% endfor %}
-                </select>
-                {% endif %}
-            </div>
-
+            {# ── DATES ── #}
             <div style="display:flex;flex-direction:column;gap:6px">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de début *</label>
                 <input type="datetime-local" name="date_debut" class="form-control" required
                        value="{{ emprunt ? emprunt.dateDebut|date('Y-m-d\\TH:i') : '' }}">
             </div>
 
+            {% if is_manager %}
             <div style="display:flex;flex-direction:column;gap:6px">
+            {% else %}
+            <div style="display:flex;flex-direction:column;gap:6px;grid-column:2">
+            {% endif %}
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de fin prévue *</label>
                 <input type="datetime-local" name="date_fin_prevue" class="form-control" required
                        value="{{ emprunt ? emprunt.dateFinPrevue|date('Y-m-d\\TH:i') : '' }}">
@@ -54,10 +49,146 @@
 
         </div>
 
+        {# ── MATÉRIEL : dropdown pour gestionnaires, catalogue pour clients ── #}
+        <div style="margin-top:18px">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:10px">Matériel *</label>
+
+            {% if acces_limite is defined and acces_limite %}
+            <div style="padding:10px 14px;background:#FFF0EB;border:1px solid #FF5C2C;border-radius:8px;font-size:12px;color:#FF5C2C">
+                <i class="fa-solid fa-lock"></i> Aucun matériel accessible avec votre profil.
+            </div>
+
+            {% elseif is_manager %}
+            <select name="materiel_id" id="materiel_select" class="form-control" required>
+                <option value="">-- Choisir --</option>
+                {% for m in materiels %}
+                <option value="{{ m.id }}" {{ emprunt and emprunt.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }} — {{ m.categorie.nom }}</option>
+                {% endfor %}
+            </select>
+
+            {% else %}
+            {# Vue catalogue pour les clients #}
+            <input type="hidden" name="materiel_id" id="materiel_id_hidden" value="{{ emprunt ? emprunt.materiel.id : '' }}" required>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px" id="catalogue-materiels">
+                {% for m in materiels %}
+                {% set selected = emprunt and emprunt.materiel.id == m.id %}
+                <label class="catalogue-card {{ m.disponible ? '' : 'catalogue-card--indispo' }} {{ selected ? 'catalogue-card--selected' : '' }}"
+                       for="mat_{{ m.id }}"
+                       style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:2px solid {{ selected ? '#FF5C2C' : (m.disponible ? '#E5E5E5' : '#F0F0F0') }};border-radius:10px;cursor:{{ m.disponible ? 'pointer' : 'default' }};background:{{ m.disponible ? '#fff' : '#FAFAFA' }};position:relative;transition:border-color .15s">
+                    <input type="radio" name="materiel_radio" id="mat_{{ m.id }}" value="{{ m.id }}"
+                           {{ selected ? 'checked' : '' }} {{ m.disponible ? '' : 'disabled' }}
+                           style="position:absolute;opacity:0;width:0;height:0">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                        <span style="font-size:13px;font-weight:700;color:{{ m.disponible ? '#1A1A1A' : '#aaa' }}">{{ m.nom }}</span>
+                        {% if m.disponible %}
+                        <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;margin-top:4px"></span>
+                        {% else %}
+                        <span style="width:8px;height:8px;border-radius:50%;background:#e5e5e5;flex-shrink:0;margin-top:4px"></span>
+                        {% endif %}
+                    </div>
+                    <span style="font-size:11px;color:#999">{{ m.categorie.nom }}</span>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+                        <span class="sbadge {{ m.etat.badgeClass() }}" style="font-size:10px">{{ m.etat.label() }}</span>
+                        <span style="font-size:11px;font-weight:600;color:{{ m.disponible ? '#22c55e' : '#ef4444' }}">
+                            {{ m.disponible ? 'Disponible' : 'Indisponible' }}
+                        </span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            {% if materiels|length == 0 %}
+            <div style="padding:16px;color:#999;font-size:13px;text-align:center">Aucun matériel accessible.</div>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        {% if not emprunt and is_manager %}
+        <div id="accessoires-wrap" style="display:none;margin-top:16px">
+            <div style="background:#F8F8F8;border:1px solid #E5E5E5;border-radius:10px;padding:16px">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;color:#666">
+                    <i class="fa-solid fa-paperclip" style="color:#FF5C2C;margin-right:6px"></i>Accessoires disponibles
+                </div>
+                <div id="accessoires-list" style="display:flex;flex-direction:column;gap:8px">
+                    <div style="color:#aaa;font-size:13px">Sélectionnez un matériel pour voir ses accessoires</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e5e5e5;display:flex;gap:10px">
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
             <a href="{{ path('emprunt_index') }}" class="btn btn-outline">Annuler</a>
         </div>
     </form>
 </div>
+
+{% if not emprunt and is_manager %}
+<script>
+document.getElementById('materiel_select').addEventListener('change', function() {
+    var id = this.value;
+    var wrap = document.getElementById('accessoires-wrap');
+    var list = document.getElementById('accessoires-list');
+    if (!id) { wrap.style.display = 'none'; return; }
+    fetch('/materiels/' + id + '/accessoires')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.length === 0) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'block';
+            list.innerHTML = data.map(function(a) {
+                var dispo = a.disponible;
+                var color = dispo ? '#22c55e' : '#ef4444';
+                var label = dispo ? 'Disponible' : 'Indisponible';
+                return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border:1px solid #e5e5e5;border-radius:8px;cursor:' + (dispo ? 'pointer' : 'default') + '">' +
+                    '<input type="checkbox" name="accessoire_ids[]" value="' + a.id + '" ' + (dispo ? '' : 'disabled') + ' style="accent-color:#FF5C2C;width:16px;height:16px">' +
+                    '<span style="flex:1;font-size:13px;font-weight:600">' + a.nom + '</span>' +
+                    '<span style="font-size:11px;color:#999">' + a.etat + '</span>' +
+                    '<span style="font-size:11px;font-weight:600;color:' + color + '">' + label + '</span>' +
+                    '</label>';
+            }).join('');
+        });
+});
+</script>
+{% endif %}
+
+{% if not is_manager %}
+<script>
+(function() {
+    var hidden = document.getElementById('materiel_id_hidden');
+    var cards = document.querySelectorAll('#catalogue-materiels .catalogue-card');
+    var radios = document.querySelectorAll('#catalogue-materiels input[type=radio]');
+
+    function selectCard(id, label) {
+        hidden.value = id;
+        cards.forEach(function(c) {
+            var isSelected = c.htmlFor === label.htmlFor;
+            c.style.borderColor = isSelected ? '#FF5C2C' : '#E5E5E5';
+            c.style.background = isSelected ? '#FFF9F7' : '#fff';
+        });
+    }
+
+    radios.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                selectCard(this.value, document.querySelector('label[for="' + this.id + '"]'));
+            }
+        });
+        // Init si pré-sélectionné
+        if (radio.checked) {
+            selectCard(radio.value, document.querySelector('label[for="' + radio.id + '"]'));
+        }
+    });
+
+    cards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            var radio = document.getElementById(this.htmlFor);
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+})();
+</script>
+{% endif %}
+
 {% endblock %}

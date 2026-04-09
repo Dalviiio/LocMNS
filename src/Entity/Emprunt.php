@@ -41,10 +41,18 @@ class Emprunt
     #[ORM\OneToMany(targetEntity: Alerte::class, mappedBy: 'emprunt')]
     private Collection $alertes;
 
+    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'empruntsAccessoires')]
+    #[ORM\JoinColumn(name: 'parent_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Emprunt $parentEmprunt = null;
+
+    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parentEmprunt')]
+    private Collection $empruntsAccessoires;
+
     public function __construct()
     {
-        $this->evenements = new ArrayCollection();
-        $this->alertes    = new ArrayCollection();
+        $this->evenements          = new ArrayCollection();
+        $this->alertes             = new ArrayCollection();
+        $this->empruntsAccessoires = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -69,6 +77,10 @@ class Emprunt
 
     public function getEvenements(): Collection { return $this->evenements; }
     public function getAlertes(): Collection { return $this->alertes; }
+
+    public function getParentEmprunt(): ?Emprunt { return $this->parentEmprunt; }
+    public function setParentEmprunt(?Emprunt $parentEmprunt): static { $this->parentEmprunt = $parentEmprunt; return $this; }
+    public function getEmpruntsAccessoires(): Collection { return $this->empruntsAccessoires; }
 
     public function isEnRetard(): bool
     {

@@ -10,7 +10,9 @@
         <div class="page-sub">{{ materiel.categorie.nom }} — {{ materiel.localisation ?? 'Localisation inconnue' }}</div>
     </div>
     <div style="display:flex;gap:8px">
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('materiel_edit', {id: materiel.id}) }}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Modifier</a>
+        {% endif %}
         <a href="{{ path('materiel_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
     </div>
 </div>
@@ -38,6 +40,7 @@
         </table>
     </div>
 
+    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
     <div class="table-wrap" style="padding:20px">
         <div class="panel-title" style="margin-bottom:16px">Ajouter un document</div>
         <form method="POST" action="{{ path('materiel_document_add', {id: materiel.id}) }}">
@@ -54,6 +57,7 @@
             </div>
         </form>
     </div>
+    {% endif %}
 
 </div>
 
@@ -72,10 +76,12 @@
                 <td><span class="sbadge {{ doc.type.badgeClass() }}">{{ doc.type.label() }}</span></td>
                 <td class="td-muted">{{ doc.url }}</td>
                 <td>
+                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
                     <form method="POST" action="{{ path('materiel_document_delete', {id: doc.id}) }}" style="display:inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('del_doc' ~ doc.id) }}">
                         <button type="submit" class="action-btn"><i class="fa-solid fa-trash"></i></button>
                     </form>
+                    {% endif %}
                 </td>
             </tr>
             {% else %}
@@ -85,6 +91,37 @@
     </table>
 </div>
 
+{% if materiel.accessoires is not empty %}
+<div class="table-wrap">
+    <div class="table-toolbar">
+        <span class="panel-title">Accessoires compatibles ({{ materiel.accessoires|length }})</span>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Accessoire</th><th>État</th><th>Disponibilité</th></tr>
+        </thead>
+        <tbody>
+            {% for acc in materiel.accessoires %}
+            <tr>
+                <td class="td-bold">
+                    <a href="{{ path('materiel_show', {id: acc.id}) }}" style="color:inherit">{{ acc.nom }}</a>
+                </td>
+                <td><span class="sbadge {{ acc.etat.badgeClass() }}">{{ acc.etat.label() }}</span></td>
+                <td>
+                    {% if acc.disponible %}
+                        <span class="sbadge sb-success"><i class="fa-solid fa-circle-check"></i> Disponible</span>
+                    {% else %}
+                        <span class="sbadge sb-danger"><i class="fa-solid fa-circle-xmark"></i> Indisponible</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
 <div class="table-wrap">
     <div class="table-toolbar">
         <span class="panel-title">Historique des emprunts</span>
@@ -108,4 +145,5 @@
         </tbody>
     </table>
 </div>
+{% endif %}
 {% endblock %}

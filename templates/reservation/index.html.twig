@@ -49,6 +49,7 @@
                 <td>{{ r.dateFin|date('d/m/Y') }}</td>
                 <td><span class="sbadge {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span></td>
                 <td><div class="action-btns">
+                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
                     {% if r.statut.value == 'en_attente' %}
                     <form method="POST" action="{{ path('reservation_confirmer', {id: r.id}) }}" style="display:inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('confirmer_resa' ~ r.id) }}">
@@ -60,6 +61,7 @@
                     </form>
                     {% endif %}
                     <a href="{{ path('reservation_edit', {id: r.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
+                    {% endif %}
                 </div></td>
             </tr>
             {% else %}

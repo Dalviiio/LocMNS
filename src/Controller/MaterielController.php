@@ -8,8 +8,10 @@ use App\Entity\Materiel;
 use App\Entity\TypeDocument;
 use App\Repository\CategorieRepository;
 use App\Repository\MaterielRepository;
+use App\Service\AutorisationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,10 +22,10 @@ class MaterielController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, MaterielRepository $repo, CategorieRepository $catRepo): Response
     {
-        $search      = $request->query->get('search');
-        $etat        = $request->query->get('etat');
         $raw         = $request->query->all();
-        $categorieId = isset($raw['categorie']) && $raw['categorie'] !== '' ? (int) $raw['categorie'] : null;
+        $search      = isset($raw['search'])    && $raw['search']    !== '' ? (string) $raw['search']    : null;
+        $etat        = isset($raw['etat'])       && $raw['etat']       !== '' ? (string) $raw['etat']       : null;
+        $categorieId = isset($raw['categorie']) && $raw['categorie'] !== '' ? (int)    $raw['categorie'] : null;
 
         return $this->render('materiel/index.html.twig', [
             'materiels'       => $repo->findWithFilters($search, $etat, $categorieId),
@@ -36,8 +38,9 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/nouveau', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, CategorieRepository $catRepo): Response
+    public function new(Request $request, EntityManagerInterface $em, CategorieRepository $catRepo, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_materiel', $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
@@ -65,9 +68,25 @@ class MaterielController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Materiel $materiel, EntityManagerInterface $em, CategorieRepository $catRepo): Response
+    #[Route('/{id}/accessoires', name: 'accessoires_json', methods: ['GET'])]
+    public function accessoiresJson(Materiel $materiel): JsonResponse
     {
+        $data = [];
+        foreach ($materiel->getAccessoires() as $acc) {
+            $data[] = [
+                'id'         => $acc->getId(),
+                'nom'        => $acc->getNom(),
+                'etat'       => $acc->getEtat()->label(),
+                'disponible' => $acc->isDisponible(),
+            ];
+        }
+        return new JsonResponse($data);
+    }
+
+    #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Materiel $materiel, EntityManagerInterface $em, CategorieRepository $catRepo, AutorisationService $auth): Response
+    {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('edit_materiel' . $materiel->getId(), $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
@@ -86,8 +105,9 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Materiel $materiel, EntityManagerInterface $em): Response
+    public function delete(Request $request, Materiel $materiel, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if ($this->isCsrfTokenValid('delete' . $materiel->getId(), $request->request->get('_token'))) {
             $em->remove($materiel);
             $em->flush();
@@ -97,8 +117,9 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/{id}/document/ajouter', name: 'document_add', methods: ['POST'])]
-    public function addDocument(Request $request, Materiel $materiel, EntityManagerInterface $em): Response
+    public function addDocument(Request $request, Materiel $materiel, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         if (!$this->isCsrfTokenValid('add_doc' . $materiel->getId(), $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF invalide.');
         }
@@ -114,8 +135,9 @@ class MaterielController extends AbstractController
     }
 
     #[Route('/document/{id}/supprimer', name: 'document_delete', methods: ['POST'])]
-    public function deleteDocument(Request $request, Document $document, EntityManagerInterface $em): Response
+    public function deleteDocument(Request $request, Document $document, EntityManagerInterface $em, AutorisationService $auth): Response
     {
+        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
         $materielId = $document->getMateriel()->getId();
         if ($this->isCsrfTokenValid('del_doc' . $document->getId(), $request->request->get('_token'))) {
             $em->remove($document);
