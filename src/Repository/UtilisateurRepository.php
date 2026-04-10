@@ -23,7 +23,21 @@ class UtilisateurRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findWithFilters(?string $search): array
+    public function countWithFilters(?string $search): int
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->join('u.profil', 'p');
+
+        if ($search) {
+            $qb->andWhere('u.nom LIKE :s OR u.prenom LIKE :s OR u.email LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function findWithFilters(?string $search, ?int $limit = null, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('u')
             ->join('u.profil', 'p')
@@ -32,6 +46,9 @@ class UtilisateurRepository extends ServiceEntityRepository
         if ($search) {
             $qb->andWhere('u.nom LIKE :s OR u.prenom LIKE :s OR u.email LIKE :s')
                ->setParameter('s', '%' . $search . '%');
+        }
+        if ($limit !== null) {
+            $qb->setMaxResults($limit)->setFirstResult($offset);
         }
 
         return $qb->getQuery()->getResult();

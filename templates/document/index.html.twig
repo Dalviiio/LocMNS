@@ -58,9 +58,7 @@
             {% endfor %}
         </tbody>
     </table>
-    <div class="table-footer">
-        <span>{{ documents|length }} document(s)</span>
-    </div>
+    {% include '_pagination.html.twig' with {paginator: paginator} %}
 </div>
 
 <!-- MODAL ajout document -->

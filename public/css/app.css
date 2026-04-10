@@ -102,13 +102,15 @@ body {
     top: calc(100% + 4px);
     right: 0;
     width: 280px;
+    max-height: calc(100vh - var(--header-h) - 16px);
     background: #fff;
     border: 1px solid #E5E5E5;
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(0,0,0,.12);
-    z-index: 1000;
+    z-index: 2000;
     display: none;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 .h-dropdown-trigger:hover .h-dropdown,
 .h-dropdown-trigger.open .h-dropdown { display: block; }
@@ -216,12 +218,11 @@ body {
    ═══════════════════════════ */
 .main {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 18px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
 }
+.main > * + * { margin-top: 14px; }
 
 .page-label {
     font-size: 11px;
@@ -680,6 +681,58 @@ tbody tr:hover { background: #FAFAFA; }
 }
 .page-btn:hover,
 .page-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+/* ═══════════════════════════
+   PAGINATION
+   ═══════════════════════════ */
+.pagination-bar {
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.pag-perpage {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.pag-pp-btn, .pag-pp-active {
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: all .13s;
+}
+.pag-pp-btn:hover { border-color: var(--primary); color: var(--primary); }
+.pag-pp-active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.pag-nav { display: flex; align-items: center; gap: 3px; }
+.pag-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 7px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text);
+    transition: all .13s;
+}
+.pag-btn:hover { border-color: var(--primary); color: var(--primary); }
+.pag-current { background: var(--primary); border-color: var(--primary); color: #fff; }
+.pag-current:hover { color: #fff; }
+.pag-disabled { opacity: .35; cursor: default; pointer-events: none; }
+.pag-ellipsis { font-size: 12px; color: var(--text-3); padding: 0 3px; }
 
 /* ═══════════════════════════
    RESPONSIVE MOBILE

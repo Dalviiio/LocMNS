@@ -12,6 +12,7 @@ use App\Repository\MaterielRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\AlerteService;
 use App\Service\AutorisationService;
+use App\Service\Paginator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,11 +33,15 @@ class EmpruntController extends AbstractController
             ? null
             : $request->getSession()->get('user_id');
 
+        $total     = $repo->countWithFilters($search ?: null, $statut ?: null, $utilisateurId);
+        $paginator = Paginator::fromRequest($request, $total);
+
         return $this->render('emprunt/index.html.twig', [
-            'emprunts'      => $repo->findWithFilters($search ?: null, $statut ?: null, $utilisateurId),
+            'emprunts'      => $repo->findWithFilters($search ?: null, $statut ?: null, $utilisateurId, $paginator->perPage, $paginator->offset),
             'statuts'       => StatutEmprunt::cases(),
             'filtre_search' => $search,
             'filtre_statut' => $statut,
+            'paginator'     => $paginator,
         ]);
     }
 

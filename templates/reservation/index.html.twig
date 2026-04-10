@@ -7,20 +7,26 @@
 <div class="page-header">
     <div>
         <div class="page-title">Réservations</div>
-        <div class="page-sub">Gestion des réservations de matériel</div>
+        <div class="page-sub">{% if is_manager %}Toutes les réservations{% else %}Vos réservations{% endif %}</div>
     </div>
     <div style="display:flex;gap:8px">
-        <a href="{{ path('reservation_planning') }}" class="btn btn-outline"><i class="fa-solid fa-calendar-days"></i> Planning</a>
-        <a href="{{ path('reservation_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvelle réservation</a>
+        <a href="{{ path('reservation_planning') }}" class="btn btn-outline">
+            <i class="fa-solid fa-calendar-days"></i> Planning
+        </a>
+        <a href="{{ path('reservation_new') }}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Nouvelle réservation
+        </a>
     </div>
 </div>
 
+{# ── Filtres ── #}
 <div class="table-wrap">
 <form method="GET">
     <div class="table-toolbar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher..." value="{{ filtre_search }}">
+            <input type="text" name="search" placeholder="Rechercher matériel{% if is_manager %}, utilisateur{% endif %}…"
+                   value="{{ filtre_search }}">
         </div>
         <div style="display:flex;gap:8px">
             <select name="statut" class="form-select-sm" onchange="this.form.submit()">
@@ -33,44 +39,104 @@
         </div>
     </div>
 </form>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th><th>Utilisateur</th><th>Matériel</th><th>Date début</th><th>Date fin</th><th>Statut</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in reservations %}
-            <tr>
-                <td class="td-muted">{{ r.id }}</td>
-                <td class="td-bold">{{ r.utilisateur.nomComplet }}</td>
-                <td>{{ r.materiel.nom }}</td>
-                <td>{{ r.dateDebut|date('d/m/Y') }}</td>
-                <td>{{ r.dateFin|date('d/m/Y') }}</td>
-                <td><span class="sbadge {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span></td>
-                <td><div class="action-btns">
-                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
-                    {% if r.statut.value == 'en_attente' %}
-                    <form method="POST" action="{{ path('reservation_confirmer', {id: r.id}) }}" style="display:inline">
-                        <input type="hidden" name="_token" value="{{ csrf_token('confirmer_resa' ~ r.id) }}">
-                        <button type="submit" class="action-btn" title="Confirmer"><i class="fa-solid fa-check"></i></button>
-                    </form>
-                    <form method="POST" action="{{ path('reservation_annuler', {id: r.id}) }}" style="display:inline">
-                        <input type="hidden" name="_token" value="{{ csrf_token('annuler_resa' ~ r.id) }}">
-                        <button type="submit" class="action-btn" title="Annuler"><i class="fa-solid fa-xmark"></i></button>
-                    </form>
+
+{# ── Tableau ── #}
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            {% if is_manager %}<th>Utilisateur</th>{% endif %}
+            <th>Matériel</th>
+            <th>Date début</th>
+            <th>Date fin</th>
+            <th>Statut</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in reservations %}
+        <tr>
+            <td class="td-muted">{{ r.id }}</td>
+            {% if is_manager %}
+            <td class="td-bold">{{ r.utilisateur.nomComplet }}</td>
+            {% endif %}
+            <td>{{ r.materiel.nom }}</td>
+            <td>{{ r.dateDebut|date('d/m/Y') }}</td>
+            <td>{{ r.dateFin|date('d/m/Y') }}</td>
+            <td>
+                <span class="sbadge {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span>
+            </td>
+            <td>
+                <div class="action-btns">
+                    {% if is_manager %}
+                        {#
+                            Flux : en_attente → approuvee → confirmee → en_cours → terminee
+                            Sorties : refusee, annulee, en_retard, en_litige
+                        #}
+                        {% macro btn_statut(id, cible, label, icon, color) %}
+                        <form method="POST" action="{{ path('reservation_changer_statut', {id: id, cible: cible}) }}" style="display:inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('statut_resa' ~ id ~ '_' ~ cible) }}">
+                            <button type="submit" class="action-btn" title="{{ label }}" style="color:{{ color }}">
+                                <i class="fa-solid fa-{{ icon }}"></i>
+                            </button>
+                        </form>
+                        {% endmacro %}
+
+                        {% if r.statut.value == 'en_attente' %}
+                            {{ _self.btn_statut(r.id, 'approuvee',  'Approuver', 'thumbs-up',  '#3b82f6') }}
+                            {{ _self.btn_statut(r.id, 'refusee',    'Refuser',   'ban',        '#ef4444') }}
+                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
+                            <a href="{{ path('reservation_edit', {id: r.id}) }}" class="action-btn" title="Éditer">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+
+                        {% elseif r.statut.value == 'approuvee' %}
+                            {{ _self.btn_statut(r.id, 'confirmee',  'Confirmer', 'check',      '#22c55e') }}
+                            {{ _self.btn_statut(r.id, 'refusee',    'Refuser',   'ban',        '#ef4444') }}
+                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
+
+                        {% elseif r.statut.value == 'confirmee' %}
+                            {{ _self.btn_statut(r.id, 'en_cours',   'Démarrer',  'play',       '#22c55e') }}
+                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
+
+                        {% elseif r.statut.value == 'en_cours' %}
+                            {{ _self.btn_statut(r.id, 'terminee',   'Terminer',  'flag-checkered', '#22c55e') }}
+                            {{ _self.btn_statut(r.id, 'en_retard',  'En retard', 'clock',      '#f59e0b') }}
+                            {{ _self.btn_statut(r.id, 'en_litige',  'En litige', 'triangle-exclamation', '#ef4444') }}
+
+                        {% elseif r.statut.value == 'en_retard' %}
+                            {{ _self.btn_statut(r.id, 'terminee',   'Terminer',  'flag-checkered', '#22c55e') }}
+                            {{ _self.btn_statut(r.id, 'en_litige',  'En litige', 'triangle-exclamation', '#ef4444') }}
+                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
+
+                        {% elseif r.statut.value == 'en_litige' %}
+                            {{ _self.btn_statut(r.id, 'terminee',   'Terminer',  'flag-checkered', '#22c55e') }}
+                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
+                        {% endif %}
+                        {# terminee / annulee / refusee / expiree : aucune action #}
+                    {% else %}
+                        {# Non-managers : éditer uniquement si En attente #}
+                        {% if r.statut.value == 'en_attente' %}
+                        <a href="{{ path('reservation_edit', {id: r.id}) }}" class="action-btn" title="Éditer">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+                        {% endif %}
                     {% endif %}
-                    <a href="{{ path('reservation_edit', {id: r.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
-                    {% endif %}
-                </div></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="7" style="text-align:center;padding:20px;color:#999">Aucune réservation trouvée</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <div class="table-footer">
-        <span>{{ reservations|length }} résultat(s)</span>
-    </div>
+                </div>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="{{ is_manager ? 7 : 6 }}" style="text-align:center;padding:32px;color:#999;font-size:13px">
+                <i class="fa-solid fa-calendar-xmark" style="font-size:24px;display:block;margin-bottom:8px;color:#ddd"></i>
+                Aucune réservation trouvée
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include '_pagination.html.twig' with {paginator: paginator} %}
 </div>
+
 {% endblock %}

@@ -9,6 +9,7 @@ use App\Entity\TypeDocument;
 use App\Repository\CategorieRepository;
 use App\Repository\MaterielRepository;
 use App\Service\AutorisationService;
+use App\Service\Paginator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,20 +21,33 @@ use Symfony\Component\Routing\Attribute\Route;
 class MaterielController extends AbstractController
 {
     #[Route('', name: 'index')]
-    public function index(Request $request, MaterielRepository $repo, CategorieRepository $catRepo): Response
+    public function index(Request $request, MaterielRepository $repo, CategorieRepository $catRepo, AutorisationService $auth): Response
     {
         $raw         = $request->query->all();
         $search      = isset($raw['search'])    && $raw['search']    !== '' ? (string) $raw['search']    : null;
         $etat        = isset($raw['etat'])       && $raw['etat']       !== '' ? (string) $raw['etat']       : null;
         $categorieId = isset($raw['categorie']) && $raw['categorie'] !== '' ? (int)    $raw['categorie'] : null;
 
+        $isManager            = $auth->isAdminOrGestionnaire();
+        $categorieIdsAutorises = $isManager ? [] : $auth->getCategoriesAutorisees();
+
+        // Catégories visibles dans les filtres : toutes pour manager, autorisées pour les autres
+        $categories = $isManager
+            ? $catRepo->findAll()
+            : $catRepo->findBy(['id' => $categorieIdsAutorises]);
+
+        $total     = $repo->countWithFilters($search, $etat, $categorieId, $categorieIdsAutorises);
+        $paginator = Paginator::fromRequest($request, $total);
+
         return $this->render('materiel/index.html.twig', [
-            'materiels'       => $repo->findWithFilters($search, $etat, $categorieId),
-            'categories'      => $catRepo->findAll(),
-            'etats'           => EtatMateriel::cases(),
-            'search'          => $search,
-            'etat_filtre'     => $etat,
+            'materiels'        => $repo->findWithFilters($search, $etat, $categorieId, $categorieIdsAutorises, $paginator->perPage, $paginator->offset),
+            'categories'       => $categories,
+            'etats'            => EtatMateriel::cases(),
+            'search'           => $search,
+            'etat_filtre'      => $etat,
             'categorie_filtre' => $categorieId,
+            'is_manager'       => $isManager,
+            'paginator'        => $paginator,
         ]);
     }
 

@@ -69,8 +69,6 @@
             {% endfor %}
         </tbody>
     </table>
-    <div class="table-footer">
-        <span>{{ emprunts|length }} résultat(s)</span>
-    </div>
+    {% include '_pagination.html.twig' with {paginator: paginator} %}
 </div>
 {% endblock %}

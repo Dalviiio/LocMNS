@@ -58,25 +58,23 @@
 </div>
 {% endif %}
 
-<!-- CALENDRIER -->
+{% if is_manager %}
+<!-- CALENDRIER (managers uniquement) -->
 {% set jours_semaine = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'] %}
 {% set mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'] %}
 
-{# Jours avec réservation ce mois #}
 {% set jours_resa = [] %}
 {% for r in reservations_mois %}
     {% set d = r.dateDebut|date('j')|number_format %}
     {% if d not in jours_resa %}{% set jours_resa = jours_resa|merge([d]) %}{% endif %}
 {% endfor %}
 
-{# Semaine courante : lundi au dimanche #}
-{% set today_num   = 'now'|date('j')|number_format %}
-{% set today_dow   = 'now'|date('N')|number_format %}{# 1=lun … 7=dim #}
-{% set week_days   = [] %}
+{% set today_num = 'now'|date('j')|number_format %}
+{% set today_dow = 'now'|date('N')|number_format %}
+{% set week_days = [] %}
 {% for i in 0..6 %}
     {% set offset = i - (today_dow - 1) %}
-    {% set day_num = today_num + offset %}
-    {% set week_days = week_days|merge([day_num]) %}
+    {% set week_days = week_days|merge([today_num + offset]) %}
 {% endfor %}
 
 <div class="cal-panel">
@@ -87,7 +85,6 @@
         </div>
         <a href="{{ path('reservation_planning') }}" class="cal-header-link">Planning →</a>
     </div>
-
     <div class="cal-week">
         {% for i in 0..6 %}
         {% set d = week_days[i] %}
@@ -95,21 +92,17 @@
         {% set has_evt  = (d in jours_resa and d >= 1 and d <= 31) %}
         <div class="cal-week-day {{ has_evt ? 'has-evt' : '' }}">
             <span class="cal-week-lbl">{{ jours_semaine[i] }}</span>
-            <span class="cal-week-num {{ is_today ? 'today' : '' }} {{ has_evt ? 'has-evt' : '' }}">
-                {{ d > 0 ? d : '' }}
-            </span>
+            <span class="cal-week-num {{ is_today ? 'today' : '' }} {{ has_evt ? 'has-evt' : '' }}">{{ d > 0 ? d : '' }}</span>
             <span class="cal-week-dot"></span>
         </div>
         {% endfor %}
     </div>
-
     {% set prochaines = [] %}
     {% for r in reservations_mois %}
         {% if r.dateDebut|date('j')|number_format >= today_num and prochaines|length < 3 %}
             {% set prochaines = prochaines|merge([r]) %}
         {% endif %}
     {% endfor %}
-
     {% if prochaines is not empty %}
     <div class="cal-upcoming">
         {% for r in prochaines %}
@@ -123,23 +116,14 @@
         {% endfor %}
     </div>
     {% endif %}
-
     <div class="cal-legend">
-        <div class="cal-legend-item">
-            <div class="cal-legend-dot" style="background:var(--dark)"></div>
-            Aujourd'hui
-        </div>
-        <div class="cal-legend-item">
-            <div class="cal-legend-dot" style="background:var(--primary)"></div>
-            Réservation
-        </div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--dark)"></div>Aujourd'hui</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--primary)"></div>Réservation</div>
     </div>
 </div>
 
-<!-- NOTIFICATIONS + ACTIVITÉ -->
+<!-- NOTIFICATIONS + ACTIVITÉ (managers) -->
 <div class="bottom-grid">
-
-    {% if is_manager %}
     <div class="panel">
         <div class="panel-title">Alertes récentes</div>
         <div class="notif-list">
@@ -165,10 +149,8 @@
             {% endfor %}
         </div>
     </div>
-    {% endif %}
-
     <div class="panel">
-        <div class="panel-title">{{ is_manager ? 'Emprunts en cours' : 'Mes emprunts en cours' }}</div>
+        <div class="panel-title">Emprunts en cours</div>
         <div class="notif-list">
             {% for emprunt in emprunts_en_cours %}
             <div class="notif-item">
@@ -190,6 +172,54 @@
             {% endfor %}
         </div>
     </div>
-
 </div>
+
+{% else %}
+<!-- ══ VUE NON-MANAGER ══ -->
+
+{# CTA Nouvelle réservation #}
+<div style="background:#fff;border-radius:14px;border:1px solid var(--border);
+            padding:28px 32px;display:flex;align-items:center;justify-content:space-between;
+            gap:20px;margin-bottom:20px">
+    <div>
+        <div style="font-size:16px;font-weight:700;color:var(--dark);margin-bottom:4px">
+            Besoin de matériel ?
+        </div>
+        <div style="font-size:13px;color:var(--text-2)">
+            Faites une demande de réservation, elle sera traitée par un gestionnaire.
+        </div>
+    </div>
+    <a href="{{ path('reservation_new') }}" class="btn btn-primary" style="white-space:nowrap;flex-shrink:0">
+        <i class="fa-solid fa-calendar-plus"></i> Nouvelle réservation
+    </a>
+</div>
+
+{# Emprunts en cours #}
+<div class="panel">
+    <div class="panel-title">Mes emprunts en cours</div>
+    <div class="notif-list">
+        {% for emprunt in emprunts_en_cours %}
+        <div class="notif-item">
+            <div class="notif-check"></div>
+            <div class="notif-body">
+                <div class="notif-meta">
+                    <span class="notif-badge {{ emprunt.enRetard ? 'badge-green' : 'badge-purple' }}">
+                        {{ emprunt.enRetard ? 'Retard' : 'En cours' }}
+                    </span>
+                    <span class="notif-time">Retour prévu : {{ emprunt.dateFinPrevue|date('d/m/Y') }}</span>
+                </div>
+                <div class="notif-title">{{ emprunt.materiel.nom }}</div>
+                <div class="notif-text">Emprunté le {{ emprunt.dateDebut|date('d/m/Y') }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div style="padding:28px;text-align:center;color:#999;font-size:13px">
+            <i class="fa-solid fa-inbox" style="font-size:22px;display:block;margin-bottom:8px;color:#ddd"></i>
+            Vous n'avez aucun emprunt en cours
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endif %}
 {% endblock %}

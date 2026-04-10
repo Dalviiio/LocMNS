@@ -21,10 +21,10 @@ class Reservation
     #[ORM\JoinColumn(nullable: false)]
     private ?Materiel $materiel = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'date')]
     private ?\DateTimeInterface $dateDebut = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'date')]
     private ?\DateTimeInterface $dateFin = null;
 
     #[ORM\Column(type: 'string', enumType: StatutReservation::class)]

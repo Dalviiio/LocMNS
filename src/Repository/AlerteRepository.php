@@ -18,6 +18,17 @@ class AlerteRepository extends ServiceEntityRepository
         return $this->count(['lu' => false]);
     }
 
+    public function countNonLuesParUser(int $userId): int
+    {
+        return (int) $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->where('a.lu = false')
+            ->andWhere('a.utilisateur = :uid')
+            ->setParameter('uid', $userId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function findNonLues(): array
     {
         return $this->createQueryBuilder('a')
@@ -31,7 +42,27 @@ class AlerteRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findWithFilters(?string $search, ?string $type, ?int $utilisateurId = null): array
+    public function countWithFilters(?string $search, ?string $type, ?int $utilisateurId = null): int
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->select('COUNT(DISTINCT a.id)')
+            ->leftJoin('a.utilisateur', 'u');
+
+        if ($utilisateurId) {
+            $qb->andWhere('a.utilisateur = :uid')->setParameter('uid', $utilisateurId);
+        }
+        if ($search) {
+            $qb->andWhere('a.message LIKE :s OR u.nom LIKE :s OR u.prenom LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+        if ($type) {
+            $qb->andWhere('a.type = :type')->setParameter('type', $type);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function findWithFilters(?string $search, ?string $type, ?int $utilisateurId = null, ?int $limit = null, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('a')
             ->addSelect('u', 'e', 'm')
@@ -49,6 +80,9 @@ class AlerteRepository extends ServiceEntityRepository
         }
         if ($type) {
             $qb->andWhere('a.type = :type')->setParameter('type', $type);
+        }
+        if ($limit !== null) {
+            $qb->setMaxResults($limit)->setFirstResult($offset);
         }
 
         return $qb->getQuery()->getResult();

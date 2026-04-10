@@ -6,6 +6,7 @@ use App\Entity\Utilisateur;
 use App\Repository\ProfilRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\AutorisationService;
+use App\Service\Paginator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,22 +19,26 @@ class UtilisateurController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, UtilisateurRepository $repo, AutorisationService $auth): Response
     {
-        if (!$auth->isAdminOrGestionnaire()) {
+        if (!$auth->isAdmin()) {
             throw $this->createAccessDeniedException();
         }
         $raw    = $request->query->all();
         $search = isset($raw['search']) ? (string) $raw['search'] : '';
 
+        $total     = $repo->countWithFilters($search ?: null);
+        $paginator = Paginator::fromRequest($request, $total);
+
         return $this->render('utilisateur/index.html.twig', [
-            'utilisateurs'  => $repo->findWithFilters($search ?: null),
+            'utilisateurs'  => $repo->findWithFilters($search ?: null, $paginator->perPage, $paginator->offset),
             'filtre_search' => $search,
+            'paginator'     => $paginator,
         ]);
     }
 
     #[Route('/nouveau', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em, ProfilRepository $profilRepo, AutorisationService $auth): Response
     {
-        if (!$auth->isAdminOrGestionnaire()) {
+        if (!$auth->isAdmin()) {
             throw $this->createAccessDeniedException();
         }
         if ($request->isMethod('POST')) {
@@ -57,7 +62,7 @@ class UtilisateurController extends AbstractController
     #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em, ProfilRepository $profilRepo, AutorisationService $auth): Response
     {
-        if (!$auth->isAdminOrGestionnaire()) {
+        if (!$auth->isAdmin()) {
             throw $this->createAccessDeniedException();
         }
         if ($request->isMethod('POST')) {
@@ -79,7 +84,7 @@ class UtilisateurController extends AbstractController
     #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em, AutorisationService $auth): Response
     {
-        if (!$auth->isAdminOrGestionnaire()) {
+        if (!$auth->isAdmin()) {
             throw $this->createAccessDeniedException();
         }
         if ($this->isCsrfTokenValid('delete_user' . $utilisateur->getId(), $request->request->get('_token'))) {

@@ -6,6 +6,7 @@ use App\Entity\Alerte;
 use App\Entity\TypeAlerte;
 use App\Repository\AlerteRepository;
 use App\Service\AutorisationService;
+use App\Service\Paginator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,18 +20,24 @@ class AlerteController extends AbstractController
     #[Route('', name: 'index')]
     public function index(Request $request, AlerteRepository $repo, AutorisationService $auth): Response
     {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
+        $isManager = $auth->isAdminOrGestionnaire();
+        $uid = $isManager ? null : $auth->getUserId();
 
         $raw    = $request->query->all();
         $search = isset($raw['search']) ? (string) $raw['search'] : '';
         $type   = isset($raw['type'])   ? (string) $raw['type']   : '';
 
+        $total     = $repo->countWithFilters($search ?: null, $type ?: null, $uid);
+        $paginator = Paginator::fromRequest($request, $total);
+
         return $this->render('alerte/index.html.twig', [
-            'alertes'       => $repo->findWithFilters($search ?: null, $type ?: null),
+            'alertes'       => $repo->findWithFilters($search ?: null, $type ?: null, $uid, $paginator->perPage, $paginator->offset),
             'types'         => TypeAlerte::cases(),
-            'count_nonlues' => $repo->countNonLues(),
+            'count_nonlues' => $uid ? $repo->countNonLuesParUser($uid) : $repo->countNonLues(),
             'filtre_search' => $search,
             'filtre_type'   => $type,
+            'is_manager'    => $isManager,
+            'paginator'     => $paginator,
         ]);
     }
 
@@ -41,7 +48,7 @@ class AlerteController extends AbstractController
             return new JsonResponse(['alertes' => [], 'total' => 0]);
         }
 
-        $alertes = array_slice($repo->findNonLues(), 0, 5);
+        $alertes = array_slice($repo->findNonLues(), 0, 15);
         $data = array_map(fn(Alerte $a) => [
             'id'      => $a->getId(),
             'type'    => $a->getType()->label(),
@@ -63,6 +70,7 @@ class AlerteController extends AbstractController
         if ($this->isCsrfTokenValid('lire_alerte' . $alerte->getId(), $request->request->get('_token'))) {
             $alerte->setLu(true);
             $em->flush();
+            $this->addFlash('success', 'Alerte marquée comme lue.');
         }
         return $this->redirectToRoute('alerte_index');
     }

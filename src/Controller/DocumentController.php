@@ -7,6 +7,7 @@ use App\Entity\TypeDocument;
 use App\Repository\DocumentRepository;
 use App\Repository\MaterielRepository;
 use App\Service\AutorisationService;
+use App\Service\Paginator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,12 +25,16 @@ class DocumentController extends AbstractController
         $search = isset($raw['search']) ? (string) $raw['search'] : '';
         $type   = isset($raw['type'])   ? (string) $raw['type']   : '';
 
+        $total     = $repo->countWithFilters($search ?: null, $type ?: null);
+        $paginator = Paginator::fromRequest($request, $total);
+
         return $this->render('document/index.html.twig', [
-            'documents'     => $repo->findWithFilters($search ?: null, $type ?: null),
+            'documents'     => $repo->findWithFilters($search ?: null, $type ?: null, $paginator->perPage, $paginator->offset),
             'materiels'     => $materielRepo->findAll(),
             'types'         => TypeDocument::cases(),
             'filtre_search' => $search,
             'filtre_type'   => $type,
+            'paginator'     => $paginator,
         ]);
     }
 

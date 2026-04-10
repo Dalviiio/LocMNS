@@ -7,12 +7,14 @@
 <div class="page-header">
     <div>
         <div class="page-title">Alertes <span style="font-size:15px;color:#999;font-weight:400">({{ count_nonlues }} non lues)</span></div>
-        <div class="page-sub">Centre de notifications et alertes</div>
+        <div class="page-sub">{% if is_manager %}Centre de notifications et alertes{% else %}Vos alertes personnelles{% endif %}</div>
     </div>
+    {% if is_manager %}
     <form method="POST" action="{{ path('alerte_tout_lire') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('tout_lire') }}">
         <button type="submit" class="btn btn-outline"><i class="fa-solid fa-check-double"></i> Tout marquer comme lu</button>
     </form>
+    {% endif %}
 </div>
 
 <div class="table-wrap">
@@ -61,10 +63,12 @@
                         <button type="submit" class="action-btn" title="Marquer comme lu"><i class="fa-solid fa-check"></i></button>
                     </form>
                     {% endif %}
+                    {% if is_manager %}
                     <form method="POST" action="{{ path('alerte_delete', {id: a.id}) }}" style="display:inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('del_alerte' ~ a.id) }}">
                         <button type="submit" class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
                     </form>
+                    {% endif %}
                 </div></td>
             </tr>
             {% else %}
@@ -72,8 +76,6 @@
             {% endfor %}
         </tbody>
     </table>
-    <div class="table-footer">
-        <span>{{ alertes|length }} alerte(s)</span>
-    </div>
+    {% include '_pagination.html.twig' with {paginator: paginator} %}
 </div>
 {% endblock %}

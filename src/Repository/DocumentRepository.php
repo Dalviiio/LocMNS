@@ -23,7 +23,24 @@ class DocumentRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findWithFilters(?string $search, ?string $type): array
+    public function countWithFilters(?string $search, ?string $type): int
+    {
+        $qb = $this->createQueryBuilder('d')
+            ->select('COUNT(d.id)')
+            ->join('d.materiel', 'm');
+
+        if ($search) {
+            $qb->andWhere('d.titre LIKE :s OR m.nom LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+        if ($type) {
+            $qb->andWhere('d.type = :type')->setParameter('type', $type);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function findWithFilters(?string $search, ?string $type, ?int $limit = null, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('d')
             ->join('d.materiel', 'm')
@@ -35,6 +52,9 @@ class DocumentRepository extends ServiceEntityRepository
         }
         if ($type) {
             $qb->andWhere('d.type = :type')->setParameter('type', $type);
+        }
+        if ($limit !== null) {
+            $qb->setMaxResults($limit)->setFirstResult($offset);
         }
 
         return $qb->getQuery()->getResult();

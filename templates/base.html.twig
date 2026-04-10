@@ -30,7 +30,7 @@
             <span id="notif-badge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--primary)"></span>
             <div class="h-dropdown h-notif-dropdown">
                 <div class="h-dropdown-title">Dernières alertes</div>
-                <div id="notif-list" style="max-height:280px;overflow-y:auto">
+                <div id="notif-list">
                     <div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Chargement…</div>
                 </div>
                 <a href="{{ path('alerte_index') }}" class="h-dropdown-footer">Voir toutes les alertes →</a>
@@ -44,7 +44,7 @@
                 <div class="h-dropdown-title">{{ app.session.get('user_nom') ?? 'Compte' }}</div>
                 <div style="padding:4px 0">
                     <a href="{{ path('compte_index') }}" class="h-dropdown-item"><i class="fa-solid fa-user" style="width:16px"></i> Mon compte</a>
-                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+                    {% if app.session.get('user_profil') == 'Administrateur' %}
                     <a href="{{ path('utilisateur_index') }}" class="h-dropdown-item"><i class="fa-solid fa-users" style="width:16px"></i> Utilisateurs</a>
                     {% endif %}
                     <div style="margin:6px 0;border-top:1px solid #F0F0F0"></div>
@@ -60,11 +60,15 @@
 
     <!-- ══ SIDEBAR ══ -->
     <aside class="sidebar" id="sidebar">
+        {# Dashboard — tous les profils #}
         <a href="{{ path('dashboard') }}"
            class="nav-item {% if app.request.attributes.get('_route') == 'dashboard' %}active{% endif %}"
            title="Dashboard">
             <i class="fa-solid fa-table-columns"></i>
         </a>
+
+        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+        {# Managers uniquement : Matériels, Emprunts, Réservations, Alertes #}
         <a href="{{ path('materiel_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'materiel' %}active{% endif %}"
            title="Matériels">
@@ -75,28 +79,31 @@
            title="Emprunts">
             <i class="fa-solid fa-right-left"></i>
         </a>
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('reservation_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'reservation' %}active{% endif %}"
            title="Réservations">
             <i class="fa-solid fa-calendar-days"></i>
         </a>
-        {% endif %}
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('alerte_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'alerte' %}active{% endif %}"
            title="Alertes">
             <i class="fa-solid fa-bell"></i>
         </a>
-        {% endif %}
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
         <a href="{{ path('document_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'document' %}active{% endif %}"
            title="Documents">
             <i class="fa-solid fa-file-lines"></i>
         </a>
+        {% else %}
+        {# Employé / Stagiaire / Client : accès direct nouvelle réservation #}
+        <a href="{{ path('reservation_new') }}"
+           class="nav-item {% if app.request.attributes.get('_route') starts with 'reservation' %}active{% endif %}"
+           title="Nouvelle réservation">
+            <i class="fa-solid fa-calendar-plus"></i>
+        </a>
         {% endif %}
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+
+        {% if app.session.get('user_profil') == 'Administrateur' %}
         <a href="{{ path('utilisateur_index') }}"
            class="nav-item {% if app.request.attributes.get('_route') starts with 'utilisateur' %}active{% endif %}"
            title="Utilisateurs">

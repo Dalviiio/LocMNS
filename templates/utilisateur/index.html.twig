@@ -64,8 +64,6 @@
             {% endfor %}
         </tbody>
     </table>
-    <div class="table-footer">
-        <span>{{ utilisateurs|length }} utilisateur(s)</span>
-    </div>
+    {% include '_pagination.html.twig' with {paginator: paginator} %}
 </div>
 {% endblock %}

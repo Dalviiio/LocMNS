@@ -76,7 +76,28 @@ class EmpruntRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findWithFilters(?string $search, ?string $statut, ?int $utilisateurId = null): array
+    public function countWithFilters(?string $search, ?string $statut, ?int $utilisateurId = null): int
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->select('COUNT(DISTINCT e.id)')
+            ->join('e.utilisateur', 'u')
+            ->join('e.materiel', 'm');
+
+        if ($utilisateurId) {
+            $qb->andWhere('e.utilisateur = :uid')->setParameter('uid', $utilisateurId);
+        }
+        if ($search) {
+            $qb->andWhere('u.nom LIKE :s OR u.prenom LIKE :s OR m.nom LIKE :s')
+               ->setParameter('s', '%' . $search . '%');
+        }
+        if ($statut) {
+            $qb->andWhere('e.statut = :statut')->setParameter('statut', $statut);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function findWithFilters(?string $search, ?string $statut, ?int $utilisateurId = null, ?int $limit = null, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('e')
             ->addSelect('u', 'm')
@@ -93,6 +114,9 @@ class EmpruntRepository extends ServiceEntityRepository
         }
         if ($statut) {
             $qb->andWhere('e.statut = :statut')->setParameter('statut', $statut);
+        }
+        if ($limit !== null) {
+            $qb->setMaxResults($limit)->setFirstResult($offset);
         }
 
         return $qb->getQuery()->getResult();

@@ -1,57 +1,64 @@
 {% extends 'base.html.twig' %}
-{% block title %}{{ reservation ? 'Modifier' : 'Nouvelle' }} réservation — LOCMNS{% endblock %}
-{% block content %}
+{% block title %}{{ reservation ? 'Modifier la réservation #' ~ reservation.id : 'Nouvelle réservation' }} — LOCMNS{% endblock %}
 
+{% block content %}
 <div class="page-label">Réservations › {{ reservation ? 'Modifier' : 'Nouvelle' }}</div>
 
 <div class="page-header">
-    <div class="page-title">{{ reservation ? 'Modifier la réservation #' ~ reservation.id : 'Nouvelle réservation' }}</div>
-    <a href="{{ path('reservation_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
+    <div>
+        <div class="page-title">{{ reservation ? 'Modifier la réservation #' ~ reservation.id : 'Nouvelle réservation' }}</div>
+        <div class="page-sub">Sélectionnez un modèle, choisissez la quantité et les dates</div>
+    </div>
+    <a href="{{ path('reservation_index') }}" class="btn btn-outline">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
 </div>
 
-<div class="table-wrap" style="padding:28px;max-width:700px">
-    <form method="POST" action="{{ reservation ? path('reservation_edit', {id: reservation.id}) : path('reservation_new') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token(reservation ? 'edit_resa' ~ reservation.id : 'new_resa') }}">
+{# ══ MODE ÉDITION (formulaire simple) ══ #}
+{% if reservation %}
+<div class="table-wrap" style="padding:28px;max-width:680px">
+    <form method="POST" action="{{ path('reservation_edit', {id: reservation.id}) }}" id="form-resa">
+        <input type="hidden" name="_token" value="{{ csrf_token('edit_resa' ~ reservation.id) }}">
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
 
-            <div style="display:flex;flex-direction:column;gap:6px">
+            {% if is_manager %}
+            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Utilisateur *</label>
                 <select name="utilisateur_id" class="form-control" required>
-                    <option value="">-- Choisir --</option>
+                    <option value="">— Sélectionner —</option>
                     {% for u in utilisateurs %}
-                    <option value="{{ u.id }}" {{ reservation and reservation.utilisateur.id == u.id ? 'selected' : '' }}>{{ u.nomComplet }}</option>
+                    <option value="{{ u.id }}" {{ reservation.utilisateur.id == u.id ? 'selected' : '' }}>{{ u.nomComplet }}</option>
                     {% endfor %}
                 </select>
             </div>
+            {% endif %}
 
-            <div style="display:flex;flex-direction:column;gap:6px">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Matériel *</label>
-                {% if acces_limite is defined and acces_limite %}
-                <div style="padding:10px 14px;background:#FFF0EB;border:1px solid #FF5C2C;border-radius:8px;font-size:12px;color:#FF5C2C">
-                    <i class="fa-solid fa-lock"></i> Aucun matériel accessible avec votre profil.
+            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Matériel</label>
+                <div style="padding:10px 14px;background:#f7f7f7;border-radius:8px;font-weight:600">
+                    {{ reservation.materiel.nom }} — {{ reservation.materiel.categorie.nom }}
+                    <span class="td-muted" style="font-size:11px;margin-left:8px">#{{ reservation.materiel.numeroSerie }}</span>
                 </div>
-                {% else %}
-                <select name="materiel_id" class="form-control" required>
-                    <option value="">-- Choisir --</option>
-                    {% for m in materiels %}
-                    <option value="{{ m.id }}" {{ reservation and reservation.materiel.id == m.id ? 'selected' : '' }}>{{ m.nom }} — {{ m.categorie.nom }}</option>
-                    {% endfor %}
-                </select>
-                {% endif %}
+                <input type="hidden" name="materiel_id" value="{{ reservation.materiel.id }}">
             </div>
 
             <div style="display:flex;flex-direction:column;gap:6px">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de début *</label>
-                <input type="datetime-local" name="date_debut" class="form-control" required
-                       value="{{ reservation ? reservation.dateDebut|date('Y-m-d\\TH:i') : '' }}">
+                <input type="date" name="date_debut" id="date_debut" class="form-control" required
+                       min="{{ 'now'|date('Y-m-d') }}"
+                       value="{{ reservation.dateDebut|date('Y-m-d') }}">
             </div>
 
             <div style="display:flex;flex-direction:column;gap:6px">
                 <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date de fin *</label>
-                <input type="datetime-local" name="date_fin" class="form-control" required
-                       value="{{ reservation ? reservation.dateFin|date('Y-m-d\\TH:i') : '' }}">
+                <input type="date" name="date_fin" id="date_fin" class="form-control" required
+                       min="{{ reservation.dateDebut|date('Y-m-d') }}"
+                       value="{{ reservation.dateFin|date('Y-m-d') }}">
+                <div id="date-error" style="display:none;font-size:11px;color:#ef4444">
+                    <i class="fa-solid fa-triangle-exclamation"></i> La date de fin doit être après la date de début.
+                </div>
             </div>
-
         </div>
 
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e5e5e5;display:flex;gap:10px">
@@ -60,4 +67,239 @@
         </div>
     </form>
 </div>
+
+{% else %}
+{# ══ MODE CRÉATION — catalogue ══ #}
+<form method="POST" action="{{ path('reservation_new') }}" id="form-resa">
+<input type="hidden" name="_token" value="{{ csrf_token('new_resa') }}">
+<input type="hidden" name="materiel_nom" id="materiel_nom_hidden" value="">
+<input type="hidden" name="quantite"     id="quantite_hidden"     value="1">
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+
+    {# ── Colonne gauche : dates + utilisateur + catalogue ── #}
+    <div>
+
+        {# Dates #}
+        <div class="table-wrap" style="padding:20px 24px;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+                        color:var(--text-3);margin-bottom:12px">
+                <i class="fa-solid fa-calendar-days" style="color:var(--primary);margin-right:6px"></i>
+                Période souhaitée
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                {% if is_manager %}
+                <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:5px">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Utilisateur *</label>
+                    <select name="utilisateur_id" class="form-control" required>
+                        <option value="">— Sélectionner —</option>
+                        {% for u in utilisateurs %}
+                        <option value="{{ u.id }}">{{ u.nomComplet }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div style="display:flex;flex-direction:column;gap:5px">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date début *</label>
+                    <input type="date" name="date_debut" id="date_debut" class="form-control" required
+                           min="{{ 'now'|date('Y-m-d') }}"
+                           value="{{ 'now'|date('Y-m-d') }}">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Date fin *</label>
+                    <input type="date" name="date_fin" id="date_fin" class="form-control" required
+                           min="{{ 'now'|date('Y-m-d') }}"
+                           value="{{ 'tomorrow'|date('Y-m-d') }}">
+                    <div id="date-error" style="display:none;font-size:11px;color:#ef4444">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Date de fin invalide.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Catalogue #}
+        <div class="table-wrap" style="padding:20px 24px">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+                        color:var(--text-3);margin-bottom:14px">
+                <i class="fa-solid fa-box" style="color:var(--primary);margin-right:6px"></i>
+                Choisir un matériel
+            </div>
+
+            {% if catalogue is empty %}
+            <div style="padding:24px;text-align:center;color:#999;font-size:13px">
+                <i class="fa-solid fa-lock" style="font-size:22px;display:block;margin-bottom:8px;color:#ddd"></i>
+                Aucun matériel accessible avec votre profil.
+            </div>
+            {% else %}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px" id="catalogue-grid">
+                {% for item in catalogue %}
+                <div class="cat-card"
+                     data-nom="{{ item.nom }}"
+                     data-total="{{ item.total }}"
+                     onclick="selectCard(this)"
+                     style="border:2px solid var(--border);border-radius:10px;padding:14px 16px;
+                            cursor:pointer;transition:all .15s;background:#fff;user-select:none">
+                    <div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:4px;
+                                line-height:1.3">{{ item.nom }}</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">{{ item.categorie }}</div>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600">
+                        <i class="fa-solid fa-layer-group" style="color:var(--primary)"></i>
+                        {{ item.total }} exemplaire{{ item.total > 1 ? 's' : '' }} au parc
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Colonne droite : panneau récap + quantité + submit ── #}
+    <div class="table-wrap" style="padding:24px;position:sticky;top:20px" id="recap-panel">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+                    color:var(--text-3);margin-bottom:16px">
+            <i class="fa-solid fa-clipboard-check" style="color:var(--primary);margin-right:6px"></i>
+            Récapitulatif
+        </div>
+
+        {# Matériel sélectionné #}
+        <div id="recap-materiel" style="padding:12px 14px;background:#f7f7f7;border-radius:8px;
+                                        margin-bottom:16px;min-height:56px;display:flex;
+                                        align-items:center;color:#aaa;font-size:13px">
+            <i class="fa-regular fa-hand-pointer" style="margin-right:8px"></i>
+            Sélectionnez un matériel
+        </div>
+
+        {# Sélecteur quantité #}
+        <div id="recap-qty" style="display:none;margin-bottom:20px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+                        color:var(--text-3);margin-bottom:8px">Quantité</div>
+            <div style="display:flex;align-items:center;gap:0;border:1px solid var(--border);
+                        border-radius:8px;overflow:hidden;width:fit-content">
+                <button type="button" onclick="changeQty(-1)"
+                        style="width:40px;height:40px;border:none;background:#f7f7f7;
+                               font-size:18px;cursor:pointer;color:var(--text);font-weight:700">−</button>
+                <div id="qty-display"
+                     style="width:52px;height:40px;display:flex;align-items:center;
+                            justify-content:center;font-size:17px;font-weight:700;
+                            color:var(--dark);border-left:1px solid var(--border);
+                            border-right:1px solid var(--border)">1</div>
+                <button type="button" onclick="changeQty(+1)"
+                        style="width:40px;height:40px;border:none;background:#f7f7f7;
+                               font-size:18px;cursor:pointer;color:var(--text);font-weight:700">+</button>
+            </div>
+            <div id="qty-max-info" style="font-size:11px;color:#aaa;margin-top:6px"></div>
+        </div>
+
+        {# Bouton submit #}
+        <button type="submit" id="btn-submit" disabled
+                class="btn btn-primary" style="width:100%;opacity:.45;cursor:not-allowed">
+            <i class="fa-solid fa-floppy-disk"></i> Réserver
+        </button>
+        <div id="submit-hint" style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">
+            Sélectionnez un matériel et des dates
+        </div>
+    </div>
+
+</div>
+</form>
+{% endif %}
+
+<script>
+(function () {
+    let selectedNom   = '';
+    let selectedTotal = 0;
+    let currentQty    = 1;
+
+    // ── Sélection d'une carte ──
+    window.selectCard = function (el) {
+        document.querySelectorAll('.cat-card').forEach(c => {
+            c.style.borderColor  = 'var(--border)';
+            c.style.background   = '#fff';
+            c.style.boxShadow    = 'none';
+        });
+        el.style.borderColor = 'var(--primary)';
+        el.style.background  = '#FFF5F2';
+        el.style.boxShadow   = '0 0 0 3px rgba(255,92,44,.12)';
+
+        selectedNom   = el.dataset.nom;
+        selectedTotal = parseInt(el.dataset.total, 10);
+        currentQty    = 1;
+
+        document.getElementById('materiel_nom_hidden').value = selectedNom;
+        document.getElementById('quantite_hidden').value     = currentQty;
+        document.getElementById('qty-display').textContent   = currentQty;
+        document.getElementById('recap-materiel').innerHTML  =
+            '<i class="fa-solid fa-check-circle" style="color:var(--primary);margin-right:8px"></i>' +
+            '<strong>' + selectedNom + '</strong>';
+
+        document.getElementById('recap-qty').style.display   = 'block';
+        document.getElementById('qty-max-info').textContent  =
+            'Max : ' + selectedTotal + ' exemplaire' + (selectedTotal > 1 ? 's' : '');
+
+        updateSubmit();
+    };
+
+    // ── Changer la quantité ──
+    window.changeQty = function (delta) {
+        currentQty = Math.max(1, Math.min(selectedTotal, currentQty + delta));
+        document.getElementById('qty-display').textContent  = currentQty;
+        document.getElementById('quantite_hidden').value    = currentQty;
+        updateSubmit();
+    };
+
+    // ── Activer/désactiver le bouton submit ──
+    function updateSubmit () {
+        const btn   = document.getElementById('btn-submit');
+        const hint  = document.getElementById('submit-hint');
+        const debut = document.getElementById('date_debut');
+        const fin   = document.getElementById('date_fin');
+        const ok    = selectedNom && debut && fin && debut.value && fin.value && fin.value > debut.value;
+        btn.disabled       = !ok;
+        btn.style.opacity  = ok ? '1' : '.45';
+        btn.style.cursor   = ok ? 'pointer' : 'not-allowed';
+        hint.textContent   = ok ? '' : (!selectedNom ? 'Sélectionnez un matériel' :
+                                        (!debut.value || !fin.value) ? 'Renseignez les dates' :
+                                        'Date de fin invalide');
+    }
+
+    // ── Validation dates ──
+    const dateDebut = document.getElementById('date_debut');
+    const dateFin   = document.getElementById('date_fin');
+    if (dateDebut && dateFin) {
+        dateDebut.addEventListener('change', function () {
+            dateFin.min = this.value;
+            // Si la date de fin est <= debut, la repousser au lendemain
+            if (dateFin.value && dateFin.value <= this.value) {
+                const d = new Date(this.value);
+                d.setDate(d.getDate() + 1);
+                dateFin.value = d.toISOString().slice(0, 10);
+            }
+            const err = document.getElementById('date-error');
+            if (err) err.style.display = 'none';
+            updateSubmit();
+        });
+        dateFin.addEventListener('change', function () {
+            const err = document.getElementById('date-error');
+            if (err) err.style.display = (dateDebut.value && this.value <= dateDebut.value) ? 'block' : 'none';
+            updateSubmit();
+        });
+    }
+
+    // ── Validation avant soumission ──
+    const form = document.getElementById('form-resa');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (dateFin && dateDebut && dateFin.value <= dateDebut.value) {
+                e.preventDefault();
+                document.getElementById('date-error').style.display = 'block';
+            }
+        });
+    }
+
+    // Init pour le mode édition (simple validation dates)
+    if (!document.getElementById('catalogue-grid') && dateDebut && dateFin) {
+        // mode edit : juste validation JS dates
+    }
+})();
+</script>
 {% endblock %}
