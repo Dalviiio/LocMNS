@@ -11,45 +11,45 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:800px">
+<div class="form-grid-2-16 compte-wrap">
 
-    <div class="table-wrap" style="padding:24px">
-        <div class="panel-title" style="margin-bottom:18px">Modifier mon profil</div>
+    <div class="table-wrap panel-padded">
+        <div class="panel-title form-section-title-mb">Modifier mon profil</div>
         <form method="POST">
             <input type="hidden" name="_token" value="{{ csrf_token('edit_compte') }}">
-            <div style="display:flex;flex-direction:column;gap:14px">
-                <div style="display:flex;flex-direction:column;gap:5px">
-                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Prénom</label>
+            <div class="form-col">
+                <div class="form-field-sm">
+                    <label class="form-label">Prénom</label>
                     <input type="text" name="prenom" class="form-control" value="{{ utilisateur.prenom }}" required>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:5px">
-                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Nom</label>
+                <div class="form-field-sm">
+                    <label class="form-label">Nom</label>
                     <input type="text" name="nom" class="form-control" value="{{ utilisateur.nom }}" required>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:5px">
-                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Email</label>
+                <div class="form-field-sm">
+                    <label class="form-label">Email</label>
                     <input type="email" name="email" class="form-control" value="{{ utilisateur.email }}" required>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:5px">
-                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Nouveau mot de passe <span style="font-weight:400;color:#aaa">(laisser vide)</span></label>
+                <div class="form-field-sm">
+                    <label class="form-label">Nouveau mot de passe <span class="form-label-note">(laisser vide)</span></label>
                     <input type="password" name="mot_de_passe" class="form-control" autocomplete="new-password">
                 </div>
-                <button type="submit" class="btn btn-primary" style="margin-top:4px"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
             </div>
         </form>
     </div>
 
-    <div class="table-wrap" style="padding:24px">
-        <div class="panel-title" style="margin-bottom:18px">Informations</div>
+    <div class="table-wrap panel-padded">
+        <div class="panel-title form-section-title-mb">Informations</div>
         <table><tbody>
-            <tr><td style="color:#999;font-size:12px;padding:10px 0;width:130px">Profil</td><td><span class="sbadge sb-info">{{ utilisateur.profil.nom }}</span></td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:10px 0">Membre depuis</td><td>{{ utilisateur.createdAt|date('d/m/Y') }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:10px 0">Emprunts actifs</td><td>{{ utilisateur.empruntsActifs|length }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:10px 0">Réservations</td><td>{{ utilisateur.reservations|length }}</td></tr>
+            <tr><td class="td-label-wide">Profil</td><td><span class="sbadge sb-info">{{ utilisateur.profil.nom }}</span></td></tr>
+            <tr><td class="td-label-wide">Membre depuis</td><td>{{ utilisateur.createdAt|date('d/m/Y') }}</td></tr>
+            <tr><td class="td-label-wide">Emprunts actifs</td><td>{{ utilisateur.empruntsActifs|length }}</td></tr>
+            <tr><td class="td-label-wide">Réservations</td><td>{{ utilisateur.reservations|length }}</td></tr>
         </tbody></table>
 
-        <div style="margin-top:24px;padding-top:20px;border-top:1px solid #E5E5E5">
-            <a href="{{ path('logout') }}" class="btn btn-outline" style="width:100%;justify-content:center">
+        <div class="form-actions">
+            <a href="{{ path('logout') }}" class="btn btn-outline btn-full">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i> Se déconnecter
             </a>
         </div>

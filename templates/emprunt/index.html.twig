@@ -9,8 +9,8 @@
         <div class="page-title">Emprunts</div>
         <div class="page-sub">Suivi des emprunts de matériel</div>
     </div>
-    <div style="display:flex;gap:8px">
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+    <div class="page-header-actions">
+        {% if is_manager %}
         <a href="{{ path('export_emprunts_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
         {% endif %}
         <a href="{{ path('emprunt_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel emprunt</a>
@@ -24,7 +24,7 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" name="search" placeholder="Rechercher..." value="{{ filtre_search }}">
         </div>
-        <div style="display:flex;gap:8px">
+        <div class="toolbar-group">
             <select name="statut" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Tous les statuts</option>
                 {% for s in statuts %}
@@ -53,9 +53,9 @@
                 <td><span class="sbadge {{ e.enRetard ? 'sb-danger' : e.statut.badgeClass() }}">{{ e.enRetard ? 'Retard' : e.statut.label() }}</span></td>
                 <td><div class="action-btns">
                     <a href="{{ path('emprunt_show', {id: e.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
-                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+                    {% if is_manager %}
                     {% if e.statut.value == 'en_cours' or e.statut.value == 'retard' %}
-                    <form method="POST" action="{{ path('emprunt_retour', {id: e.id}) }}" style="display:inline">
+                    <form method="POST" action="{{ path('emprunt_retour', {id: e.id}) }}" class="d-inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('retour_emprunt' ~ e.id) }}">
                         <button type="submit" class="action-btn" title="Enregistrer le retour"><i class="fa-solid fa-rotate-left"></i></button>
                     </form>
@@ -65,7 +65,7 @@
                 </div></td>
             </tr>
             {% else %}
-            <tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Aucun emprunt trouvé</td></tr>
+            <tr><td colspan="8" class="td-empty">Aucun emprunt trouvé</td></tr>
             {% endfor %}
         </tbody>
     </table>

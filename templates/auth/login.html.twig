@@ -54,6 +54,7 @@
             transition: background .15s;
         }
         .login-btn:hover { background: #e04a1a; }
+        .login-logo { height: 80px; width: auto; mix-blend-mode: multiply; }
         .login-error {
             background: #FFF0EB;
             border: 1px solid #FF5C2C;
@@ -71,7 +72,7 @@
 <body>
 <div class="login-wrap">
     <div class="login-top">
-        <img src="{{ asset('images/loc.png') }}" alt="LOCMNS" style="height:80px;width:auto;mix-blend-mode:multiply">
+        <img src="{{ asset('images/loc.png') }}" alt="LOCMNS" class="login-logo">
     </div>
     <div class="login-body">
         <div class="login-title">Connexion</div>

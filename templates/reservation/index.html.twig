@@ -9,7 +9,7 @@
         <div class="page-title">Réservations</div>
         <div class="page-sub">{% if is_manager %}Toutes les réservations{% else %}Vos réservations{% endif %}</div>
     </div>
-    <div style="display:flex;gap:8px">
+    <div class="page-header-actions">
         <a href="{{ path('reservation_planning') }}" class="btn btn-outline">
             <i class="fa-solid fa-calendar-days"></i> Planning
         </a>
@@ -28,7 +28,7 @@
             <input type="text" name="search" placeholder="Rechercher matériel{% if is_manager %}, utilisateur{% endif %}…"
                    value="{{ filtre_search }}">
         </div>
-        <div style="display:flex;gap:8px">
+        <div class="toolbar-group">
             <select name="statut" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Tous les statuts</option>
                 {% for s in statuts %}
@@ -74,7 +74,7 @@
                             Sorties : refusee, annulee, en_retard, en_litige
                         #}
                         {% macro btn_statut(id, cible, label, icon, color) %}
-                        <form method="POST" action="{{ path('reservation_changer_statut', {id: id, cible: cible}) }}" style="display:inline">
+                        <form method="POST" action="{{ path('reservation_changer_statut', {id: id, cible: cible}) }}" class="d-inline">
                             <input type="hidden" name="_token" value="{{ csrf_token('statut_resa' ~ id ~ '_' ~ cible) }}">
                             <button type="submit" class="action-btn" title="{{ label }}" style="color:{{ color }}">
                                 <i class="fa-solid fa-{{ icon }}"></i>
@@ -127,8 +127,8 @@
         </tr>
         {% else %}
         <tr>
-            <td colspan="{{ is_manager ? 7 : 6 }}" style="text-align:center;padding:32px;color:#999;font-size:13px">
-                <i class="fa-solid fa-calendar-xmark" style="font-size:24px;display:block;margin-bottom:8px;color:#ddd"></i>
+            <td colspan="{{ is_manager ? 7 : 6 }}" class="td-empty-lg">
+                <i class="fa-solid fa-calendar-xmark td-empty-icon"></i>
                 Aucune réservation trouvée
             </td>
         </tr>

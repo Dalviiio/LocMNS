@@ -9,23 +9,23 @@
         <div class="page-title">{{ materiel.nom }}</div>
         <div class="page-sub">{{ materiel.categorie.nom }} — {{ materiel.localisation ?? 'Localisation inconnue' }}</div>
     </div>
-    <div style="display:flex;gap:8px">
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+    <div class="page-header-actions">
+        {% if is_manager %}
         <a href="{{ path('materiel_edit', {id: materiel.id}) }}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Modifier</a>
         {% endif %}
         <a href="{{ path('materiel_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="form-grid-2-16">
 
-    <div class="table-wrap" style="padding:20px">
-        <div class="panel-title" style="margin-bottom:16px">Informations</div>
+    <div class="table-wrap panel-padded-20">
+        <div class="panel-title form-section-title-16">Informations</div>
         <table>
             <tbody>
-                <tr><td style="color:#999;font-size:12px;padding:8px 0;width:140px">N° Série</td><td>{{ materiel.numeroSerie ?? '—' }}</td></tr>
-                <tr><td style="color:#999;font-size:12px;padding:8px 0">État</td><td><span class="sbadge {{ materiel.etat.badgeClass() }}">{{ materiel.etat.label() }}</span></td></tr>
-                <tr><td style="color:#999;font-size:12px;padding:8px 0">Disponibilité</td>
+                <tr><td class="td-label">N° Série</td><td>{{ materiel.numeroSerie ?? '—' }}</td></tr>
+                <tr><td class="td-label">État</td><td><span class="sbadge {{ materiel.etat.badgeClass() }}">{{ materiel.etat.label() }}</span></td></tr>
+                <tr><td class="td-label">Disponibilité</td>
                     <td>
                         {% if materiel.disponible %}
                             <span class="sbadge sb-success">Disponible</span>
@@ -34,18 +34,18 @@
                         {% endif %}
                     </td>
                 </tr>
-                <tr><td style="color:#999;font-size:12px;padding:8px 0">Localisation</td><td>{{ materiel.localisation ?? '—' }}</td></tr>
-                <tr><td style="color:#999;font-size:12px;padding:8px 0">Ajouté le</td><td>{{ materiel.createdAt|date('d/m/Y') }}</td></tr>
+                <tr><td class="td-label">Localisation</td><td>{{ materiel.localisation ?? '—' }}</td></tr>
+                <tr><td class="td-label">Ajouté le</td><td>{{ materiel.createdAt|date('d/m/Y') }}</td></tr>
             </tbody>
         </table>
     </div>
 
-    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
-    <div class="table-wrap" style="padding:20px">
-        <div class="panel-title" style="margin-bottom:16px">Ajouter un document</div>
+    {% if is_manager %}
+    <div class="table-wrap panel-padded-20">
+        <div class="panel-title form-section-title-16">Ajouter un document</div>
         <form method="POST" action="{{ path('materiel_document_add', {id: materiel.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('add_doc' ~ materiel.id) }}">
-            <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="form-col-sm">
                 <input type="text" name="titre" placeholder="Titre du document" class="form-control" required>
                 <input type="text" name="url" placeholder="URL ou chemin du fichier" class="form-control" required>
                 <select name="type" class="form-control">
@@ -74,10 +74,10 @@
             <tr>
                 <td class="td-bold">{{ doc.titre }}</td>
                 <td><span class="sbadge {{ doc.type.badgeClass() }}">{{ doc.type.label() }}</span></td>
-                <td class="td-muted">{{ doc.url }}</td>
+                <td class="td-muted-url">{{ doc.url }}</td>
                 <td>
-                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
-                    <form method="POST" action="{{ path('materiel_document_delete', {id: doc.id}) }}" style="display:inline">
+                    {% if is_manager %}
+                    <form method="POST" action="{{ path('materiel_document_delete', {id: doc.id}) }}" class="d-inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('del_doc' ~ doc.id) }}">
                         <button type="submit" class="action-btn"><i class="fa-solid fa-trash"></i></button>
                     </form>
@@ -85,7 +85,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="4" style="text-align:center;padding:16px;color:#999">Aucun document</td></tr>
+            <tr><td colspan="4" class="td-empty-sm">Aucun document</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -104,7 +104,7 @@
             {% for acc in materiel.accessoires %}
             <tr>
                 <td class="td-bold">
-                    <a href="{{ path('materiel_show', {id: acc.id}) }}" style="color:inherit">{{ acc.nom }}</a>
+                    <a href="{{ path('materiel_show', {id: acc.id}) }}" class="link-inherit">{{ acc.nom }}</a>
                 </td>
                 <td><span class="sbadge {{ acc.etat.badgeClass() }}">{{ acc.etat.label() }}</span></td>
                 <td>
@@ -121,7 +121,7 @@
 </div>
 {% endif %}
 
-{% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+{% if is_manager %}
 <div class="table-wrap">
     <div class="table-toolbar">
         <span class="panel-title">Historique des emprunts</span>
@@ -140,7 +140,7 @@
                 <td><span class="sbadge {{ e.statut.badgeClass() }}">{{ e.statut.label() }}</span></td>
             </tr>
             {% else %}
-            <tr><td colspan="5" style="text-align:center;padding:16px;color:#999">Aucun emprunt</td></tr>
+            <tr><td colspan="5" class="td-empty-sm">Aucun emprunt</td></tr>
             {% endfor %}
         </tbody>
     </table>

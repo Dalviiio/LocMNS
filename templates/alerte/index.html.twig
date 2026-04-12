@@ -6,7 +6,7 @@
 
 <div class="page-header">
     <div>
-        <div class="page-title">Alertes <span style="font-size:15px;color:#999;font-weight:400">({{ count_nonlues }} non lues)</span></div>
+        <div class="page-title">Alertes <span class="page-title-count">({{ count_nonlues }} non lues)</span></div>
         <div class="page-sub">{% if is_manager %}Centre de notifications et alertes{% else %}Vos alertes personnelles{% endif %}</div>
     </div>
     {% if is_manager %}
@@ -24,7 +24,7 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" name="search" placeholder="Rechercher..." value="{{ filtre_search }}">
         </div>
-        <div style="display:flex;gap:8px">
+        <div class="toolbar-group">
             <select name="type" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Tous les types</option>
                 {% for t in types %}
@@ -46,9 +46,9 @@
             <tr>
                 <td>
                     {% if a.lu %}
-                        <i class="fa-regular fa-circle" style="color:#ccc;font-size:9px"></i>
+                        <i class="fa-regular fa-circle alerte-dot--lu"></i>
                     {% else %}
-                        <i class="fa-solid fa-circle" style="color:var(--primary);font-size:9px"></i>
+                        <i class="fa-solid fa-circle alerte-dot--new"></i>
                     {% endif %}
                 </td>
                 <td><span class="sbadge {{ a.type.badgeClass() }}">{{ a.type.label() }}</span></td>
@@ -58,13 +58,13 @@
                 <td class="td-muted">{{ a.createdAt|date('d/m/Y H:i') }}</td>
                 <td><div class="action-btns">
                     {% if not a.lu %}
-                    <form method="POST" action="{{ path('alerte_lire', {id: a.id}) }}" style="display:inline">
+                    <form method="POST" action="{{ path('alerte_lire', {id: a.id}) }}" class="d-inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('lire_alerte' ~ a.id) }}">
                         <button type="submit" class="action-btn" title="Marquer comme lu"><i class="fa-solid fa-check"></i></button>
                     </form>
                     {% endif %}
                     {% if is_manager %}
-                    <form method="POST" action="{{ path('alerte_delete', {id: a.id}) }}" style="display:inline">
+                    <form method="POST" action="{{ path('alerte_delete', {id: a.id}) }}" class="d-inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('del_alerte' ~ a.id) }}">
                         <button type="submit" class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
                     </form>
@@ -72,7 +72,7 @@
                 </div></td>
             </tr>
             {% else %}
-            <tr><td colspan="7" style="text-align:center;padding:20px;color:#999">Aucune alerte</td></tr>
+            <tr><td colspan="7" class="td-empty">Aucune alerte</td></tr>
             {% endfor %}
         </tbody>
     </table>

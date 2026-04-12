@@ -9,8 +9,8 @@
         <div class="page-title">Matériels</div>
         <div class="page-sub">Gestion du parc matériel</div>
     </div>
-    <div style="display:flex;gap:8px">
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+    <div class="page-header-actions">
+        {% if is_manager %}
         <a href="{{ path('export_materiels_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
         <a href="{{ path('export_materiels_xml') }}" class="btn btn-outline"><i class="fa-solid fa-code"></i> XML</a>
         <button class="btn btn-outline" onclick="document.getElementById('modal-cat').style.display='flex'">
@@ -28,7 +28,7 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" name="search" placeholder="Rechercher..." value="{{ search ?? '' }}">
         </div>
-        <div style="display:flex;gap:8px">
+        <div class="toolbar-group">
             <select name="etat" class="form-select-sm" onchange="this.form.submit()">
                 <option value="">Tous les états</option>
                 {% for etat in etats %}
@@ -62,16 +62,16 @@
                 <td>{{ m.localisation ?? '—' }}</td>
                 <td>
                     {% if m.disponible %}
-                        <i class="fa-solid fa-circle-check" style="color:#22c55e"></i>
+                        <i class="fa-solid fa-circle-check icon-available"></i>
                     {% else %}
-                        <i class="fa-solid fa-circle-xmark" style="color:#ef4444"></i>
+                        <i class="fa-solid fa-circle-xmark icon-unavailable"></i>
                     {% endif %}
                 </td>
                 <td><div class="action-btns">
                     <a href="{{ path('materiel_show', {id: m.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
-                    {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+                    {% if is_manager %}
                     <a href="{{ path('materiel_edit', {id: m.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
-                    <form method="POST" action="{{ path('materiel_delete', {id: m.id}) }}" style="display:inline" onsubmit="return confirm('Supprimer ce matériel ?')">
+                    <form method="POST" action="{{ path('materiel_delete', {id: m.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer ce matériel ?')">
                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ m.id) }}">
                         <button type="submit" class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
                     </form>
@@ -79,18 +79,18 @@
                 </div></td>
             </tr>
             {% else %}
-            <tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Aucun matériel trouvé</td></tr>
+            <tr><td colspan="8" class="td-empty">Aucun matériel trouvé</td></tr>
             {% endfor %}
         </tbody>
     </table>
     {% include '_pagination.html.twig' with {paginator: paginator} %}
     {% if is_manager and categories is not empty %}
-    <div style="padding:8px 18px 12px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border)">
+    <div class="cat-tags">
         {% for cat in categories %}
-        <span class="sbadge sb-gray" style="cursor:default">{{ cat.nom }}
-            <form method="POST" action="{{ path('categorie_delete', {id: cat.id}) }}" style="display:inline" onsubmit="return confirm('Supprimer cette catégorie ?')">
+        <span class="sbadge sb-gray sb-cursor-default">{{ cat.nom }}
+            <form method="POST" action="{{ path('categorie_delete', {id: cat.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer cette catégorie ?')">
                 <input type="hidden" name="_token" value="{{ csrf_token('del_cat' ~ cat.id) }}">
-                <button type="submit" style="background:none;border:none;padding:0;margin-left:4px;cursor:pointer;color:#999;font-size:10px" title="Supprimer">×</button>
+                <button type="submit" class="cat-tag-btn" title="Supprimer">×</button>
             </form>
         </span>
         {% endfor %}
@@ -99,23 +99,23 @@
 </div>
 
 <!-- MODAL nouvelle catégorie -->
-<div id="modal-cat" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center">
-    <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.2)">
-        <div style="background:#1A1A1A;padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
-            <span style="color:#fff;font-weight:700;font-size:15px"><i class="fa-solid fa-tag" style="color:#FF5C2C;margin-right:8px"></i>Nouvelle catégorie</span>
-            <button onclick="document.getElementById('modal-cat').style.display='none'" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;line-height:1">×</button>
+<div id="modal-cat" class="modal-overlay">
+    <div class="modal-box modal-box-sm">
+        <div class="modal-header">
+            <span class="modal-header-title"><i class="fa-solid fa-tag modal-header-icon"></i>Nouvelle catégorie</span>
+            <button onclick="document.getElementById('modal-cat').style.display='none'" class="modal-close-btn">×</button>
         </div>
-        <form method="POST" action="{{ path('categorie_new') }}" style="padding:24px;display:flex;flex-direction:column;gap:14px">
+        <form method="POST" action="{{ path('categorie_new') }}" class="modal-body">
             <input type="hidden" name="_token" value="{{ csrf_token('new_categorie') }}">
-            <div style="display:flex;flex-direction:column;gap:5px">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Nom *</label>
+            <div class="form-field-sm">
+                <label class="form-label">Nom *</label>
                 <input type="text" name="nom" class="form-control" required placeholder="Ex : Informatique, Audio…" autofocus>
             </div>
-            <div style="display:flex;flex-direction:column;gap:5px">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Description</label>
+            <div class="form-field-sm">
+                <label class="form-label">Description</label>
                 <input type="text" name="description" class="form-control" placeholder="Optionnel">
             </div>
-            <div style="display:flex;gap:10px;margin-top:4px">
+            <div class="form-actions-gap">
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Créer</button>
                 <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cat').style.display='none'">Annuler</button>
             </div>

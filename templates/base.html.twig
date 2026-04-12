@@ -6,7 +6,7 @@
     <title>{% block title %}LOCMNS{% endblock %}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/loc.png') }}">
     <link rel="stylesheet" href="{{ asset('fonts/fa/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20260406b">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20260412">
 </head>
 <body>
 
@@ -16,39 +16,38 @@
         <i class="fa-solid fa-bars"></i>
     </div>
     <div class="header-logo">
-        <a href="{{ path('dashboard') }}" style="text-decoration:none;display:flex;align-items:center">
-            <img src="{{ asset('images/loc.png') }}" alt="LOCMNS" style="height:93px;width:auto;display:block">
+        <a href="{{ path('dashboard') }}" class="header-logo-link">
+            <img src="{{ asset('images/loc.png') }}" alt="LOCMNS" class="header-logo-img">
         </a>
     </div>
     <div class="header-actions">
         {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
-        <a href="{{ path('alerte_index') }}" class="h-btn" title="Alertes" style="position:relative;text-decoration:none">
+        <a href="{{ path('alerte_index') }}" class="h-btn h-dropdown-trigger" title="Alertes">
             <i class="fa-solid fa-triangle-exclamation"></i>
         </a>
-        <div class="h-btn h-dropdown-trigger" title="Notifications" id="notif-trigger" style="position:relative">
+        <div class="h-btn h-dropdown-trigger" title="Notifications" id="notif-trigger">
             <i class="fa-solid fa-bell"></i>
-            <span id="notif-badge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--primary)"></span>
+            <span id="notif-badge" class="notif-dot"></span>
             <div class="h-dropdown h-notif-dropdown">
                 <div class="h-dropdown-title">Dernières alertes</div>
                 <div id="notif-list">
-                    <div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Chargement…</div>
+                    <div class="notif-loading">Chargement…</div>
                 </div>
                 <a href="{{ path('alerte_index') }}" class="h-dropdown-footer">Voir toutes les alertes →</a>
             </div>
         </div>
         {% endif %}
-        <div class="h-btn h-dropdown-trigger" title="Mon compte" style="position:relative">
+        <div class="h-btn h-dropdown-trigger" title="Mon compte">
             <i class="fa-solid fa-circle-user"></i>
-            <span style="font-size:12px;font-weight:600;margin-left:6px;display:none" id="h-username"></span>
             <div class="h-dropdown">
                 <div class="h-dropdown-title">{{ app.session.get('user_nom') ?? 'Compte' }}</div>
-                <div style="padding:4px 0">
-                    <a href="{{ path('compte_index') }}" class="h-dropdown-item"><i class="fa-solid fa-user" style="width:16px"></i> Mon compte</a>
+                <div class="h-dropdown-menu-pad">
+                    <a href="{{ path('compte_index') }}" class="h-dropdown-item"><i class="fa-solid fa-user h-dropdown-icon"></i> Mon compte</a>
                     {% if app.session.get('user_profil') == 'Administrateur' %}
-                    <a href="{{ path('utilisateur_index') }}" class="h-dropdown-item"><i class="fa-solid fa-users" style="width:16px"></i> Utilisateurs</a>
+                    <a href="{{ path('utilisateur_index') }}" class="h-dropdown-item"><i class="fa-solid fa-users h-dropdown-icon"></i> Utilisateurs</a>
                     {% endif %}
-                    <div style="margin:6px 0;border-top:1px solid #F0F0F0"></div>
-                    <a href="{{ path('logout') }}" class="h-dropdown-item" style="color:#FF5C2C"><i class="fa-solid fa-arrow-right-from-bracket" style="width:16px"></i> Déconnexion</a>
+                    <div class="h-dropdown-divider"></div>
+                    <a href="{{ path('logout') }}" class="h-dropdown-item h-dropdown-item-danger"><i class="fa-solid fa-arrow-right-from-bracket h-dropdown-icon"></i> Déconnexion</a>
                 </div>
             </div>
         </div>
@@ -153,22 +152,22 @@
                             document.getElementById('notif-badge').style.display = 'block';
                         }
                         if (data.alertes.length === 0) {
-                            list.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Aucune alerte non lue</div>';
+                            list.innerHTML = '<div class="notif-loading">Aucune alerte non lue</div>';
                             return;
                         }
                         list.innerHTML = data.alertes.map(function(a) {
-                            return '<div style="padding:12px 16px;border-bottom:1px solid #F5F5F5">' +
-                                '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
-                                '<span class="sbadge ' + a.badge + '" style="font-size:9px">' + a.type + '</span>' +
-                                '<span style="font-size:10px;color:#aaa">' + a.date + '</span>' +
+                            return '<div class="h-notif-item">' +
+                                '<div class="notif-meta">' +
+                                '<span class="sbadge sbadge-xs ' + a.badge + '">' + a.type + '</span>' +
+                                '<span class="notif-time">' + a.date + '</span>' +
                                 '</div>' +
-                                '<div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:2px">' + a.message + '</div>' +
-                                '<div style="font-size:11px;color:#999">' + a.user + '</div>' +
+                                '<div class="h-notif-item-msg">' + a.message + '</div>' +
+                                '<div class="h-notif-item-time">' + a.user + '</div>' +
                                 '</div>';
                         }).join('');
                     })
                     .catch(function() {
-                        document.getElementById('notif-list').innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Erreur de chargement</div>';
+                        document.getElementById('notif-list').innerHTML = '<div class="notif-loading">Erreur de chargement</div>';
                     });
             }
         });

@@ -9,8 +9,8 @@
         <div class="page-title">Emprunt #{{ emprunt.id }}</div>
         <div class="page-sub">{{ emprunt.materiel.nom }} — {{ emprunt.utilisateur.nomComplet }}</div>
     </div>
-    <div style="display:flex;gap:8px">
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
+    <div class="page-header-actions">
+        {% if is_manager %}
         {% if emprunt.statut.value == 'en_cours' or emprunt.statut.value == 'retard' %}
         <form method="POST" action="{{ path('emprunt_retour', {id: emprunt.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('retour_emprunt' ~ emprunt.id) }}">
@@ -22,25 +22,25 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="form-grid-2-16">
 
-    <div class="table-wrap" style="padding:20px">
-        <div class="panel-title" style="margin-bottom:14px">Informations</div>
+    <div class="table-wrap panel-padded-20">
+        <div class="panel-title form-section-title-mb">Informations</div>
         <table><tbody>
-            <tr><td style="color:#999;font-size:12px;padding:8px 0;width:140px">Utilisateur</td><td class="td-bold">{{ emprunt.utilisateur.nomComplet }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:8px 0">Matériel</td><td>{{ emprunt.materiel.nom }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:8px 0">Date début</td><td>{{ emprunt.dateDebut|date('d/m/Y H:i') }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:8px 0">Date fin prévue</td><td>{{ emprunt.dateFinPrevue|date('d/m/Y H:i') }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:8px 0">Date retour</td><td>{{ emprunt.dateRetour ? emprunt.dateRetour|date('d/m/Y H:i') : '—' }}</td></tr>
-            <tr><td style="color:#999;font-size:12px;padding:8px 0">Statut</td><td><span class="sbadge {{ emprunt.enRetard ? 'sb-danger' : emprunt.statut.badgeClass() }}">{{ emprunt.enRetard ? 'Retard' : emprunt.statut.label() }}</span></td></tr>
+            <tr><td class="td-label">Utilisateur</td><td class="td-bold">{{ emprunt.utilisateur.nomComplet }}</td></tr>
+            <tr><td class="td-label">Matériel</td><td>{{ emprunt.materiel.nom }}</td></tr>
+            <tr><td class="td-label">Date début</td><td>{{ emprunt.dateDebut|date('d/m/Y H:i') }}</td></tr>
+            <tr><td class="td-label">Date fin prévue</td><td>{{ emprunt.dateFinPrevue|date('d/m/Y H:i') }}</td></tr>
+            <tr><td class="td-label">Date retour</td><td>{{ emprunt.dateRetour ? emprunt.dateRetour|date('d/m/Y H:i') : '—' }}</td></tr>
+            <tr><td class="td-label">Statut</td><td><span class="sbadge {{ emprunt.enRetard ? 'sb-danger' : emprunt.statut.badgeClass() }}">{{ emprunt.enRetard ? 'Retard' : emprunt.statut.label() }}</span></td></tr>
         </tbody></table>
     </div>
 
-    <div class="table-wrap" style="padding:20px">
-        <div class="panel-title" style="margin-bottom:14px">Signaler un événement</div>
+    <div class="table-wrap panel-padded-20">
+        <div class="panel-title form-section-title-mb">Signaler un événement</div>
         <form method="POST" action="{{ path('emprunt_evenement_add', {id: emprunt.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('evenement_emprunt' ~ emprunt.id) }}">
-            <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="form-col-sm">
                 <select name="type" class="form-control">
                     {% for t in types_evenement %}
                     <option value="{{ t.value }}">{{ t.label() }}</option>
@@ -94,7 +94,7 @@
                 <td class="td-muted">{{ ev.createdAt|date('d/m/Y H:i') }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="3" style="text-align:center;padding:16px;color:#999">Aucun événement</td></tr>
+            <tr><td colspan="3" class="td-empty-sm">Aucun événement</td></tr>
             {% endfor %}
         </tbody>
     </table>

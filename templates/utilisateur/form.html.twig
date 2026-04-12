@@ -9,33 +9,33 @@
     <a href="{{ path('utilisateur_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
 </div>
 
-<div class="table-wrap" style="padding:28px;max-width:700px">
+<div class="table-wrap form-wrap-md">
     <form method="POST" action="{{ utilisateur ? path('utilisateur_edit', {id: utilisateur.id}) : path('utilisateur_new') }}">
         <input type="hidden" name="_token" value="{{ csrf_token(utilisateur ? 'edit_user' ~ utilisateur.id : 'new_user') }}">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="form-grid-2">
 
-            <div style="display:flex;flex-direction:column;gap:6px">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Prénom *</label>
+            <div class="form-field">
+                <label class="form-label">Prénom *</label>
                 <input type="text" name="prenom" class="form-control" required value="{{ utilisateur ? utilisateur.prenom : '' }}">
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:6px">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Nom *</label>
+            <div class="form-field">
+                <label class="form-label">Nom *</label>
                 <input type="text" name="nom" class="form-control" required value="{{ utilisateur ? utilisateur.nom : '' }}">
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Email *</label>
+            <div class="form-field form-field-full">
+                <label class="form-label">Email *</label>
                 <input type="email" name="email" class="form-control" required value="{{ utilisateur ? utilisateur.email : '' }}">
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Mot de passe {{ utilisateur ? '(laisser vide pour ne pas changer)' : '*' }}</label>
+            <div class="form-field form-field-full">
+                <label class="form-label">Mot de passe {{ utilisateur ? '(laisser vide pour ne pas changer)' : '*' }}</label>
                 <input type="password" name="mot_de_passe" class="form-control" {{ utilisateur ? '' : 'required' }} autocomplete="new-password">
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1">
-                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Profil *</label>
+            <div class="form-field form-field-full">
+                <label class="form-label">Profil *</label>
                 <select name="profil_id" class="form-control" required>
                     <option value="">-- Choisir --</option>
                     {% for p in profils %}
@@ -46,7 +46,7 @@
 
         </div>
 
-        <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e5e5e5;display:flex;gap:10px">
+        <div class="form-actions">
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
             <a href="{{ path('utilisateur_index') }}" class="btn btn-outline">Annuler</a>
         </div>

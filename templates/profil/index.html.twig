@@ -12,18 +12,18 @@
     <a href="{{ path('utilisateur_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
 </div>
 
-<div class="table-wrap" style="overflow-x:auto">
+<div class="table-wrap table-wrap-scroll">
     <form method="POST" action="{{ path('profil_autorisations') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('save_autorisations') }}">
 
-        <table style="min-width:700px">
+        <table class="profil-table">
             <thead>
                 <tr>
-                    <th style="min-width:160px">Catégorie</th>
+                    <th class="th-minw-160">Catégorie</th>
                     {% for profil in profils %}
-                    <th style="text-align:center;min-width:130px">
+                    <th class="th-minw-130">
                         <div>{{ profil.nom }}</div>
-                        <div style="font-size:10px;font-weight:400;color:#aaa;margin-top:2px">{{ profil.categories|length }} cat.</div>
+                        <div class="profil-th-sub">{{ profil.categories|length }} cat.</div>
                     </th>
                     {% endfor %}
                 </tr>
@@ -32,19 +32,19 @@
                 {% for cat in categories %}
                 <tr>
                     <td>
-                        <div style="font-weight:600;font-size:13px">{{ cat.nom }}</div>
+                        <div class="profil-cat-name">{{ cat.nom }}</div>
                         {% if cat.description %}
-                        <div style="font-size:11px;color:#aaa">{{ cat.description }}</div>
+                        <div class="profil-cat-desc">{{ cat.description }}</div>
                         {% endif %}
                     </td>
                     {% for profil in profils %}
-                    <td style="text-align:center">
+                    <td class="td-center">
                         <input
                             type="checkbox"
                             name="autorisations[{{ profil.id }}][{{ cat.id }}]"
                             value="1"
                             {% if profil.categories.contains(cat) %}checked{% endif %}
-                            style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer"
+                            class="profil-checkbox"
                         >
                     </td>
                     {% endfor %}
@@ -60,17 +60,17 @@
 </div>
 
 <!-- Récap par profil -->
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:16px">
+<div class="profil-recap-grid">
     {% for profil in profils %}
-    <div class="table-wrap" style="padding:16px">
-        <div style="font-weight:700;font-size:13px;margin-bottom:10px">{{ profil.nom }}</div>
-        <div style="font-size:11px;color:#999;margin-bottom:8px">{{ profil.description }}</div>
+    <div class="table-wrap profil-card">
+        <div class="profil-card-title">{{ profil.nom }}</div>
+        <div class="profil-card-desc">{{ profil.description }}</div>
         {% if profil.categories is empty %}
-            <div style="font-size:12px;color:#FF5C2C"><i class="fa-solid fa-lock"></i> Aucun accès</div>
+            <div class="profil-no-access"><i class="fa-solid fa-lock"></i> Aucun accès</div>
         {% else %}
             {% for cat in profil.categories %}
-            <div style="font-size:11px;padding:3px 0;border-bottom:1px solid #F5F5F5;display:flex;align-items:center;gap:6px">
-                <i class="fa-solid fa-circle-check" style="color:#22c55e;font-size:9px"></i> {{ cat.nom }}
+            <div class="profil-cat-item">
+                <i class="fa-solid fa-circle-check profil-cat-check"></i> {{ cat.nom }}
             </div>
             {% endfor %}
         {% endif %}
