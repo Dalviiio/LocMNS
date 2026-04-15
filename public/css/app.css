@@ -1405,11 +1405,88 @@ tbody tr:hover { background: #FAFAFA; }
 
 /* ── Responsive mobile ──────────────────────── */
 @media (max-width: 768px) {
-    :root { --sidebar-w: 0px; }
+    /* Variables */
+    :root {
+        --sidebar-w: 0px;
+        --header-h: 60px;
+    }
+
+    /* ── Header ── */
+    .header-logo-img { height: 48px; }
+    .header-logo { padding: 0 14px; }
+    .header-hamburger { width: 50px; font-size: 18px; }
+    .h-btn { width: 50px; font-size: 18px; }
+    .h-btn.profile { width: 50px; }
+
+    /* Dropdown : ne pas dépasser l'écran */
+    .h-dropdown { width: min(280px, calc(100vw - 24px)); }
+
+    /* ── Sidebar ── */
     .sidebar { display: none; }
     .sidebar.open { display: flex; position: fixed; top: var(--header-h); left: 0; bottom: 0; width: 70px; z-index: 999; }
-    .stock-grid { grid-template-columns: 1fr; }
+
+    /* ── Contenu principal ── */
+    .main { padding: 12px 14px; }
+
+    /* ── Page header (titre + actions) ── */
+    .page-header { flex-direction: column; gap: 10px; }
+    .page-header-actions { flex-wrap: wrap; }
+
+    /* ── KPI strip (scroll horizontal) ── */
+    .kpi-strip { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .kpi-card  { min-width: 150px; flex-shrink: 0; }
+
+    /* ── Grilles dashboard ── */
+    .stock-grid  { grid-template-columns: 1fr 1fr; gap: 10px; }
     .bottom-grid { grid-template-columns: 1fr; }
-    .h-btn { width: 60px; }
-    .h-btn.profile { width: 70px; }
+
+    /* ── Dashboard CTA ── */
+    .dash-cta { flex-direction: column; align-items: flex-start; padding: 18px 16px; gap: 14px; }
+
+    /* ── Tableau : scroll horizontal ── */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-toolbar { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+    .search-box { max-width: 100%; }
+    .toolbar-group { flex-wrap: wrap; }
+
+    /* ── Grilles formulaire (1 colonne) ── */
+    .form-grid-2,
+    .form-grid-2-sm,
+    .form-grid-2-12,
+    .form-grid-2-16 { grid-template-columns: 1fr; }
+
+    /* ── Formulaires wraps ── */
+    .form-wrap-sm,
+    .form-wrap-md,
+    .form-wrap-600,
+    .form-wrap-600-mb { padding: 16px; max-width: 100%; }
+
+    /* ── Layout réservation ── */
+    .resa-layout { grid-template-columns: 1fr; }
+    .recap-panel { position: static; }
+
+    /* ── Catalogue (header titre + filtre) ── */
+    .catalogue-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+    /* ── Modales ── */
+    .modal-overlay { padding: 12px; align-items: flex-end; }
+    .modal-box { border-radius: 14px 14px 0 0; max-width: 100% !important; }
+
+    /* ── Pagination ── */
+    .pagination-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+    /* ── Planning ── */
+    .plan-header-nav     { flex-wrap: wrap; gap: 8px; }
+    .plan-header-actions { flex-wrap: wrap; }
+}
+
+/* ── Très petits écrans (≤ 480px) ── */
+@media (max-width: 480px) {
+    .stock-grid  { grid-template-columns: 1fr; }
+    .main        { padding: 10px 12px; }
+    .page-title  { font-size: 17px; }
+    .kpi-card    { min-width: 130px; }
+    .btn         { padding: 8px 14px; font-size: 12px; }
+    .modal-overlay { padding: 0; }
+    .modal-box   { border-radius: 14px 14px 0 0; }
 }
