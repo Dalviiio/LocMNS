@@ -1,105 +1,72 @@
 {% extends 'base.html.twig' %}
-{% block title %}Documents — LOCMNS{% endblock %}
+{% block title %}Documents — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-5xl mx-auto">
 
-<div class="page-label">Documents</div>
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Documents techniques</h1>
 
-<div class="page-header">
-    <div>
-        <div class="page-title">Documents</div>
-        <div class="page-sub">Notices et documentations techniques</div>
-    </div>
-    <button class="btn btn-primary" onclick="document.getElementById('modal-doc').style.display='flex'">
-        <i class="fa-solid fa-plus"></i> Ajouter un document
-    </button>
-</div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-<div class="table-wrap">
-<form method="GET" id="filter-documents">
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher un document..." value="{{ filtre_search }}">
-        </div>
-        <div class="toolbar-group">
-            <select name="type" class="form-select-sm" onchange="this.form.submit()">
-                <option value="">Tous les types</option>
-                {% for t in types %}
-                <option value="{{ t.value }}" {{ filtre_type == t.value ? 'selected' : '' }}>{{ t.label() }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
-        </div>
-    </div>
-</form>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th><th>Titre</th><th>Matériel associé</th><th>Type</th><th>URL</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for doc in documents %}
-            <tr>
-                <td class="td-muted">{{ doc.id }}</td>
-                <td class="td-bold">{{ doc.titre }}</td>
-                <td><a href="{{ path('materiel_show', {id: doc.materiel.id}) }}" class="link-inherit">{{ doc.materiel.nom }}</a></td>
-                <td><span class="sbadge {{ doc.type.badgeClass() }}">{{ doc.type.label() }}</span></td>
-                <td class="td-muted-url">{{ doc.url }}</td>
-                <td><div class="action-btns">
-                    <a href="{{ doc.url }}" target="_blank" class="action-btn" title="Ouvrir"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                    <a href="{{ path('materiel_show', {id: doc.materiel.id}) }}" class="action-btn" title="Voir le matériel"><i class="fa-solid fa-box"></i></a>
-                </div></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="6" class="td-empty-24">Aucun document pour le moment</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% include '_pagination.html.twig' with {paginator: paginator} %}
-</div>
-
-<!-- MODAL ajout document -->
-<div id="modal-doc" class="modal-overlay">
-    <div class="modal-box modal-box-md">
-        <div class="modal-header">
-            <span class="modal-header-title"><i class="fa-solid fa-file-plus modal-header-icon"></i>Ajouter un document</span>
-            <button onclick="document.getElementById('modal-doc').style.display='none'" class="modal-close-btn">×</button>
-        </div>
-        <form method="POST" action="{{ path('document_new') }}" class="modal-body">
-            <input type="hidden" name="_token" value="{{ csrf_token('new_document') }}">
-            <div class="form-field-sm">
-                <label class="form-label">Titre *</label>
-                <input type="text" name="titre" class="form-control" required placeholder="Notice d'utilisation…">
-            </div>
-            <div class="form-field-sm">
-                <label class="form-label">Matériel associé *</label>
-                <select name="materiel_id" class="form-control" required>
-                    <option value="">-- Choisir --</option>
+        {# Formulaire ajout #}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h2 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <i class="fas fa-plus text-primary"></i> Ajouter un document
+            </h2>
+            <form action="{{ path('document_new') }}" method="post" class="space-y-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('document_new') }}">
+                <select name="materiel_id" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    <option value="">Matériel...</option>
                     {% for m in materiels %}
-                    <option value="{{ m.id }}">{{ m.nom }}</option>
+                        <option value="{{ m.id }}">{{ m.nom }}</option>
                     {% endfor %}
                 </select>
-            </div>
-            <div class="form-grid-2-12">
-                <div class="form-field-sm">
-                    <label class="form-label">Type *</label>
-                    <select name="type" class="form-control" required>
-                        {% for t in types %}
+                <select name="type" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    {% for t in types %}
                         <option value="{{ t.value }}">{{ t.label() }}</option>
-                        {% endfor %}
-                    </select>
+                    {% endfor %}
+                </select>
+                <input type="text" name="titre" required placeholder="Titre du document"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                <input type="url" name="url" required placeholder="https://..."
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors">
+                    Ajouter
+                </button>
+            </form>
+        </div>
+
+        {# Liste documents #}
+        <div class="lg:col-span-2 space-y-3">
+            {% for doc in documents %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
+                <i class="fas fa-file-alt text-primary text-lg flex-shrink-0"></i>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-800 truncate">{{ doc.titre }}</p>
+                    <p class="text-xs text-gray-500">{{ doc.type.label() }} — {{ doc.materiel.nom }}</p>
                 </div>
-                <div class="form-field-sm">
-                    <label class="form-label">URL / Chemin *</label>
-                    <input type="text" name="url" class="form-control" required placeholder="docs/notice.pdf">
-                </div>
+                <a href="{{ doc.url }}" target="_blank" rel="noopener"
+                   class="text-primary hover:underline text-xs flex-shrink-0">
+                    <i class="fas fa-external-link-alt mr-1"></i>Ouvrir
+                </a>
+                <form action="{{ path('document_delete', {id: doc.id}) }}" method="post" class="flex-shrink-0">
+                    <input type="hidden" name="_token" value="{{ csrf_token('doc_delete_' ~ doc.id) }}">
+                    <button type="submit" data-confirm="Supprimer ce document ?"
+                            class="text-gray-400 hover:text-red-500 transition-colors text-xs">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
             </div>
-            <div class="form-actions-gap">
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
-                <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-doc').style.display='none'">Annuler</button>
+            {% else %}
+            <div class="py-12 text-center text-gray-400">
+                <i class="fas fa-file text-4xl mb-2 block opacity-20"></i>
+                Aucun document
             </div>
-        </form>
+            {% endfor %}
+        </div>
     </div>
+
 </div>
 {% endblock %}

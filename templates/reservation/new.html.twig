@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+{% block title %}Nouvelle réservation — LOC MNS{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+    <div class="flex items-center gap-3 mb-6">
+        <a href="{{ path('reservation_index') }}" class="text-gray-400 hover:text-primary transition-colors">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-800">Nouvelle réservation</h1>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <form action="{{ path('reservation_new') }}" method="post" class="space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('reservation_new') }}">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Matériel <span class="text-red-500">*</span></label>
+                <select name="materiel_id" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    <option value="">Choisir un matériel...</option>
+                    {% for m in materiels %}
+                        <option value="{{ m.id }}">{{ m.nom }} — {{ m.categorie.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date de début <span class="text-red-500">*</span></label>
+                    <input type="datetime-local" name="date_debut" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date de fin <span class="text-red-500">*</span></label>
+                    <input type="datetime-local" name="date_fin" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="flex-1 bg-primary text-white font-medium py-2.5 rounded-lg hover:bg-orange-600 transition-colors text-sm">
+                    <i class="fas fa-save mr-1"></i> Réserver
+                </button>
+                <a href="{{ path('reservation_index') }}"
+                   class="px-5 py-2.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

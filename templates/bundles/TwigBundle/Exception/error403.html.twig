@@ -1,30 +1,19 @@
-{% extends 'base.html.twig' %}
-{% block title %}Accès refusé — LOCMNS{% endblock %}
-{% block content %}
-
-<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px">
-
-    <div style="width:72px;height:72px;background:#FFF0EC;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px">
-        <i class="fa-solid fa-lock" style="font-size:28px;color:#FF5C2C"></i>
-    </div>
-
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#FF5C2C;margin-bottom:10px">
-        Erreur 403
-    </div>
-
-    <div style="font-size:26px;font-weight:800;color:#1A1A1A;margin-bottom:12px;letter-spacing:-.5px">
-        Accès non autorisé
-    </div>
-
-    <div style="font-size:14px;color:#888;max-width:400px;line-height:1.6;margin-bottom:32px">
-        {{ exception is defined and exception.message ? exception.message : 'Vous n\'avez pas les droits nécessaires pour accéder à cette page.' }}
-    </div>
-
-    <a href="{{ path('dashboard') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px">
-        <i class="fa-solid fa-table-columns"></i>
-        Retour au dashboard
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accès refusé — LOC MNS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#FF5C2C', dark: '#1A1A1A' } } } }</script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<div class="text-center">
+    <p class="text-7xl font-extrabold text-primary">403</p>
+    <h1 class="text-2xl font-bold text-gray-800 mt-4 mb-2">Accès refusé</h1>
+    <p class="text-gray-500 mb-6">Vous n'avez pas les droits pour accéder à cette page.</p>
+    <a href="/" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium">
+        Retour à l'accueil
     </a>
-
 </div>
-
-{% endblock %}
+</body>
+</html>

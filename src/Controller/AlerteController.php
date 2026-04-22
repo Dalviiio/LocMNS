@@ -2,101 +2,80 @@
 
 namespace App\Controller;
 
-use App\Entity\Alerte;
-use App\Entity\TypeAlerte;
 use App\Repository\AlerteRepository;
-use App\Service\AutorisationService;
-use App\Service\Paginator;
+use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/alertes', name: 'alerte_')]
-class AlerteController extends AbstractController
+#[Route('/alertes')]
+class AlerteController extends AbstractAppController
 {
-    #[Route('', name: 'index')]
-    public function index(Request $request, AlerteRepository $repo, AutorisationService $auth): Response
-    {
-        $isManager = $auth->isAdminOrGestionnaire();
-        $uid = $isManager ? null : $auth->getUserId();
-
-        $raw    = $request->query->all();
-        $search = isset($raw['search']) ? (string) $raw['search'] : '';
-        $type   = isset($raw['type'])   ? (string) $raw['type']   : '';
-
-        $total     = $repo->countWithFilters($search ?: null, $type ?: null, $uid);
-        $paginator = Paginator::fromRequest($request, $total);
-
-        return $this->render('alerte/index.html.twig', [
-            'alertes'       => $repo->findWithFilters($search ?: null, $type ?: null, $uid, $paginator->perPage, $paginator->offset),
-            'types'         => TypeAlerte::cases(),
-            'count_nonlues' => $uid ? $repo->countNonLuesParUser($uid) : $repo->countNonLues(),
-            'filtre_search' => $search,
-            'filtre_type'   => $type,
-            'is_manager'    => $isManager,
-            'paginator'     => $paginator,
-        ]);
+    public function __construct(
+        UtilisateurRepository $utilisateurRepo,
+        private AlerteRepository      $alerteRepo,
+        private EntityManagerInterface $em,
+    ) {
+        parent::__construct($utilisateurRepo);
     }
 
-    #[Route('/api/dernieres', name: 'api_dernieres', methods: ['GET'])]
-    public function apiDernieres(AlerteRepository $repo, AutorisationService $auth): JsonResponse
+    #[Route('', name: 'alerte_index')]
+    public function index(Request $request): Response
     {
-        if (!$auth->isAdminOrGestionnaire()) {
-            return new JsonResponse(['alertes' => [], 'total' => 0]);
-        }
+        $user    = $this->getUtilisateurConnecte($request);
+        $context = $this->getProfilContext($request);
 
-        $alertes = array_slice($repo->findNonLues(), 0, 15);
-        $data = array_map(fn(Alerte $a) => [
-            'id'      => $a->getId(),
-            'type'    => $a->getType()->label(),
-            'badge'   => $a->getType()->badgeClass(),
-            'message' => $a->getMessage(),
-            'user'    => $a->getUtilisateur()->getNomComplet(),
-            'date'    => $a->getCreatedAt()->format('d/m/Y H:i'),
-        ], $alertes);
+        $search = $request->query->get('search');
+        $type   = $request->query->get('type');
+        $userId = $context['isGestionnaire'] ? null : $user->getId();
 
-        return new JsonResponse(['alertes' => $data, 'total' => $repo->countNonLues()]);
+        return $this->render('alerte/index.html.twig', array_merge($context, [
+            'alertes' => $this->alerteRepo->findWithFilters($search, $type, $userId),
+            'search'  => $search,
+            'typeFiltre' => $type,
+        ]));
     }
 
-    #[Route('/{id}/lire', name: 'lire', methods: ['POST'])]
-    public function marquerLu(Request $request, Alerte $alerte, EntityManagerInterface $em, AutorisationService $auth): Response
+    #[Route('/{id}/lire', name: 'alerte_lire', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function marquerLue(int $id, Request $request): Response
     {
-        if (!$auth->isAdminOrGestionnaire() && $alerte->getUtilisateur()->getId() !== $auth->getUserId()) {
-            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cette alerte.');
+        $user  = $this->getUtilisateurConnecte($request);
+        $alerte = $this->alerteRepo->find($id);
+
+        if (!$alerte) { throw $this->createNotFoundException(); }
+
+        $context = $this->getProfilContext($request);
+        if (!$context['isGestionnaire'] && $alerte->getUtilisateur()->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException();
         }
-        if ($this->isCsrfTokenValid('lire_alerte' . $alerte->getId(), $request->request->get('_token'))) {
-            $alerte->setLu(true);
-            $em->flush();
-            $this->addFlash('success', 'Alerte marquée comme lue.');
+
+        if (!$this->isCsrfTokenValid('alerte_lire_' . $id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
         }
+
+        $alerte->setLu(true);
+        $this->em->flush();
+
         return $this->redirectToRoute('alerte_index');
     }
 
-    #[Route('/tout-lire', name: 'tout_lire', methods: ['POST'])]
-    public function marquerToutLu(Request $request, AlerteRepository $repo, EntityManagerInterface $em, AutorisationService $auth): Response
+    #[Route('/tout-lire', name: 'alerte_tout_lire', methods: ['POST'])]
+    public function toutLire(Request $request): Response
     {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
-        if ($this->isCsrfTokenValid('tout_lire', $request->request->get('_token'))) {
-            foreach ($repo->findNonLues() as $alerte) {
-                $alerte->setLu(true);
-            }
-            $em->flush();
-            $this->addFlash('success', 'Toutes les alertes ont été marquées comme lues.');
-        }
-        return $this->redirectToRoute('alerte_index');
-    }
+        $user  = $this->getUtilisateurConnecte($request);
+        $context = $this->getProfilContext($request);
 
-    #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Alerte $alerte, EntityManagerInterface $em, AutorisationService $auth): Response
-    {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
-        if ($this->isCsrfTokenValid('del_alerte' . $alerte->getId(), $request->request->get('_token'))) {
-            $em->remove($alerte);
-            $em->flush();
+        if (!$this->isCsrfTokenValid('alerte_tout_lire', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
         }
+
+        $userId = $context['isGestionnaire'] ? null : $user->getId();
+        $alertes = $this->alerteRepo->findNonLues($userId);
+        foreach ($alertes as $a) { $a->setLu(true); }
+
+        $this->em->flush();
+        $this->addFlash('success', 'Toutes les alertes ont été marquées comme lues.');
         return $this->redirectToRoute('alerte_index');
     }
 }

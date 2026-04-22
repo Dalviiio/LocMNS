@@ -10,7 +10,7 @@ use Symfony\Component\Routing\RouterInterface;
 
 class AuthSubscriber implements EventSubscriberInterface
 {
-    private array $publicRoutes = ['login', '_wdt', '_profiler'];
+    private const WHITELIST = ['login', 'login_check', 'logout', '_wdt', '_profiler', '_error'];
 
     public function __construct(private RouterInterface $router) {}
 
@@ -21,13 +21,17 @@ class AuthSubscriber implements EventSubscriberInterface
 
     public function onRequest(RequestEvent $event): void
     {
-        if (!$event->isMainRequest()) return;
+        if (!$event->isMainRequest()) {
+            return;
+        }
 
         $request = $event->getRequest();
         $route   = $request->attributes->get('_route', '');
 
-        foreach ($this->publicRoutes as $public) {
-            if (str_starts_with($route, $public)) return;
+        foreach (self::WHITELIST as $prefix) {
+            if (str_starts_with($route, $prefix)) {
+                return;
+            }
         }
 
         if (!$request->getSession()->get('user_id')) {

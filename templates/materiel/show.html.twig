@@ -1,149 +1,110 @@
 {% extends 'base.html.twig' %}
-{% block title %}{{ materiel.nom }} — LOCMNS{% endblock %}
+{% block title %}{{ materiel.nom }} — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-4xl mx-auto">
 
-<div class="page-label">Matériels › Détail</div>
-
-<div class="page-header">
-    <div>
-        <div class="page-title">{{ materiel.nom }}</div>
-        <div class="page-sub">{{ materiel.categorie.nom }} — {{ materiel.localisation ?? 'Localisation inconnue' }}</div>
-    </div>
-    <div class="page-header-actions">
-        {% if is_manager %}
-        <a href="{{ path('materiel_edit', {id: materiel.id}) }}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Modifier</a>
+    <div class="flex items-center gap-3 mb-6">
+        <a href="{{ path('materiel_index') }}" class="text-gray-400 hover:text-primary transition-colors">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-800 flex-1">{{ materiel.nom }}</h1>
+        {% if isGestionnaire %}
+        <a href="{{ path('materiel_edit', {id: materiel.id}) }}"
+           class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
         {% endif %}
-        <a href="{{ path('materiel_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
-    </div>
-</div>
-
-<div class="form-grid-2-16">
-
-    <div class="table-wrap panel-padded-20">
-        <div class="panel-title form-section-title-16">Informations</div>
-        <table>
-            <tbody>
-                <tr><td class="td-label">N° Série</td><td>{{ materiel.numeroSerie ?? '—' }}</td></tr>
-                <tr><td class="td-label">État</td><td><span class="sbadge {{ materiel.etat.badgeClass() }}">{{ materiel.etat.label() }}</span></td></tr>
-                <tr><td class="td-label">Disponibilité</td>
-                    <td>
-                        {% if materiel.disponible %}
-                            <span class="sbadge sb-success">Disponible</span>
-                        {% else %}
-                            <span class="sbadge sb-danger">Indisponible</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr><td class="td-label">Localisation</td><td>{{ materiel.localisation ?? '—' }}</td></tr>
-                <tr><td class="td-label">Ajouté le</td><td>{{ materiel.createdAt|date('d/m/Y') }}</td></tr>
-            </tbody>
-        </table>
     </div>
 
-    {% if is_manager %}
-    <div class="table-wrap panel-padded-20">
-        <div class="panel-title form-section-title-16">Ajouter un document</div>
-        <form method="POST" action="{{ path('materiel_document_add', {id: materiel.id}) }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('add_doc' ~ materiel.id) }}">
-            <div class="form-col-sm">
-                <input type="text" name="titre" placeholder="Titre du document" class="form-control" required>
-                <input type="text" name="url" placeholder="URL ou chemin du fichier" class="form-control" required>
-                <select name="type" class="form-control">
-                    <option value="notice">Notice</option>
-                    <option value="doc_technique">Doc technique</option>
-                    <option value="video">Vidéo</option>
-                </select>
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ajouter</button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h2 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <i class="fas fa-info-circle text-primary"></i> Informations
+            </h2>
+            <dl class="space-y-3">
+                <div class="flex justify-between">
+                    <dt class="text-sm text-gray-500">État</dt>
+                    <dd><span class="text-xs px-2 py-1 rounded-full {{ materiel.etat.badgeClass() }}">{{ materiel.etat.label() }}</span></dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-sm text-gray-500">Catégorie</dt>
+                    <dd class="text-sm font-medium text-gray-700">{{ materiel.categorie.nom }}</dd>
+                </div>
+                {% if materiel.numeroSerie %}
+                <div class="flex justify-between">
+                    <dt class="text-sm text-gray-500">N° de série</dt>
+                    <dd class="text-sm font-mono text-gray-700">{{ materiel.numeroSerie }}</dd>
+                </div>
+                {% endif %}
+                {% if materiel.localisation %}
+                <div class="flex justify-between">
+                    <dt class="text-sm text-gray-500">Localisation</dt>
+                    <dd class="text-sm text-gray-700">{{ materiel.localisation }}</dd>
+                </div>
+                {% endif %}
+                <div class="flex justify-between">
+                    <dt class="text-sm text-gray-500">Ajouté le</dt>
+                    <dd class="text-sm text-gray-700">{{ materiel.createdAt|date('d/m/Y') }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h2 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <i class="fas fa-puzzle-piece text-primary"></i> Accessoires ({{ materiel.accessoires|length }})
+            </h2>
+            {% if materiel.accessoires|length %}
+            <div class="space-y-2">
+                {% for acc in materiel.accessoires %}
+                <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-circle text-xs text-primary"></i>
+                    <a href="{{ path('materiel_show', {id: acc.id}) }}" class="text-gray-700 hover:text-primary">{{ acc.nom }}</a>
+                </div>
+                {% endfor %}
             </div>
+            {% else %}
+            <p class="text-sm text-gray-400">Aucun accessoire associé</p>
+            {% endif %}
+        </div>
+
+        {% if materiel.documents|length %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:col-span-2">
+            <h2 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <i class="fas fa-file-alt text-primary"></i> Documents ({{ materiel.documents|length }})
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {% for doc in materiel.documents %}
+                <a href="{{ doc.url }}" target="_blank" rel="noopener"
+                   class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:border-primary transition-colors group">
+                    <i class="fas fa-file-pdf text-red-400 text-lg"></i>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-700 group-hover:text-primary truncate">{{ doc.titre }}</p>
+                        <p class="text-xs text-gray-400">{{ doc.type.label() }}</p>
+                    </div>
+                    <i class="fas fa-external-link-alt text-gray-300 text-xs"></i>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    {% if isAdmin %}
+    <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+        <p class="text-sm text-red-700 font-medium mb-3">Zone danger</p>
+        <form action="{{ path('materiel_delete', {id: materiel.id}) }}" method="post">
+            <input type="hidden" name="_token" value="{{ csrf_token('materiel_delete_' ~ materiel.id) }}">
+            <button type="submit"
+                    data-confirm="Supprimer définitivement ce matériel ?"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors">
+                <i class="fas fa-trash mr-1"></i> Supprimer
+            </button>
         </form>
     </div>
     {% endif %}
 
 </div>
-
-<div class="table-wrap">
-    <div class="table-toolbar">
-        <span class="panel-title">Documents ({{ materiel.documents|length }})</span>
-    </div>
-    <table>
-        <thead>
-            <tr><th>Titre</th><th>Type</th><th>URL</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-            {% for doc in materiel.documents %}
-            <tr>
-                <td class="td-bold">{{ doc.titre }}</td>
-                <td><span class="sbadge {{ doc.type.badgeClass() }}">{{ doc.type.label() }}</span></td>
-                <td class="td-muted-url">{{ doc.url }}</td>
-                <td>
-                    {% if is_manager %}
-                    <form method="POST" action="{{ path('materiel_document_delete', {id: doc.id}) }}" class="d-inline">
-                        <input type="hidden" name="_token" value="{{ csrf_token('del_doc' ~ doc.id) }}">
-                        <button type="submit" class="action-btn"><i class="fa-solid fa-trash"></i></button>
-                    </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {% else %}
-            <tr><td colspan="4" class="td-empty-sm">Aucun document</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{% if materiel.accessoires is not empty %}
-<div class="table-wrap">
-    <div class="table-toolbar">
-        <span class="panel-title">Accessoires compatibles ({{ materiel.accessoires|length }})</span>
-    </div>
-    <table>
-        <thead>
-            <tr><th>Accessoire</th><th>État</th><th>Disponibilité</th></tr>
-        </thead>
-        <tbody>
-            {% for acc in materiel.accessoires %}
-            <tr>
-                <td class="td-bold">
-                    <a href="{{ path('materiel_show', {id: acc.id}) }}" class="link-inherit">{{ acc.nom }}</a>
-                </td>
-                <td><span class="sbadge {{ acc.etat.badgeClass() }}">{{ acc.etat.label() }}</span></td>
-                <td>
-                    {% if acc.disponible %}
-                        <span class="sbadge sb-success"><i class="fa-solid fa-circle-check"></i> Disponible</span>
-                    {% else %}
-                        <span class="sbadge sb-danger"><i class="fa-solid fa-circle-xmark"></i> Indisponible</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-
-{% if is_manager %}
-<div class="table-wrap">
-    <div class="table-toolbar">
-        <span class="panel-title">Historique des emprunts</span>
-    </div>
-    <table>
-        <thead>
-            <tr><th>Utilisateur</th><th>Date début</th><th>Date fin prévue</th><th>Date retour</th><th>Statut</th></tr>
-        </thead>
-        <tbody>
-            {% for e in materiel.emprunts %}
-            <tr>
-                <td class="td-bold">{{ e.utilisateur.nomComplet }}</td>
-                <td>{{ e.dateDebut|date('d/m/Y') }}</td>
-                <td>{{ e.dateFinPrevue|date('d/m/Y') }}</td>
-                <td>{{ e.dateRetour ? e.dateRetour|date('d/m/Y') : '—' }}</td>
-                <td><span class="sbadge {{ e.statut.badgeClass() }}">{{ e.statut.label() }}</span></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="5" class="td-empty-sm">Aucun emprunt</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
 {% endblock %}

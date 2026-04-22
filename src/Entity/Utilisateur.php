@@ -12,35 +12,35 @@ class Utilisateur
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    private ?string $nom = null;
+    private string $nom;
 
     #[ORM\Column(length: 100)]
-    private ?string $prenom = null;
+    private string $prenom;
 
     #[ORM\Column(length: 150, unique: true)]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(length: 255)]
-    private ?string $motDePasse = null;
+    private string $motDePasse;
+
+    #[ORM\Column(type: 'datetime')]
+    private \DateTimeInterface $createdAt;
 
     #[ORM\ManyToOne(targetEntity: Profil::class, inversedBy: 'utilisateurs')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Profil $profil = null;
+    private Profil $profil;
 
-    #[ORM\Column(type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
-
-    #[ORM\OneToMany(targetEntity: Emprunt::class, mappedBy: 'utilisateur')]
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Emprunt::class)]
     private Collection $emprunts;
 
-    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'utilisateur')]
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Reservation::class)]
     private Collection $reservations;
 
-    #[ORM\OneToMany(targetEntity: Alerte::class, mappedBy: 'utilisateur')]
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Alerte::class)]
     private Collection $alertes;
 
     public function __construct()
@@ -53,32 +53,27 @@ class Utilisateur
 
     public function getId(): ?int { return $this->id; }
 
-    public function getNom(): ?string { return $this->nom; }
+    public function getNom(): string { return $this->nom; }
     public function setNom(string $nom): static { $this->nom = $nom; return $this; }
 
-    public function getPrenom(): ?string { return $this->prenom; }
+    public function getPrenom(): string { return $this->prenom; }
     public function setPrenom(string $prenom): static { $this->prenom = $prenom; return $this; }
 
-    public function getNomComplet(): string { return $this->prenom . ' ' . $this->nom; }
-
-    public function getEmail(): ?string { return $this->email; }
+    public function getEmail(): string { return $this->email; }
     public function setEmail(string $email): static { $this->email = $email; return $this; }
 
-    public function getMotDePasse(): ?string { return $this->motDePasse; }
+    public function getMotDePasse(): string { return $this->motDePasse; }
     public function setMotDePasse(string $motDePasse): static { $this->motDePasse = $motDePasse; return $this; }
 
-    public function getProfil(): ?Profil { return $this->profil; }
-    public function setProfil(?Profil $profil): static { $this->profil = $profil; return $this; }
-
-    public function getCreatedAt(): ?\DateTimeInterface { return $this->createdAt; }
+    public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(\DateTimeInterface $createdAt): static { $this->createdAt = $createdAt; return $this; }
+
+    public function getProfil(): Profil { return $this->profil; }
+    public function setProfil(Profil $profil): static { $this->profil = $profil; return $this; }
 
     public function getEmprunts(): Collection { return $this->emprunts; }
     public function getReservations(): Collection { return $this->reservations; }
     public function getAlertes(): Collection { return $this->alertes; }
 
-    public function getEmpruntsActifs(): Collection
-    {
-        return $this->emprunts->filter(fn(Emprunt $e) => $e->getStatut() === StatutEmprunt::EnCours);
-    }
+    public function getNomComplet(): string { return $this->prenom . ' ' . $this->nom; }
 }

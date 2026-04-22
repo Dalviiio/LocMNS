@@ -1,142 +1,89 @@
 {% extends 'base.html.twig' %}
-{% block title %}Réservations — LOCMNS{% endblock %}
+{% block title %}Réservations — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-7xl mx-auto">
 
-<div class="page-label">Réservations</div>
-
-<div class="page-header">
-    <div>
-        <div class="page-title">Réservations</div>
-        <div class="page-sub">{% if is_manager %}Toutes les réservations{% else %}Vos réservations{% endif %}</div>
-    </div>
-    <div class="page-header-actions">
-        <a href="{{ path('reservation_planning') }}" class="btn btn-outline">
-            <i class="fa-solid fa-calendar-days"></i> Planning
-        </a>
-        <a href="{{ path('reservation_new') }}" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> Nouvelle réservation
-        </a>
-    </div>
-</div>
-
-{# ── Filtres ── #}
-<div class="table-wrap">
-<form method="GET">
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher matériel{% if is_manager %}, utilisateur{% endif %}…"
-                   value="{{ filtre_search }}">
-        </div>
-        <div class="toolbar-group">
-            <select name="statut" class="form-select-sm" onchange="this.form.submit()">
-                <option value="">Tous les statuts</option>
-                {% for s in statuts %}
-                <option value="{{ s.value }}" {{ filtre_statut == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Réservations</h1>
+        <div class="flex gap-2">
+            <a href="{{ path('reservation_planning') }}"
+               class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                <i class="fas fa-calendar-alt"></i> Planning
+            </a>
+            <a href="{{ path('reservation_new') }}"
+               class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+                <i class="fas fa-plus"></i> Nouvelle réservation
+            </a>
         </div>
     </div>
-</form>
 
-{# ── Tableau ── #}
-<table>
-    <thead>
-        <tr>
-            <th>#</th>
-            {% if is_manager %}<th>Utilisateur</th>{% endif %}
-            <th>Matériel</th>
-            <th>Date début</th>
-            <th>Date fin</th>
-            <th>Statut</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for r in reservations %}
-        <tr>
-            <td class="td-muted">{{ r.id }}</td>
-            {% if is_manager %}
-            <td class="td-bold">{{ r.utilisateur.nomComplet }}</td>
-            {% endif %}
-            <td>{{ r.materiel.nom }}</td>
-            <td>{{ r.dateDebut|date('d/m/Y') }}</td>
-            <td>{{ r.dateFin|date('d/m/Y') }}</td>
-            <td>
-                <span class="sbadge {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span>
-            </td>
-            <td>
-                <div class="action-btns">
-                    {% if is_manager %}
-                        {#
-                            Flux : en_attente → approuvee → confirmee → en_cours → terminee
-                            Sorties : refusee, annulee, en_retard, en_litige
-                        #}
-                        {% macro btn_statut(id, cible, label, icon, color) %}
-                        <form method="POST" action="{{ path('reservation_changer_statut', {id: id, cible: cible}) }}" class="d-inline">
-                            <input type="hidden" name="_token" value="{{ csrf_token('statut_resa' ~ id ~ '_' ~ cible) }}">
-                            <button type="submit" class="action-btn" title="{{ label }}" style="color:{{ color }}">
-                                <i class="fa-solid fa-{{ icon }}"></i>
+    <form method="get" class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-3">
+        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher..."
+               class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48 focus:outline-none focus:border-primary">
+        <select name="statut" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+            <option value="">Tous les statuts</option>
+            {% for s in statuts %}
+                <option value="{{ s.value }}" {{ statutFiltre == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            <i class="fas fa-search"></i>
+        </button>
+        <a href="{{ path('reservation_index') }}" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+            <i class="fas fa-times"></i>
+        </a>
+    </form>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-100">
+                <tr>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Matériel</th>
+                    {% if isGestionnaire %}<th class="text-left px-4 py-3 text-gray-600 font-medium">Utilisateur</th>{% endif %}
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Du</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Au</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Statut</th>
+                    {% if isGestionnaire %}<th class="px-4 py-3"></th>{% endif %}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for r in reservations %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ r.materiel.nom }}</td>
+                    {% if isGestionnaire %}<td class="px-4 py-3 text-gray-600">{{ r.utilisateur.nomComplet }}</td>{% endif %}
+                    <td class="px-4 py-3 text-gray-600">{{ r.dateDebut|date('d/m/Y') }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ r.dateFin|date('d/m/Y') }}</td>
+                    <td class="px-4 py-3">
+                        <span class="text-xs px-2 py-1 rounded-full {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span>
+                    </td>
+                    {% if isGestionnaire %}
+                    <td class="px-4 py-3">
+                        <form action="{{ path('reservation_statut', {id: r.id}) }}" method="post" class="flex gap-1">
+                            <input type="hidden" name="_token" value="{{ csrf_token('res_statut_' ~ r.id) }}">
+                            {% if r.statut.value == 'EnAttente' %}
+                            <button name="statut" value="Confirmee" class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">
+                                <i class="fas fa-check"></i>
                             </button>
+                            <button name="statut" value="Annulee" class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            {% endif %}
                         </form>
-                        {% endmacro %}
-
-                        {% if r.statut.value == 'en_attente' %}
-                            {{ _self.btn_statut(r.id, 'approuvee',  'Approuver', 'thumbs-up',  '#3b82f6') }}
-                            {{ _self.btn_statut(r.id, 'refusee',    'Refuser',   'ban',        '#ef4444') }}
-                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
-                            <a href="{{ path('reservation_edit', {id: r.id}) }}" class="action-btn" title="Éditer">
-                                <i class="fa-solid fa-pen"></i>
-                            </a>
-
-                        {% elseif r.statut.value == 'approuvee' %}
-                            {{ _self.btn_statut(r.id, 'confirmee',  'Confirmer', 'check',      '#22c55e') }}
-                            {{ _self.btn_statut(r.id, 'refusee',    'Refuser',   'ban',        '#ef4444') }}
-                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
-
-                        {% elseif r.statut.value == 'confirmee' %}
-                            {{ _self.btn_statut(r.id, 'en_cours',   'Démarrer',  'play',       '#22c55e') }}
-                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
-
-                        {% elseif r.statut.value == 'en_cours' %}
-                            {{ _self.btn_statut(r.id, 'terminee',   'Terminer',  'flag-checkered', '#22c55e') }}
-                            {{ _self.btn_statut(r.id, 'en_retard',  'En retard', 'clock',      '#f59e0b') }}
-                            {{ _self.btn_statut(r.id, 'en_litige',  'En litige', 'triangle-exclamation', '#ef4444') }}
-
-                        {% elseif r.statut.value == 'en_retard' %}
-                            {{ _self.btn_statut(r.id, 'terminee',   'Terminer',  'flag-checkered', '#22c55e') }}
-                            {{ _self.btn_statut(r.id, 'en_litige',  'En litige', 'triangle-exclamation', '#ef4444') }}
-                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
-
-                        {% elseif r.statut.value == 'en_litige' %}
-                            {{ _self.btn_statut(r.id, 'terminee',   'Terminer',  'flag-checkered', '#22c55e') }}
-                            {{ _self.btn_statut(r.id, 'annulee',    'Annuler',   'xmark',      '#9ca3af') }}
-                        {% endif %}
-                        {# terminee / annulee / refusee / expiree : aucune action #}
-                    {% else %}
-                        {# Non-managers : éditer uniquement si En attente #}
-                        {% if r.statut.value == 'en_attente' %}
-                        <a href="{{ path('reservation_edit', {id: r.id}) }}" class="action-btn" title="Éditer">
-                            <i class="fa-solid fa-pen"></i>
-                        </a>
-                        {% endif %}
+                    </td>
                     {% endif %}
-                </div>
-            </td>
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="{{ is_manager ? 7 : 6 }}" class="td-empty-lg">
-                <i class="fa-solid fa-calendar-xmark td-empty-icon"></i>
-                Aucune réservation trouvée
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-4 py-12 text-center text-gray-400">
+                        <i class="fas fa-calendar text-3xl mb-2 block opacity-20"></i>
+                        Aucune réservation trouvée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-{% include '_pagination.html.twig' with {paginator: paginator} %}
 </div>
-
 {% endblock %}

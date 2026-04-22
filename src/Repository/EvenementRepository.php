@@ -16,14 +16,10 @@ class EvenementRepository extends ServiceEntityRepository
 
     public function countIncidentsOuverts(): int
     {
-        return (int) $this->createQueryBuilder('ev')
-            ->select('COUNT(ev.id)')
-            ->where('ev.type IN (:types)')
-            ->setParameter('types', [
-                TypeEvenement::Panne->value,
-                TypeEvenement::Dysfonctionnement->value,
-            ])
-            ->getQuery()
-            ->getSingleScalarResult();
+        return (int) $this->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->andWhere('e.type IN (:types)')
+            ->setParameter('types', [TypeEvenement::Panne, TypeEvenement::Dysfonctionnement])
+            ->getQuery()->getSingleScalarResult();
     }
 }

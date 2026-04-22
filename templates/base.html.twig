@@ -3,180 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LOCMNS{% endblock %}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/loc.png') }}">
-    <link rel="stylesheet" href="{{ asset('fonts/fa/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=20260413b">
+    <title>{% block title %}LOC MNS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF5C2C',
+                        dark: '#1A1A1A',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {% block stylesheets %}{% endblock %}
 </head>
-<body>
+<body class="bg-gray-100">
 
-<!-- ══ HEADER ══ -->
-<header class="header">
-    <div class="header-hamburger" id="hamburger">
-        <i class="fa-solid fa-bars"></i>
-    </div>
-    <div class="header-logo">
-        <a href="{{ path('dashboard') }}" class="header-logo-link">
-            <img src="{{ asset('images/loc.png') }}" alt="LOCMNS" class="header-logo-img">
+{# HEADER #}
+<header class="fixed top-0 left-0 right-0 z-30 bg-dark text-white h-16 flex items-center px-4 shadow-lg">
+    <button id="hamburger" class="md:hidden mr-3 text-gray-300 hover:text-white">
+        <i class="fas fa-bars text-xl"></i>
+    </button>
+    <span class="text-2xl font-extrabold tracking-tight">
+        <span class="text-primary">LOC</span><span class="text-white"> MNS</span>
+    </span>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-4">
+        {% set nbAlertes = app.session.get('nb_alertes', 0) %}
+        <a href="{{ path('alerte_index') }}" class="relative text-gray-300 hover:text-white">
+            <i class="fas fa-bell text-lg"></i>
+            {% if nbAlertes > 0 %}
+                <span class="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">{{ nbAlertes }}</span>
+            {% endif %}
         </a>
-    </div>
-    <div class="header-actions">
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
-        <a href="{{ path('alerte_index') }}" class="h-btn h-dropdown-trigger" title="Alertes">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-        </a>
-        <div class="h-btn h-dropdown-trigger" title="Notifications" id="notif-trigger">
-            <i class="fa-solid fa-bell"></i>
-            <span id="notif-badge" class="notif-dot"></span>
-            <div class="h-dropdown h-notif-dropdown">
-                <div class="h-dropdown-title">Dernières alertes</div>
-                <div id="notif-list">
-                    <div class="notif-loading">Chargement…</div>
-                </div>
-                <a href="{{ path('alerte_index') }}" class="h-dropdown-footer">Voir toutes les alertes →</a>
-            </div>
+        <div class="flex items-center gap-2 text-sm text-gray-300">
+            <i class="fas fa-user-circle text-lg"></i>
+            <span>{{ app.session.get('user_prenom') }} {{ app.session.get('user_nom') }}</span>
+            <span class="text-xs bg-gray-700 px-2 py-0.5 rounded-full">{{ profilNom }}</span>
         </div>
-        {% endif %}
-        <div class="h-btn h-dropdown-trigger" title="Mon compte">
-            <i class="fa-solid fa-circle-user"></i>
-            <div class="h-dropdown">
-                <div class="h-dropdown-title">{{ app.session.get('user_nom') ?? 'Compte' }}</div>
-                <div class="h-dropdown-menu-pad">
-                    <a href="{{ path('compte_index') }}" class="h-dropdown-item"><i class="fa-solid fa-user h-dropdown-icon"></i> Mon compte</a>
-                    {% if app.session.get('user_profil') == 'Administrateur' %}
-                    <a href="{{ path('utilisateur_index') }}" class="h-dropdown-item"><i class="fa-solid fa-users h-dropdown-icon"></i> Utilisateurs</a>
-                    {% endif %}
-                    <div class="h-dropdown-divider"></div>
-                    <a href="{{ path('logout') }}" class="h-dropdown-item h-dropdown-item-danger"><i class="fa-solid fa-arrow-right-from-bracket h-dropdown-icon"></i> Déconnexion</a>
-                </div>
-            </div>
-        </div>
+        <form action="{{ path('logout') }}" method="post">
+            <input type="hidden" name="_token" value="{{ csrf_token('logout') }}">
+            <button type="submit" class="text-gray-400 hover:text-red-400 ml-2" title="Déconnexion">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </form>
     </div>
 </header>
 
-<!-- ══ LAYOUT ══ -->
-<div class="layout">
+{# SIDEBAR #}
+<aside id="sidebar" class="fixed left-0 top-16 bottom-0 z-20 w-16 bg-gray-900 flex flex-col items-center py-4 gap-1 transform -translate-x-full md:translate-x-0 transition-transform duration-200">
+    {% set currentRoute = app.request.attributes.get('_route') %}
 
-    <!-- ══ SIDEBAR ══ -->
-    <aside class="sidebar" id="sidebar">
-        {# Dashboard — tous les profils #}
-        <a href="{{ path('dashboard') }}"
-           class="nav-item {% if app.request.attributes.get('_route') == 'dashboard' %}active{% endif %}"
-           title="Dashboard">
-            <i class="fa-solid fa-table-columns"></i>
-        </a>
+    <a href="{{ path('dashboard') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'dashboard' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Tableau de bord">
+        <i class="fas fa-tachometer-alt text-lg"></i>
+    </a>
 
-        {% if app.session.get('user_profil') in ['Administrateur', 'Gestionnaire'] %}
-        {# Managers uniquement : Matériels, Emprunts, Réservations, Alertes #}
-        <a href="{{ path('materiel_index') }}"
-           class="nav-item {% if app.request.attributes.get('_route') starts with 'materiel' %}active{% endif %}"
-           title="Matériels">
-            <i class="fa-solid fa-box"></i>
-        </a>
-        <a href="{{ path('emprunt_index') }}"
-           class="nav-item {% if app.request.attributes.get('_route') starts with 'emprunt' %}active{% endif %}"
-           title="Emprunts">
-            <i class="fa-solid fa-right-left"></i>
-        </a>
-        <a href="{{ path('reservation_index') }}"
-           class="nav-item {% if app.request.attributes.get('_route') starts with 'reservation' %}active{% endif %}"
-           title="Réservations">
-            <i class="fa-solid fa-calendar-days"></i>
-        </a>
-        <a href="{{ path('alerte_index') }}"
-           class="nav-item {% if app.request.attributes.get('_route') starts with 'alerte' %}active{% endif %}"
-           title="Alertes">
-            <i class="fa-solid fa-bell"></i>
-        </a>
-        <a href="{{ path('document_index') }}"
-           class="nav-item {% if app.request.attributes.get('_route') starts with 'document' %}active{% endif %}"
-           title="Documents">
-            <i class="fa-solid fa-file-lines"></i>
-        </a>
-        {% else %}
-        {# Employé / Stagiaire / Client : accès direct nouvelle réservation #}
-        <a href="{{ path('reservation_new') }}"
-           class="nav-item {% if app.request.attributes.get('_route') starts with 'reservation' %}active{% endif %}"
-           title="Nouvelle réservation">
-            <i class="fa-solid fa-calendar-plus"></i>
-        </a>
-        {% endif %}
+    <a href="{{ path('materiel_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'materiel' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Matériels">
+        <i class="fas fa-laptop text-lg"></i>
+    </a>
 
-        {% if app.session.get('user_profil') == 'Administrateur' %}
-        <a href="{{ path('utilisateur_index') }}"
-           class="nav-item {% if app.request.attributes.get('_route') starts with 'utilisateur' %}active{% endif %}"
-           title="Utilisateurs">
-            <i class="fa-solid fa-users"></i>
-        </a>
-        {% endif %}
-    </aside>
+    <a href="{{ path('emprunt_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'emprunt' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Emprunts">
+        <i class="fas fa-handshake text-lg"></i>
+    </a>
 
-    <!-- ══ MAIN ══ -->
-    <main class="main">
-        {% for msg in app.flashes('success') %}
-            <div class="flash-success"><i class="fa-solid fa-circle-check"></i> {{ msg }}</div>
-        {% endfor %}
-        {% for msg in app.flashes('error') %}
-            <div class="flash-error"><i class="fa-solid fa-circle-xmark"></i> {{ msg }}</div>
-        {% endfor %}
-        {% block content %}{% endblock %}
-    </main>
+    <a href="{{ path('reservation_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'reservation' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Réservations">
+        <i class="fas fa-calendar-alt text-lg"></i>
+    </a>
 
-</div>
+    <a href="{{ path('alerte_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'alerte' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Alertes">
+        <i class="fas fa-exclamation-triangle text-lg"></i>
+    </a>
 
-<script>
-    document.getElementById('hamburger').addEventListener('click', function () {
-        document.getElementById('sidebar').classList.toggle('open');
-    });
+    {% if isGestionnaire %}
+    <a href="{{ path('document_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'document' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Documents">
+        <i class="fas fa-file-alt text-lg"></i>
+    </a>
+    {% endif %}
 
-    // Fermer les modals en cliquant l'arrière-plan
-    document.querySelectorAll('[id^="modal-"]').forEach(function(modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) modal.style.display = 'none';
-        });
-    });
+    {% if isAdmin %}
+    <div class="w-8 border-t border-gray-700 my-1"></div>
+    <a href="{{ path('utilisateur_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'utilisateur' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Utilisateurs">
+        <i class="fas fa-users text-lg"></i>
+    </a>
+    <a href="{{ path('profil_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'profil' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Profils">
+        <i class="fas fa-id-card text-lg"></i>
+    </a>
+    {% endif %}
 
-    // Dropdown notifications — chargement alertes
-    var notifLoaded = false;
-    document.querySelectorAll('.h-dropdown-trigger').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            btn.classList.toggle('open');
-            if (btn.id === 'notif-trigger' && !notifLoaded) {
-                notifLoaded = true;
-                fetch('{{ path('alerte_api_dernieres') }}')
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        var list = document.getElementById('notif-list');
-                        if (data.total > 0) {
-                            document.getElementById('notif-badge').style.display = 'block';
-                        }
-                        if (data.alertes.length === 0) {
-                            list.innerHTML = '<div class="notif-loading">Aucune alerte non lue</div>';
-                            return;
-                        }
-                        list.innerHTML = data.alertes.map(function(a) {
-                            return '<div class="h-notif-item">' +
-                                '<div class="notif-meta">' +
-                                '<span class="sbadge sbadge-xs ' + a.badge + '">' + a.type + '</span>' +
-                                '<span class="notif-time">' + a.date + '</span>' +
-                                '</div>' +
-                                '<div class="h-notif-item-msg">' + a.message + '</div>' +
-                                '<div class="h-notif-item-time">' + a.user + '</div>' +
-                                '</div>';
-                        }).join('');
-                    })
-                    .catch(function() {
-                        document.getElementById('notif-list').innerHTML = '<div class="notif-loading">Erreur de chargement</div>';
-                    });
-            }
-        });
-    });
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.h-dropdown-trigger.open').forEach(function(el) {
-            el.classList.remove('open');
-        });
-    });
-</script>
+    <div class="flex-1"></div>
+    <a href="{{ path('compte_index') }}"
+       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'compte' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
+       title="Mon compte">
+        <i class="fas fa-cog text-lg"></i>
+    </a>
+</aside>
+
+{# MAIN #}
+<main class="md:ml-16 mt-16 p-6 min-h-screen">
+    {% for msg in app.flashes('success') %}
+        <div class="mb-4 px-4 py-3 rounded-lg bg-green-100 text-green-800 border border-green-200 flex items-center gap-2">
+            <i class="fas fa-check-circle"></i> {{ msg }}
+        </div>
+    {% endfor %}
+    {% for msg in app.flashes('error') %}
+        <div class="mb-4 px-4 py-3 rounded-lg bg-red-100 text-red-800 border border-red-200 flex items-center gap-2">
+            <i class="fas fa-times-circle"></i> {{ msg }}
+        </div>
+    {% endfor %}
+    {% for msg in app.flashes('warning') %}
+        <div class="mb-4 px-4 py-3 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i> {{ msg }}
+        </div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<script src="{{ asset('js/app.js') }}"></script>
+{% block javascripts %}{% endblock %}
 </body>
 </html>

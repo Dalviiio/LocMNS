@@ -1,58 +1,59 @@
 {% extends 'base.html.twig' %}
-{% block title %}Mon compte — LOCMNS{% endblock %}
+{% block title %}Mon compte — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-2xl mx-auto">
 
-<div class="page-label">Mon compte</div>
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Mon compte</h1>
 
-<div class="page-header">
-    <div>
-        <div class="page-title">{{ utilisateur.nomComplet }}</div>
-        <div class="page-sub">{{ utilisateur.profil.nom }} — {{ utilisateur.email }}</div>
-    </div>
-</div>
-
-<div class="form-grid-2-16 compte-wrap">
-
-    <div class="table-wrap panel-padded">
-        <div class="panel-title form-section-title-mb">Modifier mon profil</div>
-        <form method="POST">
-            <input type="hidden" name="_token" value="{{ csrf_token('edit_compte') }}">
-            <div class="form-col">
-                <div class="form-field-sm">
-                    <label class="form-label">Prénom</label>
-                    <input type="text" name="prenom" class="form-control" value="{{ utilisateur.prenom }}" required>
-                </div>
-                <div class="form-field-sm">
-                    <label class="form-label">Nom</label>
-                    <input type="text" name="nom" class="form-control" value="{{ utilisateur.nom }}" required>
-                </div>
-                <div class="form-field-sm">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" value="{{ utilisateur.email }}" required>
-                </div>
-                <div class="form-field-sm">
-                    <label class="form-label">Nouveau mot de passe <span class="form-label-note">(laisser vide)</span></label>
-                    <input type="password" name="mot_de_passe" class="form-control" autocomplete="new-password">
-                </div>
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center gap-4 mb-6 pb-5 border-b border-gray-100">
+            <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-user text-primary text-xl"></i>
             </div>
-        </form>
-    </div>
-
-    <div class="table-wrap panel-padded">
-        <div class="panel-title form-section-title-mb">Informations</div>
-        <table><tbody>
-            <tr><td class="td-label-wide">Profil</td><td><span class="sbadge sb-info">{{ utilisateur.profil.nom }}</span></td></tr>
-            <tr><td class="td-label-wide">Membre depuis</td><td>{{ utilisateur.createdAt|date('d/m/Y') }}</td></tr>
-            <tr><td class="td-label-wide">Emprunts actifs</td><td>{{ utilisateur.empruntsActifs|length }}</td></tr>
-            <tr><td class="td-label-wide">Réservations</td><td>{{ utilisateur.reservations|length }}</td></tr>
-        </tbody></table>
-
-        <div class="form-actions">
-            <a href="{{ path('logout') }}" class="btn btn-outline btn-full">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Se déconnecter
-            </a>
+            <div>
+                <p class="font-semibold text-gray-800">{{ user.nomComplet }}</p>
+                <p class="text-sm text-gray-500">{{ user.email }}</p>
+                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{{ user.profil.nom }}</span>
+            </div>
         </div>
+
+        <form action="{{ path('compte_index') }}" method="post" class="space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('compte_update') }}">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                    <input type="text" name="prenom" value="{{ user.prenom }}" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                    <input type="text" name="nom" value="{{ user.nom }}" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" name="email" value="{{ user.email }}" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Nouveau mot de passe
+                    <span class="text-gray-400 text-xs font-normal">(laisser vide pour ne pas changer)</span>
+                </label>
+                <input type="password" name="password"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-primary text-white font-medium py-2.5 rounded-lg hover:bg-orange-600 transition-colors text-sm">
+                <i class="fas fa-save mr-1"></i> Enregistrer les modifications
+            </button>
+        </form>
     </div>
 
 </div>

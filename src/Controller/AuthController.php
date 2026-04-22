@@ -3,45 +3,49 @@
 namespace App\Controller;
 
 use App\Repository\UtilisateurRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-class AuthController extends AbstractController
+class AuthController extends AbstractAppController
 {
-    #[Route('/login', name: 'login', methods: ['GET', 'POST'])]
-    public function login(Request $request, UtilisateurRepository $repo): Response
+    public function __construct(UtilisateurRepository $utilisateurRepo)
     {
-        if ($request->getSession()->get('user_id')) {
+        parent::__construct($utilisateurRepo);
+    }
+
+    #[Route('/login', name: 'login', methods: ['GET'])]
+    public function loginForm(): Response
+    {
+        return $this->render('auth/login.html.twig');
+    }
+
+    #[Route('/login', name: 'login_check', methods: ['POST'])]
+    public function loginCheck(Request $request): Response
+    {
+        $email    = trim($request->request->get('email', ''));
+        $password = $request->request->get('password', '');
+
+        $user = $this->utilisateurRepo->findByEmail($email);
+
+        if ($user && password_verify($password, $user->getMotDePasse())) {
+            $session = $request->getSession();
+            $session->set('user_id',     $user->getId());
+            $session->set('user_nom',    $user->getNom());
+            $session->set('user_prenom', $user->getPrenom());
+            $session->set('user_profil', $user->getProfil()->getNom());
+
             return $this->redirectToRoute('dashboard');
         }
 
-        $error = null;
-
-        if ($request->isMethod('POST')) {
-            $email = $request->request->get('email', '');
-            $mdp   = $request->request->get('mot_de_passe', '');
-
-            $utilisateur = $repo->findOneBy(['email' => $email]);
-
-            if ($utilisateur && password_verify($mdp, $utilisateur->getMotDePasse())) {
-                $request->getSession()->set('user_id', $utilisateur->getId());
-                $request->getSession()->set('user_nom', $utilisateur->getNomComplet());
-                $request->getSession()->set('user_profil', $utilisateur->getProfil()->getNom());
-                return $this->redirectToRoute('dashboard');
-            }
-
-            $error = 'Email ou mot de passe incorrect.';
-        }
-
-        return $this->render('auth/login.html.twig', ['error' => $error]);
+        $this->addFlash('error', 'Email ou mot de passe incorrect.');
+        return $this->redirectToRoute('login');
     }
 
-    #[Route('/logout', name: 'logout')]
+    #[Route('/logout', name: 'logout', methods: ['POST'])]
     public function logout(Request $request): Response
     {
-        $request->getSession()->clear();
+        $request->getSession()->invalidate();
         return $this->redirectToRoute('login');
     }
 }

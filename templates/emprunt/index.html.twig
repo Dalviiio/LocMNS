@@ -1,74 +1,84 @@
 {% extends 'base.html.twig' %}
-{% block title %}Emprunts — LOCMNS{% endblock %}
+{% block title %}Emprunts — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-7xl mx-auto">
 
-<div class="page-label">Emprunts</div>
-
-<div class="page-header">
-    <div>
-        <div class="page-title">Emprunts</div>
-        <div class="page-sub">Suivi des emprunts de matériel</div>
-    </div>
-    <div class="page-header-actions">
-        {% if is_manager %}
-        <a href="{{ path('export_emprunts_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
-        {% endif %}
-        <a href="{{ path('emprunt_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel emprunt</a>
-    </div>
-</div>
-
-<div class="table-wrap">
-<form method="GET">
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher..." value="{{ filtre_search }}">
-        </div>
-        <div class="toolbar-group">
-            <select name="statut" class="form-select-sm" onchange="this.form.submit()">
-                <option value="">Tous les statuts</option>
-                {% for s in statuts %}
-                <option value="{{ s.value }}" {{ filtre_statut == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Emprunts</h1>
+        <div class="flex gap-2">
+            {% if isGestionnaire %}
+            <a href="{{ path('emprunt_export') }}"
+               class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                <i class="fas fa-download"></i> Export CSV
+            </a>
+            {% endif %}
+            <a href="{{ path('emprunt_new') }}"
+               class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+                <i class="fas fa-plus"></i> Nouvel emprunt
+            </a>
         </div>
     </div>
-</form>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th><th>Utilisateur</th><th>Matériel</th><th>Date début</th><th>Date fin prévue</th><th>Date retour</th><th>Statut</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for e in emprunts %}
-            <tr>
-                <td class="td-muted">{{ e.id }}</td>
-                <td class="td-bold">{{ e.utilisateur.nomComplet }}</td>
-                <td>{{ e.materiel.nom }}</td>
-                <td>{{ e.dateDebut|date('d/m/Y') }}</td>
-                <td>{{ e.dateFinPrevue|date('d/m/Y') }}</td>
-                <td>{{ e.dateRetour ? e.dateRetour|date('d/m/Y') : '—' }}</td>
-                <td><span class="sbadge {{ e.enRetard ? 'sb-danger' : e.statut.badgeClass() }}">{{ e.enRetard ? 'Retard' : e.statut.label() }}</span></td>
-                <td><div class="action-btns">
-                    <a href="{{ path('emprunt_show', {id: e.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
-                    {% if is_manager %}
-                    {% if e.statut.value == 'en_cours' or e.statut.value == 'retard' %}
-                    <form method="POST" action="{{ path('emprunt_retour', {id: e.id}) }}" class="d-inline">
-                        <input type="hidden" name="_token" value="{{ csrf_token('retour_emprunt' ~ e.id) }}">
-                        <button type="submit" class="action-btn" title="Enregistrer le retour"><i class="fa-solid fa-rotate-left"></i></button>
-                    </form>
-                    {% endif %}
-                    <a href="{{ path('emprunt_edit', {id: e.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
-                    {% endif %}
-                </div></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="8" class="td-empty">Aucun emprunt trouvé</td></tr>
+
+    <form method="get" class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-3">
+        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher..."
+               class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48 focus:outline-none focus:border-primary">
+        <select name="statut" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+            <option value="">Tous les statuts</option>
+            {% for s in statuts %}
+                <option value="{{ s.value }}" {{ statutFiltre == s.value ? 'selected' : '' }}>{{ s.label() }}</option>
             {% endfor %}
-        </tbody>
-    </table>
-    {% include '_pagination.html.twig' with {paginator: paginator} %}
+        </select>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            <i class="fas fa-search"></i>
+        </button>
+        <a href="{{ path('emprunt_index') }}" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+            <i class="fas fa-times"></i>
+        </a>
+    </form>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-100">
+                <tr>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Matériel</th>
+                    {% if isGestionnaire %}<th class="text-left px-4 py-3 text-gray-600 font-medium">Utilisateur</th>{% endif %}
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Début</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Fin prévue</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Statut</th>
+                    <th class="px-4 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for emprunt in emprunts %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ emprunt.materiel.nom }}</td>
+                    {% if isGestionnaire %}
+                    <td class="px-4 py-3 text-gray-600">{{ emprunt.utilisateur.nomComplet }}</td>
+                    {% endif %}
+                    <td class="px-4 py-3 text-gray-600">{{ emprunt.dateDebut|date('d/m/Y') }}</td>
+                    <td class="px-4 py-3 {{ emprunt.enRetard ? 'text-red-600 font-semibold' : 'text-gray-600' }}">
+                        {{ emprunt.dateFinPrevue|date('d/m/Y') }}
+                        {% if emprunt.enRetard %}<i class="fas fa-exclamation-circle ml-1 text-xs"></i>{% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="text-xs px-2 py-1 rounded-full {{ emprunt.statut.badgeClass() }}">{{ emprunt.statut.label() }}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <a href="{{ path('emprunt_show', {id: emprunt.id}) }}" class="text-primary hover:underline text-xs">Voir</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-4 py-12 text-center text-gray-400">
+                        <i class="fas fa-handshake text-3xl mb-2 block opacity-20"></i>
+                        Aucun emprunt trouvé
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
 </div>
 {% endblock %}
