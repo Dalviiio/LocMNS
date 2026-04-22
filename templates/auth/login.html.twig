@@ -2,64 +2,66 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion — LOC MNS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { theme: { extend: { colors: { primary: '#FF5C2C', dark: '#1A1A1A' } } } }</script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
 </head>
-<body class="bg-dark min-h-screen flex items-center justify-center">
+<body style="background:#F2F2F2;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;font-family:system-ui,sans-serif;">
 
-<div class="w-full max-w-md mx-auto px-4">
-    <div class="text-center mb-8">
-        <span class="text-4xl font-extrabold">
-            <span class="text-primary">LOC</span><span class="text-white"> MNS</span>
-        </span>
-        <p class="text-gray-400 mt-2 text-sm">Gestion de parc matériel</p>
-    </div>
+    <div style="background:white;width:100%;max-width:400px;border-radius:12px;padding:40px;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
 
-    {% for msg in app.flashes('error') %}
-        <div class="mb-4 px-4 py-3 rounded-lg bg-red-900/50 text-red-200 border border-red-700 flex items-center gap-2 text-sm">
-            <i class="fas fa-times-circle"></i> {{ msg }}
+        <img src="{{ asset('images/loc.png') }}" alt="LOC MNS"
+             style="height:60px;width:auto;display:block;margin:0 auto 24px;">
+
+        <h1 style="text-align:center;font-size:22px;font-weight:700;color:#1A1A1A;margin:0 0 6px;">
+            Connexion
+        </h1>
+        <p style="text-align:center;color:#888888;font-size:13px;margin:0 0 28px;">
+            Accédez à votre espace LOC MNS
+        </p>
+
+        {% for message in app.flashes('error') %}
+        <div style="background:#FEE2E2;color:#B91C1C;border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:16px;">
+            {{ message }}
         </div>
-    {% endfor %}
+        {% endfor %}
 
-    <div class="bg-gray-900 rounded-2xl p-8 shadow-2xl border border-gray-800">
-        <h1 class="text-white text-xl font-bold mb-6">Connexion</h1>
+        <form method="POST" action="{{ path('login_check') }}" autocomplete="off">
+            <input type="hidden" name="_token" value="{{ csrf_token('login') }}">
 
-        <form action="{{ path('login_check') }}" method="post" class="space-y-5">
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-400 mb-1">Adresse e-mail</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        <i class="fas fa-envelope text-sm"></i>
-                    </span>
-                    <input type="email" id="email" name="email" required
-                           class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
-                           placeholder="votre@email.fr">
-                </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                    Adresse email
+                </label>
+                <input type="email" name="email" required
+                       autocomplete="off" autocorrect="off" autocapitalize="off"
+                       style="width:100%;padding:10px 14px;border:1px solid #DDDDDD;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box;transition:border-color .2s;"
+                       onfocus="this.style.borderColor='#FF5C2C'"
+                       onblur="this.style.borderColor='#DDDDDD'">
             </div>
 
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-400 mb-1">Mot de passe</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        <i class="fas fa-lock text-sm"></i>
-                    </span>
-                    <input type="password" id="password" name="password" required
-                           class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
-                           placeholder="••••••••">
-                </div>
+            <div style="margin-bottom:24px;">
+                <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                    Mot de passe
+                </label>
+                <input type="password" name="password" required
+                       autocomplete="new-password"
+                       style="width:100%;padding:10px 14px;border:1px solid #DDDDDD;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box;transition:border-color .2s;"
+                       onfocus="this.style.borderColor='#FF5C2C'"
+                       onblur="this.style.borderColor='#DDDDDD'">
             </div>
 
             <button type="submit"
-                    class="w-full bg-primary hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
-                <i class="fas fa-sign-in-alt"></i>
+                    style="width:100%;padding:12px;background:#FF5C2C;color:white;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s;"
+                    onmouseover="this.style.background='#e6512a'"
+                    onmouseout="this.style.background='#FF5C2C'">
                 Se connecter
             </button>
         </form>
+
     </div>
-</div>
 
 </body>
 </html>

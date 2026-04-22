@@ -4,143 +4,188 @@
 {% block content %}
 <div class="max-w-7xl mx-auto">
 
+    {# Page header #}
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Tableau de bord</h1>
-        <span class="text-sm text-gray-500">{{ 'now'|date('d/m/Y H:i') }}</span>
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-wider mb-0.5" style="color:#888;">LOC MNS</p>
+            <h1 class="text-2xl font-bold" style="color:#1A1A1A;">Tableau de bord</h1>
+        </div>
+        <span class="text-sm" style="color:#888;">{{ 'now'|date('d/m/Y H:i') }}</span>
     </div>
 
-    {# KPIs #}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-laptop text-blue-600"></i>
+    {# LIGNE 1 — 4 KPIs dans une seule carte #}
+    <div class="bg-white rounded-lg mb-5 overflow-hidden" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div class="grid grid-cols-2 md:grid-cols-4">
+            <div class="px-5 py-5" style="border-right:1px solid #f0f0f0;">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-box-open text-xs" style="color:#FF5C2C;"></i>
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:#888;">Matériels indisponibles</span>
                 </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-800">{{ totalMateriels }}</p>
-                    <p class="text-xs text-gray-500">Matériels</p>
-                </div>
+                <p class="font-bold leading-none" style="font-size:2.5rem;color:#1A1A1A;">{{ materielsEmpruntes }}</p>
             </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-check text-green-600"></i>
+            <div class="px-5 py-5" style="border-right:1px solid #f0f0f0;">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-clock text-xs" style="color:#FF5C2C;"></i>
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:#888;">Retards de retour</span>
                 </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-800">{{ materielsDispos }}</p>
-                    <p class="text-xs text-gray-500">Disponibles</p>
-                </div>
+                <p class="font-bold leading-none" style="font-size:2.5rem;color:{{ retards > 0 ? '#dc2626' : '#1A1A1A' }};">{{ retards }}</p>
             </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-handshake text-orange-600"></i>
+            <div class="px-5 py-5" style="border-right:1px solid #f0f0f0;">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-triangle-exclamation text-xs" style="color:#FF5C2C;"></i>
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:#888;">Incidents ouverts</span>
                 </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-800">{{ materielsEmpruntes }}</p>
-                    <p class="text-xs text-gray-500">Empruntés</p>
-                </div>
+                <p class="font-bold leading-none" style="font-size:2.5rem;color:{{ incidents > 0 ? '#ea580c' : '#1A1A1A' }};">{{ incidents }}</p>
             </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-clock text-red-600"></i>
+            <div class="px-5 py-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-inbox text-xs" style="color:#FF5C2C;"></i>
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:#888;">Demandes en attente</span>
                 </div>
-                <div>
-                    <p class="text-2xl font-bold {{ retards > 0 ? 'text-red-600' : 'text-gray-800' }}">{{ retards }}</p>
-                    <p class="text-xs text-gray-500">Retards</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-calendar text-purple-600"></i>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-800">{{ reservationsEnAttente }}</p>
-                    <p class="text-xs text-gray-500">Réservations</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-tools text-yellow-600"></i>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold {{ incidents > 0 ? 'text-yellow-700' : 'text-gray-800' }}">{{ incidents }}</p>
-                    <p class="text-xs text-gray-500">Incidents</p>
-                </div>
+                <p class="font-bold leading-none" style="font-size:2.5rem;color:#1A1A1A;">{{ reservationsEnAttente }}</p>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {# Emprunts en cours #}
-        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h2 class="font-semibold text-gray-700">Emprunts en cours</h2>
-                <a href="{{ path('emprunt_index') }}" class="text-primary text-sm hover:underline">Voir tout</a>
+    {# LIGNE 2 — 3 grandes cartes stat #}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div class="bg-white rounded-lg px-5 py-5 flex items-center gap-4" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div class="flex items-center justify-center rounded-lg flex-shrink-0" style="width:48px;height:48px;background:#fff3ef;">
+                <i class="fas fa-boxes-stacked" style="color:#FF5C2C;font-size:20px;"></i>
             </div>
-            <div class="divide-y divide-gray-50">
-                {% for emprunt in empruntsEnCours|slice(0, 8) %}
-                <div class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
-                    <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-laptop text-orange-500 text-sm"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-800 truncate">{{ emprunt.materiel.nom }}</p>
-                        <p class="text-xs text-gray-500">{{ emprunt.utilisateur.nomComplet }}</p>
-                    </div>
-                    <div class="text-right flex-shrink-0">
-                        <p class="text-xs {{ emprunt.enRetard ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
-                            {{ emprunt.dateFinPrevue|date('d/m/Y') }}
-                        </p>
-                        {% if emprunt.enRetard %}
-                            <span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Retard</span>
-                        {% endif %}
-                    </div>
-                    <a href="{{ path('emprunt_show', {id: emprunt.id}) }}" class="text-gray-400 hover:text-primary ml-2">
-                        <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
+            <div>
+                <p class="font-bold leading-none mb-1" style="font-size:2rem;color:#FF5C2C;">{{ totalMateriels }}</p>
+                <p class="text-xs" style="color:#888;">dans le parc</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg px-5 py-5 flex items-center gap-4" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div class="flex items-center justify-center rounded-lg flex-shrink-0" style="width:48px;height:48px;background:#f0fdf4;">
+                <i class="fas fa-circle-check" style="color:#22c55e;font-size:20px;"></i>
+            </div>
+            <div>
+                <p class="font-bold leading-none mb-1" style="font-size:2rem;color:#22c55e;">{{ materielsDispos }}</p>
+                <p class="text-xs" style="color:#888;">prêts à l'emprunt</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg px-5 py-5 flex items-center gap-4" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div class="flex items-center justify-center rounded-lg flex-shrink-0" style="width:48px;height:48px;background:#fff3ef;">
+                <i class="fas fa-right-left" style="color:#FF5C2C;font-size:20px;"></i>
+            </div>
+            <div>
+                <p class="font-bold leading-none mb-1" style="font-size:2rem;color:#FF5C2C;">{{ materielsEmpruntes }}</p>
+                <p class="text-xs" style="color:#888;">actuellement sortis</p>
+            </div>
+        </div>
+    </div>
+
+    {# CALENDRIER #}
+    <div class="bg-white rounded-lg p-6 mb-5" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        {% set todayDay = 'now'|date('j') %}
+        {% set firstWeekday = 'first day of this month'|date('N') %}
+        {% set daysInMonth = 'last day of this month'|date('j') %}
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-bold text-base" style="color:#1A1A1A;">{{ 'now'|date('F Y') }}</h2>
+            <a href="{{ path('reservation_planning') }}" class="text-sm" style="color:#888;">Planning →</a>
+        </div>
+        <div class="grid grid-cols-7 mb-2">
+            {% for lbl in ['LU','MA','ME','JE','VE','SA','DI'] %}
+            <div class="text-center text-xs font-semibold uppercase py-1" style="color:#bbb;">{{ lbl }}</div>
+            {% endfor %}
+        </div>
+        <div class="grid grid-cols-7">
+            {% if firstWeekday > 1 %}
+                {% for i in 1..(firstWeekday - 1) %}<div style="height:32px;"></div>{% endfor %}
+            {% endif %}
+            {% for day in 1..daysInMonth %}
+            <div class="flex items-center justify-center" style="height:32px;">
+                {% if day == todayDay %}
+                <span class="flex items-center justify-center w-7 h-7 rounded-full text-white font-bold text-xs" style="background:#1A1A1A;">{{ day }}</span>
                 {% else %}
-                <div class="px-5 py-8 text-center text-gray-400 text-sm">
-                    <i class="fas fa-handshake text-2xl mb-2 block opacity-30"></i>
-                    Aucun emprunt en cours
-                </div>
-                {% endfor %}
+                <span class="text-sm" style="color:#1A1A1A;">{{ day }}</span>
+                {% endif %}
             </div>
+            {% endfor %}
         </div>
+        {% if empruntsEnCours|length > 0 %}
+        <div class="mt-4 space-y-2">
+            {% for emprunt in empruntsEnCours|slice(0, 4) %}
+            <div class="flex items-start gap-3 pt-3" style="border-top:1px solid #f5f5f5;">
+                <span class="w-2 h-2 rounded-full flex-shrink-0 mt-1" style="background:#FF5C2C;"></span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold" style="color:#FF5C2C;">{{ emprunt.dateFinPrevue|date('d/m') }}</p>
+                    <p class="text-sm font-medium truncate" style="color:#1A1A1A;">{{ emprunt.materiel.nom }}</p>
+                    <p class="text-xs" style="color:#888;">{{ emprunt.utilisateur.nomComplet }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# LIGNE DU BAS — 2 colonnes #}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {# Alertes récentes #}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h2 class="font-semibold text-gray-700">Alertes récentes</h2>
-                <a href="{{ path('alerte_index') }}" class="text-primary text-sm hover:underline">Voir tout</a>
+        <div class="bg-white rounded-lg overflow-hidden" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid #f0f0f0;">
+                <h2 class="font-bold text-sm" style="color:#1A1A1A;">Alertes récentes</h2>
+                <a href="{{ path('alerte_index') }}" class="text-xs" style="color:#888;">Voir tout →</a>
             </div>
-            <div class="divide-y divide-gray-50">
+            <div style="max-height:260px;overflow-y:auto;">
                 {% for alerte in alertesRecentes %}
-                <div class="px-5 py-3">
-                    <div class="flex items-start gap-2">
-                        <span class="text-xs px-2 py-0.5 rounded-full mt-0.5 {{ alerte.type.badgeClass() }}">{{ alerte.type.label() }}</span>
+                <div class="px-5 py-3 flex items-start gap-3" style="border-bottom:1px solid #f5f5f5;">
+                    <span class="badge {{ alerte.type.badgeClass() }} flex-shrink-0 mt-0.5">{{ alerte.type.label() }}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold truncate" style="color:#1A1A1A;">{{ alerte.message }}</p>
+                        {% if alerte.emprunt %}
+                        <p class="text-xs mt-0.5" style="color:#888;">
+                            Emprunt #{{ alerte.emprunt.id }} — {{ alerte.emprunt.materiel.nom }}
+                        </p>
+                        {% endif %}
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-xs font-medium" style="color:#FF5C2C;">{{ alerte.utilisateur.nomComplet }}</span>
+                        </div>
                     </div>
-                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ alerte.message }}</p>
-                    <p class="text-xs text-gray-400 mt-1">{{ alerte.createdAt|date('d/m/Y H:i') }}</p>
+                    <span class="text-xs flex-shrink-0" style="color:#bbb;">{{ alerte.createdAt|date('d/m') }}</span>
                 </div>
                 {% else %}
-                <div class="px-5 py-8 text-center text-gray-400 text-sm">
-                    <i class="fas fa-bell text-2xl mb-2 block opacity-30"></i>
-                    Aucune alerte
+                <div class="px-5 py-10 text-center">
+                    <i class="fas fa-bell text-3xl mb-2 block" style="color:#e0e0e0;"></i>
+                    <p class="text-sm" style="color:#bbb;">Aucune alerte</p>
                 </div>
                 {% endfor %}
             </div>
         </div>
+
+        {# Emprunts en cours #}
+        <div class="bg-white rounded-lg overflow-hidden" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid #f0f0f0;">
+                <h2 class="font-bold text-sm" style="color:#1A1A1A;">Emprunts en cours</h2>
+                <a href="{{ path('emprunt_index') }}" class="text-xs" style="color:#888;">Voir tout →</a>
+            </div>
+            <div style="max-height:260px;overflow-y:auto;">
+                {% for emprunt in empruntsEnCours|slice(0, 8) %}
+                <div class="px-5 py-3 flex items-start gap-3" style="border-bottom:1px solid #f5f5f5;">
+                    <span class="badge bg-blue-100 text-blue-800 flex-shrink-0 mt-0.5">En cours</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold truncate" style="color:#1A1A1A;">{{ emprunt.materiel.nom }}</p>
+                        <p class="text-xs mt-0.5" style="color:#888;">Début : {{ emprunt.dateDebut|date('d/m/Y') }}</p>
+                        <span class="text-xs font-medium" style="color:#FF5C2C;">{{ emprunt.utilisateur.nomComplet }}</span>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-xs" style="color:#888;">Retour prévu :</p>
+                        <p class="text-xs font-semibold {{ emprunt.enRetard ? 'text-red-600' : '' }}" style="{{ emprunt.enRetard ? '' : 'color:#888;' }}">{{ emprunt.dateFinPrevue|date('d/m/Y') }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="px-5 py-10 text-center">
+                    <i class="fas fa-right-left text-3xl mb-2 block" style="color:#e0e0e0;"></i>
+                    <p class="text-sm" style="color:#bbb;">Aucun emprunt en cours</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
     </div>
 
 </div>

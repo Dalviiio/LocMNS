@@ -4,87 +4,111 @@
 {% block content %}
 <div class="max-w-7xl mx-auto">
 
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Matériels</h1>
-        <div class="flex gap-2">
-            {% if isGestionnaire %}
-            <a href="{{ path('materiel_export') }}"
-               class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
-                <i class="fas fa-download"></i> Export CSV
-            </a>
-            <a href="{{ path('materiel_new') }}"
-               class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
-                <i class="fas fa-plus"></i> Nouveau matériel
-            </a>
-            {% endif %}
+    <div class="mb-6">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-0.5" style="color:#888;">Parc matériel</p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-bold" style="color:#1A1A1A;">Matériels</h1>
+                <p class="text-sm mt-0.5" style="color:#888;">Gestion du parc matériel</p>
+            </div>
+            <div class="flex gap-2">
+                {% if isGestionnaire %}
+                <a href="{{ path('materiel_export') }}" class="flex items-center gap-2 px-4 py-2 bg-white border rounded text-sm font-medium transition-colors hover:bg-gray-50" style="border-color:#ddd;color:#555;">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+                <a href="{{ path('materiel_new') }}" class="flex items-center gap-2 px-4 py-2 rounded text-sm font-medium transition-colors btn-primary">
+                    <i class="fas fa-plus"></i> Nouveau matériel
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 
     {# Filtres #}
-    <form method="get" class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-3">
-        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher..."
-               class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48 focus:outline-none focus:border-primary">
-        <select name="etat" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+    <form method="get" class="bg-white rounded-lg p-4 mb-5 flex flex-wrap gap-3" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div class="relative flex-1 min-w-48">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#bbb;"></i>
+            <input type="text" name="search" value="{{ search }}" placeholder="Rechercher un matériel..."
+                   class="w-full pl-8 pr-3 py-2 border rounded text-sm input-focus" style="border-color:#ddd;">
+        </div>
+        <select name="etat" class="border rounded px-3 py-2 text-sm input-focus bg-white" style="border-color:#ddd;color:#555;">
             <option value="">Tous les états</option>
             {% for e in etats %}
                 <option value="{{ e.value }}" {{ etatFiltre == e.value ? 'selected' : '' }}>{{ e.label() }}</option>
             {% endfor %}
         </select>
         {% if isGestionnaire %}
-        <select name="categorie" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+        <select name="categorie" class="border rounded px-3 py-2 text-sm input-focus bg-white" style="border-color:#ddd;color:#555;">
             <option value="">Toutes les catégories</option>
             {% for cat in categories %}
                 <option value="{{ cat.id }}" {{ catFiltre == cat.id ? 'selected' : '' }}>{{ cat.nom }}</option>
             {% endfor %}
         </select>
         {% endif %}
-        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
-            <i class="fas fa-search"></i>
+        <button type="submit" class="flex items-center gap-2 px-4 py-2 rounded text-sm font-medium btn-primary">
+            <i class="fas fa-search"></i> Filtrer
         </button>
-        <a href="{{ path('materiel_index') }}" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+        <a href="{{ path('materiel_index') }}" class="flex items-center gap-2 px-4 py-2 bg-white border rounded text-sm font-medium hover:bg-gray-50" style="border-color:#ddd;color:#888;">
             <i class="fas fa-times"></i>
         </a>
     </form>
 
-    {# Grille matériels #}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {% for m in materiels %}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div class="p-4">
-                <div class="flex items-start justify-between mb-3">
-                    <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-laptop text-primary"></i>
-                    </div>
-                    <span class="text-xs px-2 py-1 rounded-full {{ m.etat.badgeClass() }}">{{ m.etat.label() }}</span>
-                </div>
-                <h3 class="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">{{ m.nom }}</h3>
-                <p class="text-xs text-gray-500 mb-1">{{ m.categorie.nom }}</p>
-                {% if m.numeroSerie %}
-                    <p class="text-xs text-gray-400 font-mono">{{ m.numeroSerie }}</p>
-                {% endif %}
-                {% if m.localisation %}
-                    <p class="text-xs text-gray-400 mt-1"><i class="fas fa-map-marker-alt mr-1"></i>{{ m.localisation }}</p>
-                {% endif %}
-            </div>
-            <div class="border-t border-gray-50 px-4 py-2 flex gap-2">
-                <a href="{{ path('materiel_show', {id: m.id}) }}"
-                   class="flex-1 text-center text-xs py-1.5 text-primary hover:bg-orange-50 rounded-lg transition-colors">
-                    <i class="fas fa-eye mr-1"></i>Voir
-                </a>
-                {% if isGestionnaire %}
-                <a href="{{ path('materiel_edit', {id: m.id}) }}"
-                   class="flex-1 text-center text-xs py-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                    <i class="fas fa-edit mr-1"></i>Modifier
-                </a>
-                {% endif %}
-            </div>
+    {# Tableau #}
+    <div class="bg-white rounded-lg overflow-hidden" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr style="border-bottom:1px solid #eee;">
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Matériel</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Catégorie</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">N° série</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Localisation</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">État</th>
+                        <th class="px-4 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in materiels %}
+                    <tr class="table-row" style="border-bottom:1px solid #f5f5f5;">
+                        <td class="px-4 py-3 font-medium" style="color:#1A1A1A;">{{ m.nom }}</td>
+                        <td class="px-4 py-3" style="color:#555;">{{ m.categorie.nom }}</td>
+                        <td class="px-4 py-3 font-mono text-xs" style="color:#888;">{{ m.numeroSerie ?: '—' }}</td>
+                        <td class="px-4 py-3 text-sm" style="color:#888;">
+                            {% if m.localisation %}<i class="fas fa-map-marker-alt mr-1" style="color:#bbb;"></i>{{ m.localisation }}{% else %}—{% endif %}
+                        </td>
+                        <td class="px-4 py-3"><span class="badge {{ m.etat.badgeClass() }}">{{ m.etat.label() }}</span></td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <a href="{{ path('materiel_show', {id: m.id}) }}" title="Voir" style="color:#bbb;" onmouseover="this.style.color='#FF5C2C'" onmouseout="this.style.color='#bbb'">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if isGestionnaire %}
+                                <a href="{{ path('materiel_edit', {id: m.id}) }}" title="Modifier" style="color:#bbb;" onmouseover="this.style.color='#FF5C2C'" onmouseout="this.style.color='#bbb'">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                {% endif %}
+                                {% if isAdmin %}
+                                <form action="{{ path('materiel_delete', {id: m.id}) }}" method="post" class="inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('materiel_delete_' ~ m.id) }}">
+                                    <button type="submit" data-confirm="Supprimer ce matériel ?" title="Supprimer" style="color:#bbb;background:none;border:none;cursor:pointer;padding:0;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#bbb'">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-14 text-center">
+                            <i class="fas fa-box text-3xl mb-2 block" style="color:#e0e0e0;"></i>
+                            <p class="text-sm" style="color:#bbb;">Aucun matériel trouvé</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% else %}
-        <div class="col-span-full py-16 text-center text-gray-400">
-            <i class="fas fa-laptop text-4xl mb-3 block opacity-20"></i>
-            Aucun matériel trouvé
-        </div>
-        {% endfor %}
     </div>
 
 </div>

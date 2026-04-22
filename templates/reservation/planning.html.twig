@@ -4,63 +4,69 @@
 {% block content %}
 <div class="max-w-7xl mx-auto">
 
-    <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-            <a href="{{ path('reservation_index') }}" class="text-gray-400 hover:text-primary transition-colors">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h1 class="text-2xl font-bold text-gray-800">Planning — {{ moisNom }}</h1>
-        </div>
-        <div class="flex gap-2">
-            {% set moisPrec = mois - 1 %}
-            {% set anneePrec = moisPrec == 0 ? annee - 1 : annee %}
-            {% set moisPrecVal = moisPrec == 0 ? 12 : moisPrec %}
-            <a href="{{ path('reservation_planning', {mois: moisPrecVal, annee: anneePrec}) }}"
-               class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-            {% set moisSuiv = mois + 1 %}
-            {% set anneeSuiv = moisSuiv == 13 ? annee + 1 : annee %}
-            {% set moisSuivVal = moisSuiv == 13 ? 1 : moisSuiv %}
-            <a href="{{ path('reservation_planning', {mois: moisSuivVal, annee: anneeSuiv}) }}"
-               class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
-                <i class="fas fa-chevron-right"></i>
-            </a>
+    <div class="mb-6">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-0.5" style="color:#888;">Réservations</p>
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="{{ path('reservation_index') }}" style="color:#bbb;" onmouseover="this.style.color='#FF5C2C'" onmouseout="this.style.color='#bbb'">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold" style="color:#1A1A1A;">Planning — {{ moisNom }}</h1>
+                    <p class="text-sm mt-0.5" style="color:#888;">Vue mensuelle des réservations</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                {% set moisPrec = mois - 1 %}
+                {% set anneePrec = moisPrec == 0 ? annee - 1 : annee %}
+                {% set moisPrecVal = moisPrec == 0 ? 12 : moisPrec %}
+                <a href="{{ path('reservation_planning', {mois: moisPrecVal, annee: anneePrec}) }}"
+                   class="flex items-center gap-2 px-3 py-2 bg-white border rounded text-sm font-medium hover:bg-gray-50 transition-colors" style="border-color:#ddd;color:#555;">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% set moisSuiv = mois + 1 %}
+                {% set anneeSuiv = moisSuiv == 13 ? annee + 1 : annee %}
+                {% set moisSuivVal = moisSuiv == 13 ? 1 : moisSuiv %}
+                <a href="{{ path('reservation_planning', {mois: moisSuivVal, annee: anneeSuiv}) }}"
+                   class="flex items-center gap-2 px-3 py-2 bg-white border rounded text-sm font-medium hover:bg-gray-50 transition-colors" style="border-color:#ddd;color:#555;">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-                <tr>
-                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Matériel</th>
-                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Utilisateur</th>
-                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Du</th>
-                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Au</th>
-                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Statut</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-                {% for r in reservations %}
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 font-medium text-gray-800">{{ r.materiel.nom }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ r.utilisateur.nomComplet }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ r.dateDebut|date('d/m/Y') }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ r.dateFin|date('d/m/Y') }}</td>
-                    <td class="px-4 py-3">
-                        <span class="text-xs px-2 py-1 rounded-full {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5" class="px-4 py-12 text-center text-gray-400">
-                        <i class="fas fa-calendar text-3xl mb-2 block opacity-20"></i>
-                        Aucune réservation ce mois-ci
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white rounded-lg overflow-hidden" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr style="border-bottom:1px solid #eee;">
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Matériel</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Utilisateur</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Du</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Au</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:#888;">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reservations %}
+                    <tr class="table-row" style="border-bottom:1px solid #f5f5f5;">
+                        <td class="px-4 py-3 font-medium" style="color:#1A1A1A;">{{ r.materiel.nom }}</td>
+                        <td class="px-4 py-3" style="color:#555;">{{ r.utilisateur.nomComplet }}</td>
+                        <td class="px-4 py-3" style="color:#888;">{{ r.dateDebut|date('d/m/Y') }}</td>
+                        <td class="px-4 py-3" style="color:#888;">{{ r.dateFin|date('d/m/Y') }}</td>
+                        <td class="px-4 py-3"><span class="badge {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-14 text-center">
+                            <i class="fas fa-calendar-days text-3xl mb-2 block" style="color:#e0e0e0;"></i>
+                            <p class="text-sm" style="color:#bbb;">Aucune réservation ce mois-ci</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>

@@ -4,36 +4,50 @@
 {% block content %}
 <div class="max-w-5xl mx-auto">
 
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Documents techniques</h1>
+    <div class="mb-6">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-0.5" style="color:#888;">Ressources</p>
+        <h1 class="text-2xl font-bold" style="color:#1A1A1A;">Documents techniques</h1>
+        <p class="text-sm mt-0.5" style="color:#888;">Manuels, fiches et documentation matériel</p>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {# Formulaire ajout #}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h2 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                <i class="fas fa-plus text-primary"></i> Ajouter un document
+        <div class="bg-white rounded-lg p-5" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <h2 class="font-semibold text-sm mb-4 flex items-center gap-2" style="color:#1A1A1A;">
+                <i class="fas fa-plus" style="color:#FF5C2C;"></i> Ajouter un document
             </h2>
             <form action="{{ path('document_new') }}" method="post" class="space-y-3">
                 <input type="hidden" name="_token" value="{{ csrf_token('document_new') }}">
-                <select name="materiel_id" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
-                    <option value="">Matériel...</option>
-                    {% for m in materiels %}
-                        <option value="{{ m.id }}">{{ m.nom }}</option>
-                    {% endfor %}
-                </select>
-                <select name="type" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
-                    {% for t in types %}
-                        <option value="{{ t.value }}">{{ t.label() }}</option>
-                    {% endfor %}
-                </select>
-                <input type="text" name="titre" required placeholder="Titre du document"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
-                <input type="url" name="url" required placeholder="https://..."
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
-                <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors">
-                    Ajouter
+                <div>
+                    <label class="block text-xs font-medium mb-1" style="color:#888;">Matériel <span style="color:#ef4444;">*</span></label>
+                    <select name="materiel_id" required class="w-full border rounded px-3 py-2 text-sm input-focus bg-white" style="border-color:#ddd;">
+                        <option value="">Choisir...</option>
+                        {% for m in materiels %}
+                            <option value="{{ m.id }}">{{ m.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1" style="color:#888;">Type <span style="color:#ef4444;">*</span></label>
+                    <select name="type" required class="w-full border rounded px-3 py-2 text-sm input-focus bg-white" style="border-color:#ddd;">
+                        {% for t in types %}
+                            <option value="{{ t.value }}">{{ t.label() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1" style="color:#888;">Titre <span style="color:#ef4444;">*</span></label>
+                    <input type="text" name="titre" required placeholder="Titre du document"
+                           class="w-full border rounded px-3 py-2 text-sm input-focus" style="border-color:#ddd;">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1" style="color:#888;">URL <span style="color:#ef4444;">*</span></label>
+                    <input type="url" name="url" required placeholder="https://..."
+                           class="w-full border rounded px-3 py-2 text-sm input-focus" style="border-color:#ddd;">
+                </div>
+                <button type="submit" class="w-full flex items-center justify-center gap-2 py-2 rounded text-sm font-medium btn-primary">
+                    <i class="fas fa-plus"></i> Ajouter
                 </button>
             </form>
         </div>
@@ -41,31 +55,32 @@
         {# Liste documents #}
         <div class="lg:col-span-2 space-y-3">
             {% for doc in documents %}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
-                <i class="fas fa-file-alt text-primary text-lg flex-shrink-0"></i>
+            <div class="bg-white rounded-lg p-4 flex items-center gap-3" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <i class="fas fa-file-lines text-lg flex-shrink-0" style="color:#FF5C2C;"></i>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-800 truncate">{{ doc.titre }}</p>
-                    <p class="text-xs text-gray-500">{{ doc.type.label() }} — {{ doc.materiel.nom }}</p>
+                    <p class="text-sm font-semibold truncate" style="color:#1A1A1A;">{{ doc.titre }}</p>
+                    <p class="text-xs mt-0.5" style="color:#888;">{{ doc.type.label() }} — {{ doc.materiel.nom }}</p>
                 </div>
                 <a href="{{ doc.url }}" target="_blank" rel="noopener"
-                   class="text-primary hover:underline text-xs flex-shrink-0">
-                    <i class="fas fa-external-link-alt mr-1"></i>Ouvrir
+                   class="flex items-center gap-1 text-xs font-medium flex-shrink-0" style="color:#FF5C2C;">
+                    <i class="fas fa-external-link-alt"></i> Ouvrir
                 </a>
                 <form action="{{ path('document_delete', {id: doc.id}) }}" method="post" class="flex-shrink-0">
                     <input type="hidden" name="_token" value="{{ csrf_token('doc_delete_' ~ doc.id) }}">
                     <button type="submit" data-confirm="Supprimer ce document ?"
-                            class="text-gray-400 hover:text-red-500 transition-colors text-xs">
-                        <i class="fas fa-trash"></i>
+                            style="background:none;border:none;cursor:pointer;color:#bbb;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#bbb'">
+                        <i class="fas fa-trash text-xs"></i>
                     </button>
                 </form>
             </div>
             {% else %}
-            <div class="py-12 text-center text-gray-400">
-                <i class="fas fa-file text-4xl mb-2 block opacity-20"></i>
-                Aucun document
+            <div class="py-14 text-center">
+                <i class="fas fa-file-lines text-4xl mb-3 block" style="color:#e0e0e0;"></i>
+                <p class="text-sm" style="color:#bbb;">Aucun document</p>
             </div>
             {% endfor %}
         </div>
+
     </div>
 
 </div>

@@ -4,39 +4,43 @@
 {% block content %}
 <div class="max-w-5xl mx-auto">
 
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Profils & autorisations</h1>
+    <div class="mb-6">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-0.5" style="color:#888;">Administration</p>
+        <h1 class="text-2xl font-bold" style="color:#1A1A1A;">Profils & autorisations</h1>
+        <p class="text-sm mt-0.5" style="color:#888;">Gérer les catégories autorisées par profil</p>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {% for profil in profils %}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-id-card text-primary"></i> {{ profil.nom }}
+        <div class="bg-white rounded-lg p-5" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div class="flex items-center justify-between mb-4 pb-3" style="border-bottom:1px solid #f0f0f0;">
+                <h2 class="font-semibold flex items-center gap-2" style="color:#1A1A1A;">
+                    <i class="fas fa-id-card text-sm" style="color:#FF5C2C;"></i> {{ profil.nom }}
                 </h2>
-                <span class="text-xs text-gray-400">{{ profil.utilisateurs|length }} utilisateur(s)</span>
+                <span class="text-xs" style="color:#bbb;">{{ profil.utilisateurs|length }} utilisateur(s)</span>
             </div>
 
             {% if profil.description %}
-            <p class="text-sm text-gray-500 mb-4">{{ profil.description }}</p>
+            <p class="text-sm mb-4" style="color:#888;">{{ profil.description }}</p>
             {% endif %}
 
             <form action="{{ path('profil_categories', {id: profil.id}) }}" method="post">
                 <input type="hidden" name="_token" value="{{ csrf_token('profil_cat_' ~ profil.id) }}">
 
-                <p class="text-xs font-medium text-gray-600 mb-2">Catégories autorisées :</p>
-                <div class="space-y-1 mb-4">
+                <p class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#888;">Catégories autorisées</p>
+                <div class="space-y-2 mb-4">
                     {% for cat in categories %}
-                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <label class="flex items-center gap-3 text-sm cursor-pointer py-1">
                         <input type="checkbox" name="categories[]" value="{{ cat.id }}"
                                {{ profil.categories.contains(cat) ? 'checked' : '' }}
-                               class="rounded border-gray-300 text-primary focus:ring-primary">
-                        <span class="text-gray-700">{{ cat.nom }}</span>
+                               style="accent-color:#FF5C2C;width:15px;height:15px;">
+                        <span style="color:#1A1A1A;">{{ cat.nom }}</span>
                     </label>
                     {% endfor %}
                 </div>
 
-                <button type="submit" class="w-full py-2 bg-primary text-white text-sm rounded-lg hover:bg-orange-600 transition-colors font-medium">
-                    <i class="fas fa-save mr-1"></i> Enregistrer
+                <button type="submit" class="w-full flex items-center justify-center gap-2 py-2 rounded text-sm font-medium btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer
                 </button>
             </form>
         </div>

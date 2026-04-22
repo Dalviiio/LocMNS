@@ -4,28 +4,36 @@
 {% block content %}
 <div class="max-w-2xl mx-auto">
 
-    <div class="flex items-center gap-3 mb-6">
-        <a href="{{ path('materiel_index') }}" class="text-gray-400 hover:text-primary transition-colors">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h1 class="text-2xl font-bold text-gray-800">Nouveau matériel</h1>
+    <div class="mb-6">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#888;">
+            <a href="{{ path('materiel_index') }}" style="color:#bbb;" onmouseover="this.style.color='#FF5C2C'" onmouseout="this.style.color='#bbb'">Matériels</a>
+            <span class="mx-1">›</span> Nouveau
+        </p>
+        <div class="flex items-center gap-3">
+            <a href="{{ path('materiel_index') }}" style="color:#bbb;" onmouseover="this.style.color='#FF5C2C'" onmouseout="this.style.color='#bbb'">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold" style="color:#1A1A1A;">Nouveau matériel</h1>
+                <p class="text-sm mt-0.5" style="color:#888;">Ajouter un équipement au parc</p>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-lg p-6" style="box-shadow:0 1px 3px rgba(0,0,0,0.1);">
         <form action="{{ path('materiel_new') }}" method="post" class="space-y-5">
             <input type="hidden" name="_token" value="{{ csrf_token('materiel_new') }}">
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nom <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium mb-1" style="color:#555;">Nom <span style="color:#ef4444;">*</span></label>
                 <input type="text" name="nom" required
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                       class="w-full border rounded px-3 py-2 text-sm input-focus" style="border-color:#ddd;">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie <span class="text-red-500">*</span></label>
-                    <select name="categorie_id" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    <label class="block text-sm font-medium mb-1" style="color:#555;">Catégorie <span style="color:#ef4444;">*</span></label>
+                    <select name="categorie_id" required class="w-full border rounded px-3 py-2 text-sm input-focus bg-white" style="border-color:#ddd;">
                         <option value="">Choisir...</option>
                         {% for cat in categories %}
                             <option value="{{ cat.id }}">{{ cat.nom }}</option>
@@ -33,9 +41,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">État <span class="text-red-500">*</span></label>
-                    <select name="etat" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    <label class="block text-sm font-medium mb-1" style="color:#555;">État <span style="color:#ef4444;">*</span></label>
+                    <select name="etat" required class="w-full border rounded px-3 py-2 text-sm input-focus bg-white" style="border-color:#ddd;">
                         {% for e in etats %}
                             <option value="{{ e.value }}">{{ e.label() }}</option>
                         {% endfor %}
@@ -44,25 +51,21 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Numéro de série</label>
-                <input type="text" name="numero_serie"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                <label class="block text-sm font-medium mb-1" style="color:#555;">Numéro de série</label>
+                <input type="text" name="numero_serie" class="w-full border rounded px-3 py-2 text-sm input-focus" style="border-color:#ddd;">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Localisation</label>
-                <input type="text" name="localisation"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
-                       placeholder="Ex: Salle B204, armoire 3">
+                <label class="block text-sm font-medium mb-1" style="color:#555;">Localisation</label>
+                <input type="text" name="localisation" placeholder="Ex : Salle B204, armoire 3"
+                       class="w-full border rounded px-3 py-2 text-sm input-focus" style="border-color:#ddd;">
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit"
-                        class="flex-1 bg-primary text-white font-medium py-2.5 rounded-lg hover:bg-orange-600 transition-colors text-sm">
-                    <i class="fas fa-save mr-1"></i> Créer le matériel
+                <button type="submit" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded text-sm font-medium btn-primary">
+                    <i class="fas fa-save"></i> Créer le matériel
                 </button>
-                <a href="{{ path('materiel_index') }}"
-                   class="px-5 py-2.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                <a href="{{ path('materiel_index') }}" class="px-5 py-2.5 bg-white border rounded text-sm font-medium hover:bg-gray-50 transition-colors" style="border-color:#ddd;color:#555;">
                     Annuler
                 </a>
             </div>

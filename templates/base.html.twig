@@ -4,140 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LOC MNS{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#FF5C2C',
-                        dark: '#1A1A1A',
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
+    <style>
+        body { background-color: #F2F2F2; color: #1A1A1A; }
+        @media (min-width:768px) {
+            #sidebar { transform:translateX(0) !important; }
+            #main-content { margin-left:55px; }
+        }
+        @media (max-width:767px) {
+            #main-content { margin-left:0; }
+        }
+    </style>
     {% block stylesheets %}{% endblock %}
 </head>
-<body class="bg-gray-100">
+<body>
 
 {# HEADER #}
-<header class="fixed top-0 left-0 right-0 z-30 bg-dark text-white h-16 flex items-center px-4 shadow-lg">
-    <button id="hamburger" class="md:hidden mr-3 text-gray-300 hover:text-white">
-        <i class="fas fa-bars text-xl"></i>
+<header class="fixed top-0 left-0 right-0 z-30 flex items-center" style="height:60px;background:#1A1A1A;">
+    <button id="hamburger" class="header-icon flex items-center justify-center flex-shrink-0 md:hidden" style="width:60px;height:60px;background:transparent;border:none;cursor:pointer;">
+        <i class="fas fa-bars" style="color:#888;font-size:16px;"></i>
     </button>
-    <span class="text-2xl font-extrabold tracking-tight">
-        <span class="text-primary">LOC</span><span class="text-white"> MNS</span>
-    </span>
+    <a href="{{ path('dashboard') }}" style="text-decoration:none;display:flex;align-items:center;margin-left:8px;">
+        <img src="{{ asset('images/loc.png') }}" alt="LOC MNS" style="height:46px;width:auto;display:block;">
+    </a>
     <div class="flex-1"></div>
-    <div class="flex items-center gap-4">
-        {% set nbAlertes = app.session.get('nb_alertes', 0) %}
-        <a href="{{ path('alerte_index') }}" class="relative text-gray-300 hover:text-white">
-            <i class="fas fa-bell text-lg"></i>
-            {% if nbAlertes > 0 %}
-                <span class="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">{{ nbAlertes }}</span>
-            {% endif %}
-        </a>
-        <div class="flex items-center gap-2 text-sm text-gray-300">
-            <i class="fas fa-user-circle text-lg"></i>
-            <span>{{ app.session.get('user_prenom') }} {{ app.session.get('user_nom') }}</span>
-            <span class="text-xs bg-gray-700 px-2 py-0.5 rounded-full">{{ profilNom }}</span>
-        </div>
-        <form action="{{ path('logout') }}" method="post">
-            <input type="hidden" name="_token" value="{{ csrf_token('logout') }}">
-            <button type="submit" class="text-gray-400 hover:text-red-400 ml-2" title="Déconnexion">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
-        </form>
-    </div>
+    {% set nbAlertes = app.session.get('nb_alertes', 0) %}
+    <a href="{{ path('alerte_index') }}" class="header-icon relative flex items-center justify-center flex-shrink-0" style="width:60px;height:60px;border-left:1px solid #2e2e2e;" title="Alertes">
+        <i class="fas fa-triangle-exclamation" style="color:#FF5C2C;font-size:16px;"></i>
+        {% if nbAlertes > 0 %}
+        <span class="absolute flex items-center justify-center rounded-full text-white font-bold" style="top:10px;right:10px;width:16px;height:16px;font-size:9px;background:#FF5C2C;">{{ nbAlertes > 9 ? '9+' : nbAlertes }}</span>
+        {% endif %}
+    </a>
+    <a href="{{ path('alerte_index') }}" class="header-icon flex items-center justify-center flex-shrink-0" style="width:60px;height:60px;border-left:1px solid #2e2e2e;" title="Notifications">
+        <i class="fas fa-bell" style="color:#FF5C2C;font-size:16px;"></i>
+    </a>
+    <a href="{{ path('compte_index') }}" class="header-icon flex items-center justify-center flex-shrink-0" style="width:60px;height:60px;border-left:1px solid #2e2e2e;" title="{{ app.session.get('user_prenom') }} {{ app.session.get('user_nom') }}">
+        <i class="fas fa-circle-user" style="color:#FF5C2C;font-size:16px;"></i>
+    </a>
 </header>
 
 {# SIDEBAR #}
-<aside id="sidebar" class="fixed left-0 top-16 bottom-0 z-20 w-16 bg-gray-900 flex flex-col items-center py-4 gap-1 transform -translate-x-full md:translate-x-0 transition-transform duration-200">
-    {% set currentRoute = app.request.attributes.get('_route') %}
+<aside id="sidebar" class="fixed left-0 bottom-0 z-20 flex flex-col" style="top:60px;width:55px;background:#2C2C2C;transform:translateX(-100%);transition:transform .2s;">
+    {% set cr = app.request.attributes.get('_route') %}
 
-    <a href="{{ path('dashboard') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'dashboard' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Tableau de bord">
-        <i class="fas fa-tachometer-alt text-lg"></i>
+    {% macro navlink(route, icon, title, active) %}
+    <a href="{{ path(route) }}" title="{{ title }}"
+       class="sidebar-link relative flex items-center justify-center flex-shrink-0"
+       style="width:55px;height:55px;{{ active ? 'background:rgba(255,92,44,0.18);border-left:3px solid #FF5C2C;' : 'border-left:3px solid transparent;' }}">
+        <i class="fas {{ icon }}" style="font-size:18px;color:{{ active ? '#FF5C2C' : '#888' }};"></i>
+        {% if active %}<span class="sidebar-arrow"></span>{% endif %}
     </a>
+    {% endmacro %}
 
-    <a href="{{ path('materiel_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'materiel' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Matériels">
-        <i class="fas fa-laptop text-lg"></i>
-    </a>
-
-    <a href="{{ path('emprunt_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'emprunt' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Emprunts">
-        <i class="fas fa-handshake text-lg"></i>
-    </a>
-
-    <a href="{{ path('reservation_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'reservation' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Réservations">
-        <i class="fas fa-calendar-alt text-lg"></i>
-    </a>
-
-    <a href="{{ path('alerte_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'alerte' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Alertes">
-        <i class="fas fa-exclamation-triangle text-lg"></i>
-    </a>
-
+    {{ _self.navlink('dashboard', 'fa-table-columns', 'Tableau de bord', cr starts with 'dashboard') }}
+    {{ _self.navlink('materiel_index', 'fa-box', 'Matériels', cr starts with 'materiel') }}
+    {{ _self.navlink('emprunt_index', 'fa-right-left', 'Emprunts', cr starts with 'emprunt') }}
+    {{ _self.navlink('reservation_index', 'fa-calendar-days', 'Réservations', cr starts with 'reservation') }}
+    {{ _self.navlink('alerte_index', 'fa-bell', 'Alertes', cr starts with 'alerte') }}
     {% if isGestionnaire %}
-    <a href="{{ path('document_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'document' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Documents">
-        <i class="fas fa-file-alt text-lg"></i>
-    </a>
+    {{ _self.navlink('document_index', 'fa-file-lines', 'Documents', cr starts with 'document') }}
     {% endif %}
-
     {% if isAdmin %}
-    <div class="w-8 border-t border-gray-700 my-1"></div>
-    <a href="{{ path('utilisateur_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'utilisateur' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Utilisateurs">
-        <i class="fas fa-users text-lg"></i>
-    </a>
-    <a href="{{ path('profil_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'profil' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Profils">
-        <i class="fas fa-id-card text-lg"></i>
-    </a>
+    <div style="height:1px;background:#3a3a3a;margin:4px 10px;"></div>
+    {{ _self.navlink('utilisateur_index', 'fa-users', 'Utilisateurs', cr starts with 'utilisateur') }}
+    {{ _self.navlink('profil_index', 'fa-id-card', 'Profils', cr starts with 'profil') }}
     {% endif %}
 
     <div class="flex-1"></div>
-    <a href="{{ path('compte_index') }}"
-       class="w-full flex flex-col items-center py-3 px-1 hover:text-primary hover:bg-gray-800 transition-colors {{ currentRoute starts with 'compte' ? 'text-primary border-l-2 border-primary bg-gray-800' : 'text-gray-400' }}"
-       title="Mon compte">
-        <i class="fas fa-cog text-lg"></i>
-    </a>
+
+    <form action="{{ path('logout') }}" method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('logout') }}">
+        <button type="submit" title="Déconnexion"
+                class="sidebar-link relative flex items-center justify-center w-full"
+                style="height:55px;border-left:3px solid transparent;background:transparent;cursor:pointer;border-top:1px solid #3a3a3a;">
+            <i class="fas fa-sign-out-alt" style="font-size:18px;color:#888;"></i>
+        </button>
+    </form>
 </aside>
 
+{# MOBILE OVERLAY #}
+<div id="sidebar-overlay" class="fixed inset-0 z-10 hidden" style="background:rgba(0,0,0,0.5);" onclick="closeSidebar()"></div>
+
 {# MAIN #}
-<main class="md:ml-16 mt-16 p-6 min-h-screen">
+<main id="main-content" class="min-h-screen" style="margin-top:60px;background:#F2F2F2;padding:24px;">
     {% for msg in app.flashes('success') %}
-        <div class="mb-4 px-4 py-3 rounded-lg bg-green-100 text-green-800 border border-green-200 flex items-center gap-2">
-            <i class="fas fa-check-circle"></i> {{ msg }}
-        </div>
+    <div class="mb-4 px-4 py-3 rounded-lg flex items-center gap-2 text-sm font-medium" style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;">
+        <i class="fas fa-check-circle"></i> {{ msg }}
+    </div>
     {% endfor %}
     {% for msg in app.flashes('error') %}
-        <div class="mb-4 px-4 py-3 rounded-lg bg-red-100 text-red-800 border border-red-200 flex items-center gap-2">
-            <i class="fas fa-times-circle"></i> {{ msg }}
-        </div>
+    <div class="mb-4 px-4 py-3 rounded-lg flex items-center gap-2 text-sm font-medium" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">
+        <i class="fas fa-times-circle"></i> {{ msg }}
+    </div>
     {% endfor %}
     {% for msg in app.flashes('warning') %}
-        <div class="mb-4 px-4 py-3 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-2">
-            <i class="fas fa-exclamation-circle"></i> {{ msg }}
-        </div>
+    <div class="mb-4 px-4 py-3 rounded-lg flex items-center gap-2 text-sm font-medium" style="background:#fef9c3;color:#854d0e;border:1px solid #fef08a;">
+        <i class="fas fa-exclamation-circle"></i> {{ msg }}
+    </div>
     {% endfor %}
 
     {% block content %}{% endblock %}
 </main>
 
+<script>
+function closeSidebar() {
+    document.getElementById('sidebar').style.transform = 'translateX(-100%)';
+    document.getElementById('sidebar-overlay').classList.add('hidden');
+}
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('hamburger');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (btn) {
+        btn.addEventListener('click', function () {
+            var open = sidebar.style.transform === 'translateX(0px)' || sidebar.style.transform === 'translateX(0)';
+            sidebar.style.transform = open ? 'translateX(-100%)' : 'translateX(0)';
+            overlay.classList.toggle('hidden', open);
+        });
+    }
+});
+</script>
 <script src="{{ asset('js/app.js') }}"></script>
 {% block javascripts %}{% endblock %}
 </body>

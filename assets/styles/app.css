@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* ─── Palette personnalisée ──────────────────────── */
+@theme {
+  --color-primary: #FF5C2C;
+  --color-dark:    #1A1A1A;
+}
+
+/* ─── Sources à scanner ──────────────────────────── */
+@source "../../templates/**/*.html.twig";
+@source "../../public/js/**/*.js";
+
+/* ─── Composants réutilisables ───────────────────── */
+@layer components {
+
+  /* Boutons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold cursor-pointer border-0 transition-opacity;
+    background: #FF5C2C;
+    color: #fff;
+  }
+  .btn-primary:hover { opacity: .9; }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold cursor-pointer transition-colors;
+    background: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+  }
+  .btn-secondary:hover { background: #f9f9f9; }
+
+  /* Badges (dot indicator via ::before) */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* Formulaires */
+  .form-input {
+    @apply w-full px-3 py-2 rounded text-sm bg-white transition-colors;
+    border: 1px solid #ddd;
+    outline: none;
+  }
+  .form-input:focus { border-color: #FF5C2C; }
+
+  .form-label {
+    @apply block text-sm font-medium mb-1;
+    color: #555;
+  }
+
+  /* Tableaux */
+  .table-header {
+    @apply text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider;
+    color: #888;
+  }
+  .table-cell {
+    @apply px-4 py-3 text-sm;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .table-row { transition: background .1s; }
+  .table-row:hover { background: #fafafa; }
+
+  /* Sidebar */
+  .nav-item {
+    @apply relative flex items-center justify-center flex-shrink-0 transition-colors no-underline;
+    width: 55px;
+    height: 55px;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.06); }
+  .nav-item-active {
+    background: rgba(255,92,44,.18);
+    border-left-color: #FF5C2C;
+  }
+
+  .sidebar-arrow {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-color: transparent transparent transparent #FF5C2C;
+  }
+
+  /* Header */
+  .header-icon { transition: background .15s; }
+  .header-icon:hover { background: #242424; }
+
+  /* Inputs legacy (focus via JS inline style) */
+  .input-focus:focus { outline: none; border-color: #FF5C2C !important; }
+}

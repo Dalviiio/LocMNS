@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libicu-dev \
     libzip-dev \
+    nodejs \
+    npm \
+    default-mysql-client \
     && docker-php-ext-install \
         pdo_mysql \
         opcache \
@@ -30,6 +33,8 @@ COPY composer.json composer.lock* ./
 RUN composer install --no-scripts --no-interaction --prefer-dist --optimize-autoloader
 
 COPY . .
+
+RUN npm install && npm run build:css
 
 RUN composer dump-autoload --optimize --no-dev \
     && mkdir -p var/cache var/log public_volume \

@@ -1,0 +1,13 @@
+{
+  "name": "loc-mns",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i assets/styles/app.css -o public/css/app.css --minify",
+    "watch:css": "tailwindcss -i assets/styles/app.css -o public/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.4",
+    "tailwindcss": "^4.2.4"
+  }
+}

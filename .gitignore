@@ -7,26 +7,6 @@
 /public/bundles/
 /var/
 /vendor/
-###< symfony/framework-bundle ###
-
-# Sensitive / local
 .env
-.env.*
-!.env.example
-
-# Claude AI
-.claude/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Database seeds / dumps
-database/seed.sql
-database/*.sql
+.claude
+###< symfony/framework-bundle ###
