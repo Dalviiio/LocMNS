@@ -1,129 +1,67 @@
 {% extends 'base.html.twig' %}
-{% block title %}Planning réservations — LOCMNS{% endblock %}
+{% block title %}Planning réservations — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-7xl mx-auto">
 
-<div class="page-label">Réservations › Planning</div>
-
-<div class="page-header">
-    <div class="plan-header-nav">
-        <a href="{{ path('reservation_planning', {annee: prev.format('Y'), mois: prev.format('n')}) }}"
-           class="btn btn-outline btn-sm-nav">
-            <i class="fa-solid fa-chevron-left"></i>
-        </a>
-        <div>
-            <div class="page-title">{{ debut|date('F Y')|capitalize }}</div>
-            <div class="page-sub">
-                {{ reservations|length }} réservation(s) •
-                {% if is_manager %}Planning global{% else %}Vos réservations{% endif %}
-            </div>
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <a href="{{ path('reservation_index') }}" class="text-gray-400 hover:text-primary transition-colors">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Planning — {{ moisNom }}</h1>
         </div>
-        <a href="{{ path('reservation_planning', {annee: next.format('Y'), mois: next.format('n')}) }}"
-           class="btn btn-outline btn-sm-nav">
-            <i class="fa-solid fa-chevron-right"></i>
-        </a>
-    </div>
-    <div class="plan-header-actions">
-        <a href="{{ path('reservation_planning', {annee: 'now'|date('Y'), mois: 'now'|date('n')}) }}"
-           class="btn btn-outline">
-            Aujourd'hui
-        </a>
-        <a href="{{ path('reservation_index') }}" class="btn btn-outline">
-            <i class="fa-solid fa-list"></i> Vue liste
-        </a>
-        <a href="{{ path('reservation_new') }}" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> Nouvelle
-        </a>
-    </div>
-</div>
-
-{# ── Calendrier ── #}
-<div class="table-wrap plan-wrap">
-
-    {# En-têtes jours de la semaine #}
-    <div class="plan-grid-header">
-        {% for jour in ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] %}
-        <div class="plan-dow-cell">{{ jour }}</div>
-        {% endfor %}
+        <div class="flex gap-2">
+            {% set moisPrec = mois - 1 %}
+            {% set anneePrec = moisPrec == 0 ? annee - 1 : annee %}
+            {% set moisPrecVal = moisPrec == 0 ? 12 : moisPrec %}
+            <a href="{{ path('reservation_planning', {mois: moisPrecVal, annee: anneePrec}) }}"
+               class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% set moisSuiv = mois + 1 %}
+            {% set anneeSuiv = moisSuiv == 13 ? annee + 1 : annee %}
+            {% set moisSuivVal = moisSuiv == 13 ? 1 : moisSuiv %}
+            <a href="{{ path('reservation_planning', {mois: moisSuivVal, annee: anneeSuiv}) }}"
+               class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
     </div>
 
-    {# Grille des jours #}
-    <div class="plan-grid">
-        {% set today   = 'now'|date('Y-m-d') %}
-        {% set annee   = debut.format('Y') %}
-        {% set mois    = debut.format('m') %}
-
-        {# Cases vides avant le 1er du mois #}
-        {% for i in 1..(premier_jour - 1) %}
-        <div class="plan-cell plan-cell--empty"></div>
-        {% endfor %}
-
-        {% for jour in 1..nb_jours %}
-            {% set dateStr   = annee ~ '-' ~ mois ~ '-' ~ (jour < 10 ? '0' ~ jour : jour) %}
-            {% set isToday   = dateStr == today %}
-            {% set col       = (premier_jour + jour - 2) % 7 + 1 %}
-            {% set isWeekend = col == 6 or col == 7 %}
-
-            <div class="plan-cell {{ isWeekend ? 'plan-cell--weekend' : 'plan-cell--default' }}">
-
-                {# Numéro du jour #}
-                <div class="plan-day-num-wrap">
-                    <span class="plan-day-num {{ isToday ? 'plan-day-num--today' : (isWeekend ? 'plan-day-num--weekend' : 'plan-day-num--default') }}">
-                        {{ jour }}
-                    </span>
-                </div>
-
-                {# Réservations du jour #}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-100">
+                <tr>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Matériel</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Utilisateur</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Du</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Au</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Statut</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
                 {% for r in reservations %}
-                    {% if r.dateDebut|date('Y-m-d') <= dateStr and r.dateFin|date('Y-m-d') >= dateStr %}
-                        {% set canEdit = is_manager or r.statut.value == 'en_attente' %}
-                        {% if r.statut.value == 'confirmee' %}
-                            {% set evtClass = 'plan-evt--confirmed' %}
-                        {% elseif r.statut.value == 'en_attente' %}
-                            {% set evtClass = 'plan-evt--pending' %}
-                        {% else %}
-                            {% set evtClass = 'plan-evt--other' %}
-                        {% endif %}
-
-                        {% if canEdit %}
-                        <a href="{{ path('reservation_edit', {id: r.id}) }}"
-                        {% else %}
-                        <span
-                        {% endif %}
-                           title="{{ is_manager ? r.utilisateur.nomComplet ~ ' — ' : '' }}{{ r.materiel.nom }} ({{ r.statut.label() }})"
-                           class="plan-evt {{ evtClass }}">
-                            {{ r.materiel.nom|slice(0, 18) }}{% if r.materiel.nom|length > 18 %}…{% endif %}
-                        {% if canEdit %}</a>{% else %}</span>{% endif %}
-                    {% endif %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ r.materiel.nom }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ r.utilisateur.nomComplet }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ r.dateDebut|date('d/m/Y') }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ r.dateFin|date('d/m/Y') }}</td>
+                    <td class="px-4 py-3">
+                        <span class="text-xs px-2 py-1 rounded-full {{ r.statut.badgeClass() }}">{{ r.statut.label() }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="px-4 py-12 text-center text-gray-400">
+                        <i class="fas fa-calendar text-3xl mb-2 block opacity-20"></i>
+                        Aucune réservation ce mois-ci
+                    </td>
+                </tr>
                 {% endfor %}
-
-            </div>
-        {% endfor %}
-
-        {# Cases vides après le dernier jour #}
-        {% set dernierCol = (premier_jour + nb_jours - 2) % 7 + 1 %}
-        {% if dernierCol < 7 %}
-            {% for i in (dernierCol + 1)..7 %}
-            <div class="plan-cell plan-cell--empty"></div>
-            {% endfor %}
-        {% endif %}
+            </tbody>
+        </table>
     </div>
-</div>
 
-{# ── Légende ── #}
-<div class="plan-legend">
-    <span class="plan-legend-label">Légende :</span>
-    <span class="plan-legend-item">
-        <span class="plan-legend-dot plan-legend-dot--confirmed"></span>
-        Confirmée
-    </span>
-    <span class="plan-legend-item">
-        <span class="plan-legend-dot plan-legend-dot--pending"></span>
-        En attente
-    </span>
-    <span class="plan-legend-item">
-        <span class="plan-legend-dot plan-legend-dot--other"></span>
-        Annulée
-    </span>
 </div>
-
 {% endblock %}

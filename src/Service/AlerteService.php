@@ -10,27 +10,19 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class AlerteService
 {
-    public function __construct(
-        private EntityManagerInterface $em,
-    ) {}
+    public function __construct(private EntityManagerInterface $em) {}
 
-    /**
-     * Crée et persiste une alerte (sans flush — le flush reste à la charge du controller).
-     */
     public function creer(
-        Utilisateur $utilisateur,
-        string      $message,
-        TypeAlerte  $type,
-        ?Emprunt    $emprunt = null,
+        Utilisateur $user,
+        TypeAlerte $type,
+        string $message,
+        ?Emprunt $emprunt = null
     ): Alerte {
         $alerte = new Alerte();
-        $alerte->setUtilisateur($utilisateur);
-        $alerte->setMessage($message);
+        $alerte->setUtilisateur($user);
         $alerte->setType($type);
-
-        if ($emprunt !== null) {
-            $alerte->setEmprunt($emprunt);
-        }
+        $alerte->setMessage($message);
+        $alerte->setEmprunt($emprunt);
 
         $this->em->persist($alerte);
 

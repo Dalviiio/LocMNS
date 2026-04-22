@@ -4,43 +4,52 @@ namespace App\Controller;
 
 use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/compte', name: 'compte_')]
-class CompteController extends AbstractController
+#[Route('/compte')]
+class CompteController extends AbstractAppController
 {
-    #[Route('', name: 'index', methods: ['GET', 'POST'])]
-    public function index(Request $request, UtilisateurRepository $repo, EntityManagerInterface $em): Response
+    public function __construct(
+        UtilisateurRepository $utilisateurRepo,
+        private EntityManagerInterface $em,
+    ) {
+        parent::__construct($utilisateurRepo);
+    }
+
+    #[Route('', name: 'compte_index', methods: ['GET', 'POST'])]
+    public function index(Request $request): Response
     {
-        $userId = $request->getSession()->get('user_id');
-        $utilisateur = $repo->find($userId);
+        $user    = $this->getUtilisateurConnecte($request);
+        $context = $this->getProfilContext($request);
 
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('edit_compte', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('compte_update', $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
             }
 
-            $utilisateur->setNom($request->request->get('nom'));
-            $utilisateur->setPrenom($request->request->get('prenom'));
-            $utilisateur->setEmail($request->request->get('email'));
+            $user->setNom($request->request->get('nom'));
+            $user->setPrenom($request->request->get('prenom'));
+            $user->setEmail($request->request->get('email'));
 
-            $mdp = $request->request->get('mot_de_passe');
-            if ($mdp) {
-                $utilisateur->setMotDePasse(password_hash($mdp, PASSWORD_BCRYPT));
+            $pwd = $request->request->get('password');
+            if ($pwd) {
+                $user->setMotDePasse(password_hash($pwd, PASSWORD_BCRYPT));
             }
 
-            $em->flush();
+            $this->em->flush();
 
-            $request->getSession()->set('user_nom', $utilisateur->getNomComplet());
-            $this->addFlash('success', 'Profil mis à jour.');
+            $session = $request->getSession();
+            $session->set('user_nom', $user->getNom());
+            $session->set('user_prenom', $user->getPrenom());
+
+            $this->addFlash('success', 'Votre profil a été mis à jour.');
             return $this->redirectToRoute('compte_index');
         }
 
-        return $this->render('compte/index.html.twig', [
-            'utilisateur' => $utilisateur,
-        ]);
+        return $this->render('compte/index.html.twig', array_merge($context, [
+            'user' => $user,
+        ]));
     }
 }

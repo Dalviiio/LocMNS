@@ -7,46 +7,45 @@ use App\Repository\EmpruntRepository;
 use App\Repository\EvenementRepository;
 use App\Repository\MaterielRepository;
 use App\Repository\ReservationRepository;
-use App\Service\AutorisationService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Repository\UtilisateurRepository;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-class DashboardController extends AbstractController
+class DashboardController extends AbstractAppController
 {
+    public function __construct(
+        UtilisateurRepository $utilisateurRepo,
+        private MaterielRepository   $materielRepo,
+        private EmpruntRepository    $empruntRepo,
+        private AlerteRepository     $alerteRepo,
+        private ReservationRepository $reservationRepo,
+        private EvenementRepository  $evenementRepo,
+    ) {
+        parent::__construct($utilisateurRepo);
+    }
+
     #[Route('/', name: 'dashboard')]
-    public function index(
-        MaterielRepository    $materielRepo,
-        EmpruntRepository     $empruntRepo,
-        ReservationRepository $reservationRepo,
-        EvenementRepository   $evenementRepo,
-        AlerteRepository      $alerteRepo,
-        AutorisationService   $auth,
-    ): Response {
-        $isManager = $auth->isAdminOrGestionnaire();
-        $uid = $isManager ? null : $auth->getUserId();
+    public function index(Request $request): Response
+    {
+        $user = $this->getUtilisateurConnecte($request);
 
-        $debut = new \DateTime('first day of this month 00:00:00');
-        $fin   = new \DateTime('last day of this month 23:59:59');
+        $nbAlertes = $this->alerteRepo->countNonLues($user->getId());
+        $request->getSession()->set('nb_alertes', $nbAlertes);
 
-        return $this->render('dashboard/index.html.twig', [
-            'kpi' => [
-                'materiels_indisponibles' => $isManager ? $materielRepo->countIndisponibles() : null,
-                'retards'                 => $empruntRepo->countRetards($uid),
-                'incidents'               => $isManager ? $evenementRepo->countIncidentsOuverts() : null,
-                'demandes'                => $isManager ? $reservationRepo->countEnAttente() : $reservationRepo->countEnAttente($uid),
-            ],
-            'stock' => $isManager ? [
-                'total'       => $materielRepo->countTotal(),
-                'disponibles' => $materielRepo->countDisponibles(),
-                'empruntes'   => $materielRepo->countEmpruntes(),
-            ] : null,
-            'alertes_recentes'  => $isManager ? $alerteRepo->findNonLues() : [],
-            'emprunts_en_cours' => $empruntRepo->findEnCours($uid),
-            'reservations_mois' => $reservationRepo->findPlanning($debut, $fin, $uid),
-            'cal_annee'         => (int) (new \DateTime())->format('Y'),
-            'cal_mois'          => (int) (new \DateTime())->format('n'),
-            'is_manager'        => $isManager,
-        ]);
+        return $this->render('dashboard/index.html.twig', array_merge(
+            $this->getProfilContext($request),
+            [
+                'totalMateriels'    => $this->materielRepo->countTotal(),
+                'materielsDispos'   => $this->materielRepo->countDisponibles(),
+                'materielsEmpruntes'=> $this->materielRepo->countEmpruntes(),
+                'retards'           => $this->empruntRepo->countRetards(),
+                'reservationsEnAttente' => $this->reservationRepo->countEnAttente(),
+                'incidents'         => $this->evenementRepo->countIncidentsOuverts(),
+                'empruntsEnCours'   => $this->empruntRepo->findEnCours(),
+                'planning'          => $this->empruntRepo->findPlanningDashboard(),
+                'alertesRecentes'   => $this->alerteRepo->findNonLues($user->getId()),
+            ]
+        ));
     }
 }

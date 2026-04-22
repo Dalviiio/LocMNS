@@ -1,8 +1,4 @@
 
-# Outils locaux
-.claude/
-database/seed.sql
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php

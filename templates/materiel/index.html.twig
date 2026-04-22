@@ -1,125 +1,91 @@
 {% extends 'base.html.twig' %}
-{% block title %}Matériels — LOCMNS{% endblock %}
+{% block title %}Matériels — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-7xl mx-auto">
 
-<div class="page-label">Matériels</div>
-
-<div class="page-header">
-    <div>
-        <div class="page-title">Matériels</div>
-        <div class="page-sub">Gestion du parc matériel</div>
-    </div>
-    <div class="page-header-actions">
-        {% if is_manager %}
-        <a href="{{ path('export_materiels_csv') }}" class="btn btn-outline"><i class="fa-solid fa-download"></i> CSV</a>
-        <a href="{{ path('export_materiels_xml') }}" class="btn btn-outline"><i class="fa-solid fa-code"></i> XML</a>
-        <button class="btn btn-outline" onclick="document.getElementById('modal-cat').style.display='flex'">
-            <i class="fa-solid fa-tag"></i> Catégorie
-        </button>
-        <a href="{{ path('materiel_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouveau matériel</a>
-        {% endif %}
-    </div>
-</div>
-
-<div class="table-wrap">
-<form method="GET">
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher..." value="{{ search ?? '' }}">
-        </div>
-        <div class="toolbar-group">
-            <select name="etat" class="form-select-sm" onchange="this.form.submit()">
-                <option value="">Tous les états</option>
-                {% for etat in etats %}
-                <option value="{{ etat.value }}" {{ etat_filtre == etat.value ? 'selected' : '' }}>{{ etat.label() }}</option>
-                {% endfor %}
-            </select>
-            <select name="categorie" class="form-select-sm" onchange="this.form.submit()">
-                <option value="">Toutes les catégories</option>
-                {% for cat in categories %}
-                <option value="{{ cat.id }}" {{ categorie_filtre == cat.id ? 'selected' : '' }}>{{ cat.nom }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Matériels</h1>
+        <div class="flex gap-2">
+            {% if isGestionnaire %}
+            <a href="{{ path('materiel_export') }}"
+               class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                <i class="fas fa-download"></i> Export CSV
+            </a>
+            <a href="{{ path('materiel_new') }}"
+               class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+                <i class="fas fa-plus"></i> Nouveau matériel
+            </a>
+            {% endif %}
         </div>
     </div>
-</form>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th><th>Nom</th><th>N° Série</th><th>Catégorie</th><th>État</th><th>Localisation</th><th>Dispo</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for m in materiels %}
-            <tr>
-                <td class="td-muted">{{ m.id }}</td>
-                <td class="td-bold">{{ m.nom }}</td>
-                <td class="td-muted">{{ m.numeroSerie ?? '—' }}</td>
-                <td>{{ m.categorie.nom }}</td>
-                <td><span class="sbadge {{ m.etat.badgeClass() }}">{{ m.etat.label() }}</span></td>
-                <td>{{ m.localisation ?? '—' }}</td>
-                <td>
-                    {% if m.disponible %}
-                        <i class="fa-solid fa-circle-check icon-available"></i>
-                    {% else %}
-                        <i class="fa-solid fa-circle-xmark icon-unavailable"></i>
-                    {% endif %}
-                </td>
-                <td><div class="action-btns">
-                    <a href="{{ path('materiel_show', {id: m.id}) }}" class="action-btn" title="Voir"><i class="fa-solid fa-eye"></i></a>
-                    {% if is_manager %}
-                    <a href="{{ path('materiel_edit', {id: m.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
-                    <form method="POST" action="{{ path('materiel_delete', {id: m.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer ce matériel ?')">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ m.id) }}">
-                        <button type="submit" class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                    </form>
-                    {% endif %}
-                </div></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="8" class="td-empty">Aucun matériel trouvé</td></tr>
+
+    {# Filtres #}
+    <form method="get" class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-3">
+        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher..."
+               class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48 focus:outline-none focus:border-primary">
+        <select name="etat" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+            <option value="">Tous les états</option>
+            {% for e in etats %}
+                <option value="{{ e.value }}" {{ etatFiltre == e.value ? 'selected' : '' }}>{{ e.label() }}</option>
             {% endfor %}
-        </tbody>
-    </table>
-    {% include '_pagination.html.twig' with {paginator: paginator} %}
-    {% if is_manager and categories is not empty %}
-    <div class="cat-tags">
-        {% for cat in categories %}
-        <span class="sbadge sb-gray sb-cursor-default">{{ cat.nom }}
-            <form method="POST" action="{{ path('categorie_delete', {id: cat.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer cette catégorie ?')">
-                <input type="hidden" name="_token" value="{{ csrf_token('del_cat' ~ cat.id) }}">
-                <button type="submit" class="cat-tag-btn" title="Supprimer">×</button>
-            </form>
-        </span>
+        </select>
+        {% if isGestionnaire %}
+        <select name="categorie" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+            <option value="">Toutes les catégories</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}" {{ catFiltre == cat.id ? 'selected' : '' }}>{{ cat.nom }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            <i class="fas fa-search"></i>
+        </button>
+        <a href="{{ path('materiel_index') }}" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+            <i class="fas fa-times"></i>
+        </a>
+    </form>
+
+    {# Grille matériels #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for m in materiels %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="p-4">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-laptop text-primary"></i>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full {{ m.etat.badgeClass() }}">{{ m.etat.label() }}</span>
+                </div>
+                <h3 class="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">{{ m.nom }}</h3>
+                <p class="text-xs text-gray-500 mb-1">{{ m.categorie.nom }}</p>
+                {% if m.numeroSerie %}
+                    <p class="text-xs text-gray-400 font-mono">{{ m.numeroSerie }}</p>
+                {% endif %}
+                {% if m.localisation %}
+                    <p class="text-xs text-gray-400 mt-1"><i class="fas fa-map-marker-alt mr-1"></i>{{ m.localisation }}</p>
+                {% endif %}
+            </div>
+            <div class="border-t border-gray-50 px-4 py-2 flex gap-2">
+                <a href="{{ path('materiel_show', {id: m.id}) }}"
+                   class="flex-1 text-center text-xs py-1.5 text-primary hover:bg-orange-50 rounded-lg transition-colors">
+                    <i class="fas fa-eye mr-1"></i>Voir
+                </a>
+                {% if isGestionnaire %}
+                <a href="{{ path('materiel_edit', {id: m.id}) }}"
+                   class="flex-1 text-center text-xs py-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                    <i class="fas fa-edit mr-1"></i>Modifier
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full py-16 text-center text-gray-400">
+            <i class="fas fa-laptop text-4xl mb-3 block opacity-20"></i>
+            Aucun matériel trouvé
+        </div>
         {% endfor %}
     </div>
-    {% endif %}
-</div>
 
-<!-- MODAL nouvelle catégorie -->
-<div id="modal-cat" class="modal-overlay">
-    <div class="modal-box modal-box-sm">
-        <div class="modal-header">
-            <span class="modal-header-title"><i class="fa-solid fa-tag modal-header-icon"></i>Nouvelle catégorie</span>
-            <button onclick="document.getElementById('modal-cat').style.display='none'" class="modal-close-btn">×</button>
-        </div>
-        <form method="POST" action="{{ path('categorie_new') }}" class="modal-body">
-            <input type="hidden" name="_token" value="{{ csrf_token('new_categorie') }}">
-            <div class="form-field-sm">
-                <label class="form-label">Nom *</label>
-                <input type="text" name="nom" class="form-control" required placeholder="Ex : Informatique, Audio…" autofocus>
-            </div>
-            <div class="form-field-sm">
-                <label class="form-label">Description</label>
-                <input type="text" name="description" class="form-control" placeholder="Optionnel">
-            </div>
-            <div class="form-actions-gap">
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Créer</button>
-                <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-cat').style.display='none'">Annuler</button>
-            </div>
-        </form>
-    </div>
 </div>
 {% endblock %}

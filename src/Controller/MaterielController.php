@@ -2,174 +2,227 @@
 
 namespace App\Controller;
 
-use App\Entity\Document;
 use App\Entity\EtatMateriel;
 use App\Entity\Materiel;
-use App\Entity\TypeDocument;
 use App\Repository\CategorieRepository;
 use App\Repository\MaterielRepository;
+use App\Repository\UtilisateurRepository;
 use App\Service\AutorisationService;
-use App\Service\Paginator;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/materiels', name: 'materiel_')]
-class MaterielController extends AbstractController
+#[Route('/materiels')]
+class MaterielController extends AbstractAppController
 {
-    #[Route('', name: 'index')]
-    public function index(Request $request, MaterielRepository $repo, CategorieRepository $catRepo, AutorisationService $auth): Response
-    {
-        $raw         = $request->query->all();
-        $search      = isset($raw['search'])    && $raw['search']    !== '' ? (string) $raw['search']    : null;
-        $etat        = isset($raw['etat'])       && $raw['etat']       !== '' ? (string) $raw['etat']       : null;
-        $categorieId = isset($raw['categorie']) && $raw['categorie'] !== '' ? (int)    $raw['categorie'] : null;
-
-        $isManager            = $auth->isAdminOrGestionnaire();
-        $categorieIdsAutorises = $isManager ? [] : $auth->getCategoriesAutorisees();
-
-        // Catégories visibles dans les filtres : toutes pour manager, autorisées pour les autres
-        $categories = $isManager
-            ? $catRepo->findAll()
-            : $catRepo->findBy(['id' => $categorieIdsAutorises]);
-
-        $total     = $repo->countWithFilters($search, $etat, $categorieId, $categorieIdsAutorises);
-        $paginator = Paginator::fromRequest($request, $total);
-
-        return $this->render('materiel/index.html.twig', [
-            'materiels'        => $repo->findWithFilters($search, $etat, $categorieId, $categorieIdsAutorises, $paginator->perPage, $paginator->offset),
-            'categories'       => $categories,
-            'etats'            => EtatMateriel::cases(),
-            'search'           => $search,
-            'etat_filtre'      => $etat,
-            'categorie_filtre' => $categorieId,
-            'is_manager'       => $isManager,
-            'paginator'        => $paginator,
-        ]);
+    public function __construct(
+        UtilisateurRepository $utilisateurRepo,
+        private MaterielRepository    $materielRepo,
+        private CategorieRepository   $categorieRepo,
+        private AutorisationService   $autorisationService,
+        private EntityManagerInterface $em,
+    ) {
+        parent::__construct($utilisateurRepo);
     }
 
-    #[Route('/nouveau', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, CategorieRepository $catRepo, AutorisationService $auth): Response
+    #[Route('', name: 'materiel_index')]
+    public function index(Request $request): Response
     {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
+        $user    = $this->getUtilisateurConnecte($request);
+        $context = $this->getProfilContext($request);
+
+        $search      = $request->query->get('search');
+        $etat        = $request->query->get('etat');
+        $categorieId = $request->query->getInt('categorie') ?: null;
+
+        $categorieIds = [];
+        if (!$context['isGestionnaire']) {
+            foreach ($this->autorisationService->getCategoriesAutorisees($user) as $cat) {
+                $categorieIds[] = $cat->getId();
+            }
+        }
+
+        $materiels  = $this->materielRepo->findWithFilters($search, $etat, $categorieId, $categorieIds);
+        $categories = $this->categorieRepo->findBy([], ['nom' => 'ASC']);
+
+        return $this->render('materiel/index.html.twig', array_merge($context, [
+            'materiels'   => $materiels,
+            'categories'  => $categories,
+            'etats'       => EtatMateriel::cases(),
+            'search'      => $search,
+            'etatFiltre'  => $etat,
+            'catFiltre'   => $categorieId,
+        ]));
+    }
+
+    #[Route('/nouveau', name: 'materiel_new', methods: ['GET', 'POST'])]
+    public function new(Request $request): Response
+    {
+        $user    = $this->getUtilisateurConnecte($request);
+        $context = $this->getProfilContext($request);
+
+        if (!$context['isGestionnaire']) {
+            throw $this->createAccessDeniedException();
+        }
+
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('new_materiel', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('materiel_new', $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
             }
+
             $materiel = new Materiel();
-            $this->hydrateFromRequest($materiel, $request, $catRepo);
-            $em->persist($materiel);
-            $em->flush();
-            $this->addFlash('success', 'Matériel ajouté avec succès.');
-            return $this->redirectToRoute('materiel_index');
+            $materiel->setNom($request->request->get('nom'));
+            $materiel->setNumeroSerie($request->request->get('numero_serie') ?: null);
+            $materiel->setEtat(EtatMateriel::from($request->request->get('etat')));
+            $materiel->setLocalisation($request->request->get('localisation') ?: null);
+
+            $categorie = $this->categorieRepo->find($request->request->getInt('categorie_id'));
+            if (!$categorie) {
+                $this->addFlash('error', 'Catégorie invalide.');
+                return $this->redirectToRoute('materiel_new');
+            }
+            $materiel->setCategorie($categorie);
+
+            $this->em->persist($materiel);
+            $this->em->flush();
+
+            $this->addFlash('success', 'Matériel créé avec succès.');
+            return $this->redirectToRoute('materiel_show', ['id' => $materiel->getId()]);
         }
 
-        return $this->render('materiel/form.html.twig', [
-            'materiel'   => null,
-            'categories' => $catRepo->findAll(),
+        return $this->render('materiel/new.html.twig', array_merge($context, [
+            'categories' => $this->categorieRepo->findBy([], ['nom' => 'ASC']),
             'etats'      => EtatMateriel::cases(),
-        ]);
+        ]));
     }
 
-    #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(Materiel $materiel): Response
+    #[Route('/{id}', name: 'materiel_show', requirements: ['id' => '\d+'])]
+    public function show(int $id, Request $request): Response
     {
-        return $this->render('materiel/show.html.twig', [
-            'materiel' => $materiel,
-        ]);
-    }
+        $user    = $this->getUtilisateurConnecte($request);
+        $context = $this->getProfilContext($request);
+        $materiel = $this->materielRepo->find($id);
 
-    #[Route('/{id}/accessoires', name: 'accessoires_json', methods: ['GET'])]
-    public function accessoiresJson(Materiel $materiel): JsonResponse
-    {
-        $data = [];
-        foreach ($materiel->getAccessoires() as $acc) {
-            $data[] = [
-                'id'         => $acc->getId(),
-                'nom'        => $acc->getNom(),
-                'etat'       => $acc->getEtat()->label(),
-                'disponible' => $acc->isDisponible(),
-            ];
+        if (!$materiel) { throw $this->createNotFoundException(); }
+
+        if (!$context['isGestionnaire']) {
+            $this->autorisationService->verifierOuRefuser($user, $materiel);
         }
-        return new JsonResponse($data);
+
+        return $this->render('materiel/show.html.twig', array_merge($context, [
+            'materiel' => $materiel,
+        ]));
     }
 
-    #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Materiel $materiel, EntityManagerInterface $em, CategorieRepository $catRepo, AutorisationService $auth): Response
+    #[Route('/{id}/modifier', name: 'materiel_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function edit(int $id, Request $request): Response
     {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
+        $context = $this->getProfilContext($request);
+        if (!$context['isGestionnaire']) { throw $this->createAccessDeniedException(); }
+
+        $this->getUtilisateurConnecte($request);
+        $materiel = $this->materielRepo->find($id);
+        if (!$materiel) { throw $this->createNotFoundException(); }
+
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('edit_materiel' . $materiel->getId(), $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('materiel_edit_' . $id, $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
             }
-            $this->hydrateFromRequest($materiel, $request, $catRepo);
-            $em->flush();
+
+            $materiel->setNom($request->request->get('nom'));
+            $materiel->setNumeroSerie($request->request->get('numero_serie') ?: null);
+            $materiel->setEtat(EtatMateriel::from($request->request->get('etat')));
+            $materiel->setLocalisation($request->request->get('localisation') ?: null);
+
+            $categorie = $this->categorieRepo->find($request->request->getInt('categorie_id'));
+            if ($categorie) { $materiel->setCategorie($categorie); }
+
+            $this->em->flush();
             $this->addFlash('success', 'Matériel modifié avec succès.');
             return $this->redirectToRoute('materiel_show', ['id' => $materiel->getId()]);
         }
 
-        return $this->render('materiel/form.html.twig', [
+        return $this->render('materiel/edit.html.twig', array_merge($context, [
             'materiel'   => $materiel,
-            'categories' => $catRepo->findAll(),
+            'categories' => $this->categorieRepo->findBy([], ['nom' => 'ASC']),
             'etats'      => EtatMateriel::cases(),
-        ]);
+        ]));
     }
 
-    #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Materiel $materiel, EntityManagerInterface $em, AutorisationService $auth): Response
+    #[Route('/{id}/supprimer', name: 'materiel_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function delete(int $id, Request $request): Response
     {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
-        if ($this->isCsrfTokenValid('delete' . $materiel->getId(), $request->request->get('_token'))) {
-            $em->remove($materiel);
-            $em->flush();
-            $this->addFlash('success', 'Matériel supprimé.');
+        $context = $this->getProfilContext($request);
+        if (!$context['isAdmin']) { throw $this->createAccessDeniedException(); }
+
+        $this->getUtilisateurConnecte($request);
+        $materiel = $this->materielRepo->find($id);
+        if (!$materiel) { throw $this->createNotFoundException(); }
+
+        if (!$this->isCsrfTokenValid('materiel_delete_' . $id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
         }
+
+        $this->em->remove($materiel);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Matériel supprimé.');
         return $this->redirectToRoute('materiel_index');
     }
 
-    #[Route('/{id}/document/ajouter', name: 'document_add', methods: ['POST'])]
-    public function addDocument(Request $request, Materiel $materiel, EntityManagerInterface $em, AutorisationService $auth): Response
+    #[Route('/{id}/accessoires', name: 'materiel_accessoires_json', requirements: ['id' => '\d+'])]
+    public function accessoiresJson(int $id, Request $request): JsonResponse
     {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
-        if (!$this->isCsrfTokenValid('add_doc' . $materiel->getId(), $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        $user     = $this->getUtilisateurConnecte($request);
+        $materiel = $this->materielRepo->find($id);
+        if (!$materiel) { return new JsonResponse([]); }
+
+        $data = [];
+        foreach ($materiel->getAccessoires() as $acc) {
+            $emprunte = false;
+            foreach ($acc->getEmprunts() as $emp) {
+                if ($emp->getStatut()->value === 'EnCours') {
+                    $emprunte = true;
+                    break;
+                }
+            }
+            $data[] = [
+                'id'         => $acc->getId(),
+                'nom'        => $acc->getNom(),
+                'disponible' => !$emprunte,
+            ];
         }
-        $doc = new Document();
-        $doc->setMateriel($materiel);
-        $doc->setTitre($request->request->get('titre'));
-        $doc->setUrl($request->request->get('url'));
-        $doc->setType(TypeDocument::from($request->request->get('type')));
-        $em->persist($doc);
-        $em->flush();
-        $this->addFlash('success', 'Document ajouté.');
-        return $this->redirectToRoute('materiel_show', ['id' => $materiel->getId()]);
+
+        return new JsonResponse($data);
     }
 
-    #[Route('/document/{id}/supprimer', name: 'document_delete', methods: ['POST'])]
-    public function deleteDocument(Request $request, Document $document, EntityManagerInterface $em, AutorisationService $auth): Response
+    #[Route('/export', name: 'materiel_export')]
+    public function export(Request $request): Response
     {
-        $auth->verifier(['Administrateur', 'Gestionnaire'], 'Accès réservé aux gestionnaires.');
-        $materielId = $document->getMateriel()->getId();
-        if ($this->isCsrfTokenValid('del_doc' . $document->getId(), $request->request->get('_token'))) {
-            $em->remove($document);
-            $em->flush();
-            $this->addFlash('success', 'Document supprimé.');
-        }
-        return $this->redirectToRoute('materiel_show', ['id' => $materielId]);
-    }
+        $context = $this->getProfilContext($request);
+        if (!$context['isGestionnaire']) { throw $this->createAccessDeniedException(); }
 
-    private function hydrateFromRequest(Materiel $materiel, Request $request, CategorieRepository $catRepo): void
-    {
-        $materiel->setNom($request->request->get('nom'));
-        $materiel->setNumeroSerie($request->request->get('numero_serie') ?: null);
-        $materiel->setLocalisation($request->request->get('localisation') ?: null);
-        $materiel->setEtat(EtatMateriel::from($request->request->get('etat')));
-        $categorie = $catRepo->find($request->request->getInt('categorie_id'));
-        if ($categorie) {
-            $materiel->setCategorie($categorie);
+        $this->getUtilisateurConnecte($request);
+        $materiels = $this->materielRepo->findWithFilters();
+
+        $csv = "ID;Nom;N° Série;État;Localisation;Catégorie;Créé le\n";
+        foreach ($materiels as $m) {
+            $csv .= implode(';', [
+                $m->getId(),
+                $m->getNom(),
+                $m->getNumeroSerie() ?? '',
+                $m->getEtat()->label(),
+                $m->getLocalisation() ?? '',
+                $m->getCategorie()->getNom(),
+                $m->getCreatedAt()->format('d/m/Y'),
+            ]) . "\n";
         }
+
+        return new Response($csv, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="materiels.csv"',
+        ]);
     }
 }

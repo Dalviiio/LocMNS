@@ -1,81 +1,68 @@
 {% extends 'base.html.twig' %}
-{% block title %}Alertes — LOCMNS{% endblock %}
+{% block title %}Alertes — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-4xl mx-auto">
 
-<div class="page-label">Alertes</div>
-
-<div class="page-header">
-    <div>
-        <div class="page-title">Alertes <span class="page-title-count">({{ count_nonlues }} non lues)</span></div>
-        <div class="page-sub">{% if is_manager %}Centre de notifications et alertes{% else %}Vos alertes personnelles{% endif %}</div>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Alertes</h1>
+        <form action="{{ path('alerte_tout_lire') }}" method="post">
+            <input type="hidden" name="_token" value="{{ csrf_token('alerte_tout_lire') }}">
+            <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+                <i class="fas fa-check-double"></i> Tout marquer lu
+            </button>
+        </form>
     </div>
-    {% if is_manager %}
-    <form method="POST" action="{{ path('alerte_tout_lire') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('tout_lire') }}">
-        <button type="submit" class="btn btn-outline"><i class="fa-solid fa-check-double"></i> Tout marquer comme lu</button>
+
+    <form method="get" class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-3">
+        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher..."
+               class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48 focus:outline-none focus:border-primary">
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            <i class="fas fa-search"></i>
+        </button>
+        <a href="{{ path('alerte_index') }}" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm">
+            <i class="fas fa-times"></i>
+        </a>
     </form>
-    {% endif %}
-</div>
 
-<div class="table-wrap">
-<form method="GET" id="filter-alertes">
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher..." value="{{ filtre_search }}">
-        </div>
-        <div class="toolbar-group">
-            <select name="type" class="form-select-sm" onchange="this.form.submit()">
-                <option value="">Tous les types</option>
-                {% for t in types %}
-                <option value="{{ t.value }}" {{ filtre_type == t.value ? 'selected' : '' }}>{{ t.label() }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
-        </div>
-    </div>
-</form>
-    <table>
-        <thead>
-            <tr>
-                <th>Lu</th><th>Type</th><th>Message</th><th>Utilisateur</th><th>Emprunt</th><th>Date</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for a in alertes %}
-            <tr>
-                <td>
-                    {% if a.lu %}
-                        <i class="fa-regular fa-circle alerte-dot--lu"></i>
-                    {% else %}
-                        <i class="fa-solid fa-circle alerte-dot--new"></i>
+    <div class="space-y-3">
+        {% for alerte in alertes %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-start gap-4 {{ alerte.lu ? 'opacity-60' : '' }}">
+            <div class="flex-shrink-0 mt-0.5">
+                <span class="text-xs px-2 py-1 rounded-full {{ alerte.type.badgeClass() }}">{{ alerte.type.label() }}</span>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm text-gray-800">{{ alerte.message }}</p>
+                <div class="flex items-center gap-3 mt-1">
+                    <p class="text-xs text-gray-400">{{ alerte.createdAt|date('d/m/Y H:i') }}</p>
+                    {% if isGestionnaire %}
+                    <p class="text-xs text-gray-400">— {{ alerte.utilisateur.nomComplet }}</p>
                     {% endif %}
-                </td>
-                <td><span class="sbadge {{ a.type.badgeClass() }}">{{ a.type.label() }}</span></td>
-                <td>{{ a.message }}</td>
-                <td class="td-bold">{{ a.utilisateur.nomComplet }}</td>
-                <td class="td-muted">{{ a.emprunt ? '#' ~ a.emprunt.id : '—' }}</td>
-                <td class="td-muted">{{ a.createdAt|date('d/m/Y H:i') }}</td>
-                <td><div class="action-btns">
-                    {% if not a.lu %}
-                    <form method="POST" action="{{ path('alerte_lire', {id: a.id}) }}" class="d-inline">
-                        <input type="hidden" name="_token" value="{{ csrf_token('lire_alerte' ~ a.id) }}">
-                        <button type="submit" class="action-btn" title="Marquer comme lu"><i class="fa-solid fa-check"></i></button>
-                    </form>
+                    {% if alerte.emprunt %}
+                    <a href="{{ path('emprunt_show', {id: alerte.emprunt.id}) }}" class="text-xs text-primary hover:underline">
+                        Voir l'emprunt
+                    </a>
                     {% endif %}
-                    {% if is_manager %}
-                    <form method="POST" action="{{ path('alerte_delete', {id: a.id}) }}" class="d-inline">
-                        <input type="hidden" name="_token" value="{{ csrf_token('del_alerte' ~ a.id) }}">
-                        <button type="submit" class="action-btn" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                    </form>
-                    {% endif %}
-                </div></td>
-            </tr>
+                </div>
+            </div>
+            {% if not alerte.lu %}
+            <form action="{{ path('alerte_lire', {id: alerte.id}) }}" method="post" class="flex-shrink-0">
+                <input type="hidden" name="_token" value="{{ csrf_token('alerte_lire_' ~ alerte.id) }}">
+                <button type="submit" class="text-gray-400 hover:text-green-600 transition-colors" title="Marquer comme lu">
+                    <i class="fas fa-check"></i>
+                </button>
+            </form>
             {% else %}
-            <tr><td colspan="7" class="td-empty">Aucune alerte</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% include '_pagination.html.twig' with {paginator: paginator} %}
+            <i class="fas fa-check text-green-400 flex-shrink-0"></i>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="py-16 text-center text-gray-400">
+            <i class="fas fa-bell text-4xl mb-3 block opacity-20"></i>
+            Aucune alerte
+        </div>
+        {% endfor %}
+    </div>
+
 </div>
 {% endblock %}

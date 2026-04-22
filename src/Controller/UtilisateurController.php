@@ -5,110 +5,128 @@ namespace App\Controller;
 use App\Entity\Utilisateur;
 use App\Repository\ProfilRepository;
 use App\Repository\UtilisateurRepository;
-use App\Service\AutorisationService;
-use App\Service\Paginator;
+use App\Service\RoleService;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/utilisateurs', name: 'utilisateur_')]
-class UtilisateurController extends AbstractController
+#[Route('/utilisateurs')]
+class UtilisateurController extends AbstractAppController
 {
-    #[Route('', name: 'index')]
-    public function index(Request $request, UtilisateurRepository $repo, AutorisationService $auth): Response
-    {
-        if (!$auth->isAdmin()) {
-            throw $this->createAccessDeniedException();
-        }
-        $raw    = $request->query->all();
-        $search = isset($raw['search']) ? (string) $raw['search'] : '';
-
-        $total     = $repo->countWithFilters($search ?: null);
-        $paginator = Paginator::fromRequest($request, $total);
-
-        return $this->render('utilisateur/index.html.twig', [
-            'utilisateurs'  => $repo->findWithFilters($search ?: null, $paginator->perPage, $paginator->offset),
-            'filtre_search' => $search,
-            'paginator'     => $paginator,
-        ]);
+    public function __construct(
+        UtilisateurRepository $utilisateurRepo,
+        private ProfilRepository      $profilRepo,
+        private RoleService           $roleService,
+        private EntityManagerInterface $em,
+    ) {
+        parent::__construct($utilisateurRepo);
     }
 
-    #[Route('/nouveau', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, ProfilRepository $profilRepo, AutorisationService $auth): Response
+    #[Route('', name: 'utilisateur_index')]
+    public function index(Request $request): Response
     {
-        if (!$auth->isAdmin()) {
-            throw $this->createAccessDeniedException();
-        }
+        $user = $this->getUtilisateurConnecte($request);
+        $this->roleService->verifier($user, ['Administrateur']);
+
+        return $this->render('utilisateur/index.html.twig', array_merge(
+            $this->getProfilContext($request),
+            ['utilisateurs' => $this->utilisateurRepo->findBy([], ['nom' => 'ASC'])]
+        ));
+    }
+
+    #[Route('/nouveau', name: 'utilisateur_new', methods: ['GET', 'POST'])]
+    public function new(Request $request): Response
+    {
+        $user = $this->getUtilisateurConnecte($request);
+        $this->roleService->verifier($user, ['Administrateur']);
+        $context = $this->getProfilContext($request);
+
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('new_user', $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('user_new', $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
             }
-            $utilisateur = new Utilisateur();
-            $this->hydrateFromRequest($utilisateur, $request, $profilRepo);
-            $em->persist($utilisateur);
-            $em->flush();
-            $this->addFlash('success', 'Utilisateur créé avec succès.');
+
+            if ($this->utilisateurRepo->findByEmail($request->request->get('email'))) {
+                $this->addFlash('error', 'Cet email est déjà utilisé.');
+                return $this->redirectToRoute('utilisateur_new');
+            }
+
+            $profil = $this->profilRepo->find($request->request->getInt('profil_id'));
+            if (!$profil) { $this->addFlash('error', 'Profil invalide.'); return $this->redirectToRoute('utilisateur_new'); }
+
+            $u = new Utilisateur();
+            $u->setNom($request->request->get('nom'));
+            $u->setPrenom($request->request->get('prenom'));
+            $u->setEmail($request->request->get('email'));
+            $u->setMotDePasse(password_hash($request->request->get('password'), PASSWORD_BCRYPT));
+            $u->setProfil($profil);
+            $this->em->persist($u);
+            $this->em->flush();
+
+            $this->addFlash('success', 'Utilisateur créé.');
             return $this->redirectToRoute('utilisateur_index');
         }
 
-        return $this->render('utilisateur/form.html.twig', [
-            'utilisateur' => null,
-            'profils'     => $profilRepo->findAll(),
-        ]);
+        return $this->render('utilisateur/new.html.twig', array_merge($context, [
+            'profils' => $this->profilRepo->findBy([], ['nom' => 'ASC']),
+        ]));
     }
 
-    #[Route('/{id}/modifier', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em, ProfilRepository $profilRepo, AutorisationService $auth): Response
+    #[Route('/{id}/modifier', name: 'utilisateur_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function edit(int $id, Request $request): Response
     {
-        if (!$auth->isAdmin()) {
-            throw $this->createAccessDeniedException();
-        }
+        $user = $this->getUtilisateurConnecte($request);
+        $this->roleService->verifier($user, ['Administrateur']);
+        $context = $this->getProfilContext($request);
+
+        $cible = $this->utilisateurRepo->find($id);
+        if (!$cible) { throw $this->createNotFoundException(); }
+
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('edit_user' . $utilisateur->getId(), $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid('user_edit_' . $id, $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Token CSRF invalide.');
             }
-            $this->hydrateFromRequest($utilisateur, $request, $profilRepo, preservePassword: true);
-            $em->flush();
+
+            $cible->setNom($request->request->get('nom'));
+            $cible->setPrenom($request->request->get('prenom'));
+            $cible->setEmail($request->request->get('email'));
+
+            $profil = $this->profilRepo->find($request->request->getInt('profil_id'));
+            if ($profil) { $cible->setProfil($profil); }
+
+            $pwd = $request->request->get('password');
+            if ($pwd) { $cible->setMotDePasse(password_hash($pwd, PASSWORD_BCRYPT)); }
+
+            $this->em->flush();
             $this->addFlash('success', 'Utilisateur modifié.');
             return $this->redirectToRoute('utilisateur_index');
         }
 
-        return $this->render('utilisateur/form.html.twig', [
-            'utilisateur' => $utilisateur,
-            'profils'     => $profilRepo->findAll(),
-        ]);
+        return $this->render('utilisateur/edit.html.twig', array_merge($context, [
+            'cible'   => $cible,
+            'profils' => $this->profilRepo->findBy([], ['nom' => 'ASC']),
+        ]));
     }
 
-    #[Route('/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Utilisateur $utilisateur, EntityManagerInterface $em, AutorisationService $auth): Response
+    #[Route('/{id}/supprimer', name: 'utilisateur_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function delete(int $id, Request $request): Response
     {
-        if (!$auth->isAdmin()) {
-            throw $this->createAccessDeniedException();
+        $user = $this->getUtilisateurConnecte($request);
+        $this->roleService->verifier($user, ['Administrateur']);
+
+        $cible = $this->utilisateurRepo->find($id);
+        if (!$cible) { throw $this->createNotFoundException(); }
+        if ($cible->getId() === $user->getId()) { $this->addFlash('error', 'Impossible de supprimer votre propre compte.'); return $this->redirectToRoute('utilisateur_index'); }
+
+        if (!$this->isCsrfTokenValid('user_delete_' . $id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
         }
-        if ($this->isCsrfTokenValid('delete_user' . $utilisateur->getId(), $request->request->get('_token'))) {
-            $em->remove($utilisateur);
-            $em->flush();
-            $this->addFlash('success', 'Utilisateur supprimé.');
-        }
+
+        $this->em->remove($cible);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Utilisateur supprimé.');
         return $this->redirectToRoute('utilisateur_index');
-    }
-
-    private function hydrateFromRequest(Utilisateur $utilisateur, Request $request, ProfilRepository $profilRepo, bool $preservePassword = false): void
-    {
-        $utilisateur->setNom($request->request->get('nom'));
-        $utilisateur->setPrenom($request->request->get('prenom'));
-        $utilisateur->setEmail($request->request->get('email'));
-
-        $mdp = $request->request->get('mot_de_passe');
-        if ($mdp && (!$preservePassword || $mdp !== '')) {
-            $utilisateur->setMotDePasse(password_hash($mdp, PASSWORD_BCRYPT));
-        }
-
-        $profil = $profilRepo->find($request->request->getInt('profil_id'));
-        if ($profil) {
-            $utilisateur->setProfil($profil);
-        }
     }
 }

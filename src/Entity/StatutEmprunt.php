@@ -4,9 +4,9 @@ namespace App\Entity;
 
 enum StatutEmprunt: string
 {
-    case EnCours = 'en_cours';
-    case Rendu   = 'rendu';
-    case Retard  = 'retard';
+    case EnCours = 'EnCours';
+    case Rendu   = 'Rendu';
+    case Retard  = 'Retard';
 
     public function label(): string
     {
@@ -20,9 +20,9 @@ enum StatutEmprunt: string
     public function badgeClass(): string
     {
         return match($this) {
-            self::EnCours => 'sb-info',
-            self::Rendu   => 'sb-success',
-            self::Retard  => 'sb-danger',
+            self::EnCours => 'bg-blue-100 text-blue-800',
+            self::Rendu   => 'bg-green-100 text-green-800',
+            self::Retard  => 'bg-red-100 text-red-800',
         };
     }
 }

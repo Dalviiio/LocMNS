@@ -1,48 +1,66 @@
 services:
-
   app:
-    build: .
-    ports:
-      - "8000:80"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - app_var:/var/www/html/var
+      - app_public:/var/www/html/public_volume
+    networks:
+      - locmns_net
     depends_on:
-      database:
+      db:
         condition: service_healthy
     environment:
-      APP_ENV: prod
-      APP_SECRET: locmns_secret_key_change_in_prod
-      DATABASE_URL: "mysql://locmns:locmns@database:3306/locmns?serverVersion=8.0&charset=utf8mb4"
-      PHP_OPCACHE_VALIDATE_TIMESTAMPS: "1"
-    volumes:
-      - ./src:/var/www/html/src
-      - ./templates:/var/www/html/templates
-      - ./config:/var/www/html/config
-      - ./public:/var/www/html/public
+      APP_ENV: dev
+      APP_DEBUG: "1"
 
-  database:
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - app_public:/var/www/html/public:ro
+    networks:
+      - locmns_net
+    depends_on:
+      - app
+
+  db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: locmns
-      MYSQL_USER: locmns
-      MYSQL_PASSWORD: locmns
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: locmns
     volumes:
-      - database_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
+    networks:
+      - locmns_net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
 
   phpmyadmin:
-    image: phpmyadmin:latest
+    image: phpmyadmin:5
     ports:
       - "8080:80"
-    depends_on:
-      - database
     environment:
-      PMA_HOST: database
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: root
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    networks:
+      - locmns_net
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  database_data:
+  db_data:
+  app_var:
+  app_public:
+
+networks:
+  locmns_net:
+    driver: bridge

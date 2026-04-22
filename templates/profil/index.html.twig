@@ -1,81 +1,47 @@
 {% extends 'base.html.twig' %}
-{% block title %}Profils & Autorisations — LOCMNS{% endblock %}
+{% block title %}Profils — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-5xl mx-auto">
 
-<div class="page-label">Utilisateurs › Profils & Autorisations</div>
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Profils & autorisations</h1>
 
-<div class="page-header">
-    <div>
-        <div class="page-title">Profils & Autorisations</div>
-        <div class="page-sub">Gérer les accès aux catégories de matériel par profil</div>
-    </div>
-    <a href="{{ path('utilisateur_index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Retour</a>
-</div>
-
-<div class="table-wrap table-wrap-scroll">
-    <form method="POST" action="{{ path('profil_autorisations') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('save_autorisations') }}">
-
-        <table class="profil-table">
-            <thead>
-                <tr>
-                    <th class="th-minw-160">Catégorie</th>
-                    {% for profil in profils %}
-                    <th class="th-minw-130">
-                        <div>{{ profil.nom }}</div>
-                        <div class="profil-th-sub">{{ profil.categories|length }} cat.</div>
-                    </th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for cat in categories %}
-                <tr>
-                    <td>
-                        <div class="profil-cat-name">{{ cat.nom }}</div>
-                        {% if cat.description %}
-                        <div class="profil-cat-desc">{{ cat.description }}</div>
-                        {% endif %}
-                    </td>
-                    {% for profil in profils %}
-                    <td class="td-center">
-                        <input
-                            type="checkbox"
-                            name="autorisations[{{ profil.id }}][{{ cat.id }}]"
-                            value="1"
-                            {% if profil.categories.contains(cat) %}checked{% endif %}
-                            class="profil-checkbox"
-                        >
-                    </td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="table-footer">
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer les autorisations</button>
-        </div>
-    </form>
-</div>
-
-<!-- Récap par profil -->
-<div class="profil-recap-grid">
-    {% for profil in profils %}
-    <div class="table-wrap profil-card">
-        <div class="profil-card-title">{{ profil.nom }}</div>
-        <div class="profil-card-desc">{{ profil.description }}</div>
-        {% if profil.categories is empty %}
-            <div class="profil-no-access"><i class="fa-solid fa-lock"></i> Aucun accès</div>
-        {% else %}
-            {% for cat in profil.categories %}
-            <div class="profil-cat-item">
-                <i class="fa-solid fa-circle-check profil-cat-check"></i> {{ cat.nom }}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% for profil in profils %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-id-card text-primary"></i> {{ profil.nom }}
+                </h2>
+                <span class="text-xs text-gray-400">{{ profil.utilisateurs|length }} utilisateur(s)</span>
             </div>
-            {% endfor %}
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
 
+            {% if profil.description %}
+            <p class="text-sm text-gray-500 mb-4">{{ profil.description }}</p>
+            {% endif %}
+
+            <form action="{{ path('profil_categories', {id: profil.id}) }}" method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token('profil_cat_' ~ profil.id) }}">
+
+                <p class="text-xs font-medium text-gray-600 mb-2">Catégories autorisées :</p>
+                <div class="space-y-1 mb-4">
+                    {% for cat in categories %}
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="checkbox" name="categories[]" value="{{ cat.id }}"
+                               {{ profil.categories.contains(cat) ? 'checked' : '' }}
+                               class="rounded border-gray-300 text-primary focus:ring-primary">
+                        <span class="text-gray-700">{{ cat.nom }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="w-full py-2 bg-primary text-white text-sm rounded-lg hover:bg-orange-600 transition-colors font-medium">
+                    <i class="fas fa-save mr-1"></i> Enregistrer
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
 {% endblock %}

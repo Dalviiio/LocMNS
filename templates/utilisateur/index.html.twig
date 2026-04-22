@@ -1,69 +1,59 @@
 {% extends 'base.html.twig' %}
-{% block title %}Utilisateurs — LOCMNS{% endblock %}
+{% block title %}Utilisateurs — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-5xl mx-auto">
 
-<div class="page-label">Utilisateurs</div>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Utilisateurs</h1>
+        <a href="{{ path('utilisateur_new') }}"
+           class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            <i class="fas fa-plus"></i> Nouvel utilisateur
+        </a>
+    </div>
 
-<div class="page-header">
-    <div>
-        <div class="page-title">Utilisateurs</div>
-        <div class="page-sub">Gestion des comptes utilisateurs</div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-100">
+                <tr>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Nom</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Email</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Profil</th>
+                    <th class="text-left px-4 py-3 text-gray-600 font-medium">Créé le</th>
+                    <th class="px-4 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for u in utilisateurs %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-medium text-gray-800">{{ u.nomComplet }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ u.email }}</td>
+                    <td class="px-4 py-3">
+                        <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{{ u.profil.nom }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 text-xs">{{ u.createdAt|date('d/m/Y') }}</td>
+                    <td class="px-4 py-3 flex gap-2 justify-end">
+                        <a href="{{ path('utilisateur_edit', {id: u.id}) }}"
+                           class="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                            <i class="fas fa-edit mr-1"></i>Modifier
+                        </a>
+                        <form action="{{ path('utilisateur_delete', {id: u.id}) }}" method="post" class="inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('user_delete_' ~ u.id) }}">
+                            <button type="submit" data-confirm="Supprimer cet utilisateur ?"
+                                    class="text-xs px-3 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="px-4 py-10 text-center text-gray-400">Aucun utilisateur</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <div class="page-header-actions">
-        <a href="{{ path('profil_index') }}" class="btn btn-outline"><i class="fa-solid fa-shield-halved"></i> Profils & Autorisations</a>
-        <a href="{{ path('utilisateur_new') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvel utilisateur</a>
-    </div>
-</div>
 
-<div class="table-wrap">
-<form method="GET" id="filter-utilisateurs">
-    <div class="table-toolbar">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" placeholder="Rechercher un utilisateur..." value="{{ filtre_search }}">
-        </div>
-        <div class="toolbar-group">
-            <button type="submit" class="btn btn-outline"><i class="fa-solid fa-filter"></i> Filtrer</button>
-        </div>
-    </div>
-</form>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Profil</th>
-                <th>Emprunts actifs</th>
-                <th>Inscrit le</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for u in utilisateurs %}
-            <tr>
-                <td class="td-muted">{{ u.id }}</td>
-                <td class="td-bold">{{ u.nomComplet }}</td>
-                <td class="td-muted">{{ u.email }}</td>
-                <td>
-                    <span class="sbadge sb-info">{{ u.profil.nom }}</span>
-                    <span class="badge-extra">{{ u.profil.categories|length }} cat.</span>
-                </td>
-                <td>{{ u.empruntsActifs|length }}</td>
-                <td class="td-muted">{{ u.createdAt|date('d/m/Y') }}</td>
-                <td><div class="action-btns">
-                    <a href="{{ path('utilisateur_edit', {id: u.id}) }}" class="action-btn" title="Modifier"><i class="fa-solid fa-pen"></i></a>
-                    <form method="POST" action="{{ path('utilisateur_delete', {id: u.id}) }}" class="d-inline">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete_user' ~ u.id) }}">
-                        <button type="submit" class="action-btn" title="Supprimer" onclick="return confirm('Supprimer cet utilisateur ?')"><i class="fa-solid fa-trash"></i></button>
-                    </form>
-                </div></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="7" class="td-empty">Aucun utilisateur trouvé</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% include '_pagination.html.twig' with {paginator: paginator} %}
 </div>
 {% endblock %}

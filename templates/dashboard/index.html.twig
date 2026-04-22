@@ -1,219 +1,147 @@
 {% extends 'base.html.twig' %}
-{% block title %}Dashboard — LOCMNS{% endblock %}
+{% block title %}Tableau de bord — LOC MNS{% endblock %}
+
 {% block content %}
+<div class="max-w-7xl mx-auto">
 
-<div class="page-label">Dashboard</div>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Tableau de bord</h1>
+        <span class="text-sm text-gray-500">{{ 'now'|date('d/m/Y H:i') }}</span>
+    </div>
 
-<!-- KPI -->
-<div class="kpi-strip">
-    {% if is_manager %}
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fa-solid fa-box-open"></i> Matériels indisponibles</div>
-        <div class="kpi-value">{{ kpi.materiels_indisponibles }}</div>
-    </div>
-    {% endif %}
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fa-solid fa-clock"></i> {{ is_manager ? 'Retards de retour' : 'Mes retards' }}</div>
-        <div class="kpi-value">{{ kpi.retards }}</div>
-    </div>
-    {% if is_manager %}
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fa-solid fa-triangle-exclamation"></i> Incidents ouverts</div>
-        <div class="kpi-value">{{ kpi.incidents }}</div>
-    </div>
-    {% endif %}
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fa-solid fa-inbox"></i> {{ is_manager ? 'Demandes en attente' : 'Mes demandes' }}</div>
-        <div class="kpi-value">{{ kpi.demandes }}</div>
-    </div>
-</div>
-
-<!-- ÉTAT DU STOCK (gestionnaires uniquement) -->
-{% if is_manager and stock %}
-<div class="stock-grid">
-    <div class="stock-card">
-        <div class="stock-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
-        <div class="stock-info">
-            <div class="stock-label">Total matériels</div>
-            <div class="stock-value">{{ stock.total }}</div>
-            <div class="stock-sub">dans le parc</div>
-        </div>
-    </div>
-    <div class="stock-card">
-        <div class="stock-icon stock-icon--green"><i class="fa-solid fa-circle-check"></i></div>
-        <div class="stock-info">
-            <div class="stock-label">Disponibles</div>
-            <div class="stock-value stock-value--green">{{ stock.disponibles }}</div>
-            <div class="stock-sub">prêts à l'emprunt</div>
-        </div>
-    </div>
-    <div class="stock-card">
-        <div class="stock-icon stock-icon--amber"><i class="fa-solid fa-right-left"></i></div>
-        <div class="stock-info">
-            <div class="stock-label">En cours d'emprunt</div>
-            <div class="stock-value stock-value--amber">{{ stock.empruntes }}</div>
-            <div class="stock-sub">actuellement sortis</div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-{% if is_manager %}
-<!-- CALENDRIER (managers uniquement) -->
-{% set jours_semaine = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'] %}
-{% set mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'] %}
-
-{% set jours_resa = [] %}
-{% for r in reservations_mois %}
-    {% set d = r.dateDebut|date('j')|number_format %}
-    {% if d not in jours_resa %}{% set jours_resa = jours_resa|merge([d]) %}{% endif %}
-{% endfor %}
-
-{% set today_num = 'now'|date('j')|number_format %}
-{% set today_dow = 'now'|date('N')|number_format %}
-{% set week_days = [] %}
-{% for i in 0..6 %}
-    {% set offset = i - (today_dow - 1) %}
-    {% set week_days = week_days|merge([today_num + offset]) %}
-{% endfor %}
-
-<div class="cal-panel">
-    <div class="cal-header">
-        <div class="cal-header-left">
-            <span class="cal-header-month">{{ mois_noms[cal_mois] }}</span>
-            <span class="cal-header-year">{{ cal_annee }}</span>
-        </div>
-        <a href="{{ path('reservation_planning') }}" class="cal-header-link">Planning →</a>
-    </div>
-    <div class="cal-week">
-        {% for i in 0..6 %}
-        {% set d = week_days[i] %}
-        {% set is_today = (d == today_num) %}
-        {% set has_evt  = (d in jours_resa and d >= 1 and d <= 31) %}
-        <div class="cal-week-day {{ has_evt ? 'has-evt' : '' }}">
-            <span class="cal-week-lbl">{{ jours_semaine[i] }}</span>
-            <span class="cal-week-num {{ is_today ? 'today' : '' }} {{ has_evt ? 'has-evt' : '' }}">{{ d > 0 ? d : '' }}</span>
-            <span class="cal-week-dot"></span>
-        </div>
-        {% endfor %}
-    </div>
-    {% set prochaines = [] %}
-    {% for r in reservations_mois %}
-        {% if r.dateDebut|date('j')|number_format >= today_num and prochaines|length < 3 %}
-            {% set prochaines = prochaines|merge([r]) %}
-        {% endif %}
-    {% endfor %}
-    {% if prochaines is not empty %}
-    <div class="cal-upcoming">
-        {% for r in prochaines %}
-        <div class="cal-upcoming-item">
-            <span class="cal-upcoming-date">{{ r.dateDebut|date('d/M') }}</span>
-            <div class="cal-upcoming-info">
-                <div class="cal-upcoming-mat">{{ r.materiel.nom }}</div>
-                <div class="cal-upcoming-user">{{ r.utilisateur.nomComplet }}</div>
+    {# KPIs #}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-laptop text-blue-600"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-800">{{ totalMateriels }}</p>
+                    <p class="text-xs text-gray-500">Matériels</p>
+                </div>
             </div>
         </div>
-        {% endfor %}
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check text-green-600"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-800">{{ materielsDispos }}</p>
+                    <p class="text-xs text-gray-500">Disponibles</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-handshake text-orange-600"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-800">{{ materielsEmpruntes }}</p>
+                    <p class="text-xs text-gray-500">Empruntés</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock text-red-600"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold {{ retards > 0 ? 'text-red-600' : 'text-gray-800' }}">{{ retards }}</p>
+                    <p class="text-xs text-gray-500">Retards</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar text-purple-600"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-800">{{ reservationsEnAttente }}</p>
+                    <p class="text-xs text-gray-500">Réservations</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-tools text-yellow-600"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold {{ incidents > 0 ? 'text-yellow-700' : 'text-gray-800' }}">{{ incidents }}</p>
+                    <p class="text-xs text-gray-500">Incidents</p>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
-    <div class="cal-legend">
-        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot--dark"></div>Aujourd'hui</div>
-        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot--primary"></div>Réservation</div>
-    </div>
-</div>
 
-<!-- NOTIFICATIONS + ACTIVITÉ (managers) -->
-<div class="bottom-grid">
-    <div class="panel">
-        <div class="panel-title">Alertes récentes</div>
-        <div class="notif-list">
-            {% for alerte in alertes_recentes %}
-            <div class="notif-item">
-                <div class="notif-check"></div>
-                <div class="notif-body">
-                    <div class="notif-meta">
-                        <span class="notif-badge {{ alerte.type.badgeClass() == 'sb-danger' ? 'badge-green' : (alerte.type.badgeClass() == 'sb-warning' ? 'badge-purple' : 'badge-blend') }}">
-                            {{ alerte.type.label() }}
-                        </span>
-                        <span class="notif-time">{{ alerte.createdAt|date('d/m/Y H:i') }}</span>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {# Emprunts en cours #}
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Emprunts en cours</h2>
+                <a href="{{ path('emprunt_index') }}" class="text-primary text-sm hover:underline">Voir tout</a>
+            </div>
+            <div class="divide-y divide-gray-50">
+                {% for emprunt in empruntsEnCours|slice(0, 8) %}
+                <div class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+                    <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-laptop text-orange-500 text-sm"></i>
                     </div>
-                    <div class="notif-title">{{ alerte.message }}</div>
-                    {% if alerte.emprunt %}
-                        <div class="notif-text">Emprunt #{{ alerte.emprunt.id }} — {{ alerte.emprunt.materiel.nom }}</div>
-                    {% endif %}
-                    <div class="notif-author">{{ alerte.utilisateur.nomComplet }}</div>
-                </div>
-            </div>
-            {% else %}
-            <div class="panel-empty">Aucune alerte non lue</div>
-            {% endfor %}
-        </div>
-    </div>
-    <div class="panel">
-        <div class="panel-title">Emprunts en cours</div>
-        <div class="notif-list">
-            {% for emprunt in emprunts_en_cours %}
-            <div class="notif-item">
-                <div class="notif-check"></div>
-                <div class="notif-body">
-                    <div class="notif-meta">
-                        <span class="notif-badge {{ emprunt.enRetard ? 'badge-green' : 'badge-purple' }}">
-                            {{ emprunt.enRetard ? 'Retard' : 'En cours' }}
-                        </span>
-                        <span class="notif-time">Retour prévu : {{ emprunt.dateFinPrevue|date('d/m/Y') }}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 truncate">{{ emprunt.materiel.nom }}</p>
+                        <p class="text-xs text-gray-500">{{ emprunt.utilisateur.nomComplet }}</p>
                     </div>
-                    <div class="notif-title">{{ emprunt.materiel.nom }}</div>
-                    <div class="notif-text">Début : {{ emprunt.dateDebut|date('d/m/Y') }}</div>
-                    <div class="notif-author">{{ emprunt.utilisateur.nomComplet }}</div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-xs {{ emprunt.enRetard ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
+                            {{ emprunt.dateFinPrevue|date('d/m/Y') }}
+                        </p>
+                        {% if emprunt.enRetard %}
+                            <span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Retard</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ path('emprunt_show', {id: emprunt.id}) }}" class="text-gray-400 hover:text-primary ml-2">
+                        <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
                 </div>
-            </div>
-            {% else %}
-            <div class="panel-empty">Aucun emprunt en cours</div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-
-{% else %}
-<!-- ══ VUE NON-MANAGER ══ -->
-
-{# CTA Nouvelle réservation #}
-<div class="dash-cta">
-    <div>
-        <div class="dash-cta-title">Besoin de matériel ?</div>
-        <div class="dash-cta-sub">Faites une demande de réservation, elle sera traitée par un gestionnaire.</div>
-    </div>
-    <a href="{{ path('reservation_new') }}" class="btn btn-primary dash-cta-btn">
-        <i class="fa-solid fa-calendar-plus"></i> Nouvelle réservation
-    </a>
-</div>
-
-{# Emprunts en cours #}
-<div class="panel">
-    <div class="panel-title">Mes emprunts en cours</div>
-    <div class="notif-list">
-        {% for emprunt in emprunts_en_cours %}
-        <div class="notif-item">
-            <div class="notif-check"></div>
-            <div class="notif-body">
-                <div class="notif-meta">
-                    <span class="notif-badge {{ emprunt.enRetard ? 'badge-green' : 'badge-purple' }}">
-                        {{ emprunt.enRetard ? 'Retard' : 'En cours' }}
-                    </span>
-                    <span class="notif-time">Retour prévu : {{ emprunt.dateFinPrevue|date('d/m/Y') }}</span>
+                {% else %}
+                <div class="px-5 py-8 text-center text-gray-400 text-sm">
+                    <i class="fas fa-handshake text-2xl mb-2 block opacity-30"></i>
+                    Aucun emprunt en cours
                 </div>
-                <div class="notif-title">{{ emprunt.materiel.nom }}</div>
-                <div class="notif-text">Emprunté le {{ emprunt.dateDebut|date('d/m/Y') }}</div>
+                {% endfor %}
             </div>
         </div>
-        {% else %}
-        <div class="dash-empty">
-            <i class="fa-solid fa-inbox dash-empty-icon"></i>
-            Vous n'avez aucun emprunt en cours
-        </div>
-        {% endfor %}
-    </div>
-</div>
 
-{% endif %}
+        {# Alertes récentes #}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Alertes récentes</h2>
+                <a href="{{ path('alerte_index') }}" class="text-primary text-sm hover:underline">Voir tout</a>
+            </div>
+            <div class="divide-y divide-gray-50">
+                {% for alerte in alertesRecentes %}
+                <div class="px-5 py-3">
+                    <div class="flex items-start gap-2">
+                        <span class="text-xs px-2 py-0.5 rounded-full mt-0.5 {{ alerte.type.badgeClass() }}">{{ alerte.type.label() }}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ alerte.message }}</p>
+                    <p class="text-xs text-gray-400 mt-1">{{ alerte.createdAt|date('d/m/Y H:i') }}</p>
+                </div>
+                {% else %}
+                <div class="px-5 py-8 text-center text-gray-400 text-sm">
+                    <i class="fas fa-bell text-2xl mb-2 block opacity-30"></i>
+                    Aucune alerte
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
 {% endblock %}
